@@ -1,105 +1,149 @@
-import React from 'react';
-import { MapPin, ZoomIn, ZoomOut, Layers, MapPinned } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Box, Typography, Card, CardContent, TextField,
+  FormGroup, FormControlLabel, Checkbox, Button, Paper, IconButton
+} from '@mui/material';
+import { Add, Remove, Layers as LayersIcon, Map as MapIcon } from '@mui/icons-material';
 
 const CoverageMap = () => {
+  const [capas, setCapas] = useState({
+    cobertura: true,
+    zonaNo: true,
+    clientes: true,
+    colonias: false,
+    expansion: false
+  });
+
+  const handleChangeCapa = (event) => {
+    setCapas({ ...capas, [event.target.name]: event.target.checked });
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">Mapa de cobertura</h2>
-      
-      <div className="flex gap-4">
-        {/* Map Section */}
-        <div className="flex-1">
-          <div className="bg-gray-300 rounded-lg h-96 relative overflow-hidden">
-            {/* Placeholder for map */}
-            <img 
-              src="https://via.placeholder.com/800x400/cccccc/666666?text=Mapa+de+Cobertura" 
-              alt="Coverage Map"
-              className="w-full h-full object-cover"
-            />
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
+          Mapa de Cobertura
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Visualiza zonas de servicio, clientes actuales y factibilidad técnica.
+        </Typography>
+      </Box>
+
+      {/* CONTENEDOR FLEX ROBUSTO (Garantiza que no se encoja en PC) */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', md: 'row' }, 
+        gap: 3, 
+        width: '100%' 
+      }}>
+        
+        {/* ZONA DEL MAPA (Toma todo el espacio restante en PC, y 100% en Celular) */}
+        <Box sx={{ flexGrow: 1, width: { xs: '100%', md: 'calc(100% - 340px)' } }}>
+          <Card variant="outlined" sx={{ 
+            width: '100%', 
+            height: { xs: 450, md: 'calc(100vh - 180px)' }, 
+            minHeight: 400,
+            position: 'relative', 
+            borderRadius: 3,
+            overflow: 'hidden' // Evita que elementos internos desborden
+          }}>
             
-            {/* Map Controls */}
-            <div className="absolute right-4 top-4 flex flex-col gap-2">
-              <button className="bg-white p-2 rounded-lg shadow-md hover:bg-gray-50">
-                <ZoomIn className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="bg-white p-2 rounded-lg shadow-md hover:bg-gray-50">
-                <ZoomOut className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="bg-white p-2 rounded-lg shadow-md hover:bg-gray-50">
-                <Layers className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
+            {/* Fondo simulado del mapa */}
+            <Box sx={{ 
+              width: '100%', 
+              height: '100%', 
+              backgroundColor: '#e2e8f0',
+              backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+                <MapIcon sx={{ fontSize: 100, color: '#94a3b8', opacity: 0.5 }} />
+            </Box>
 
-            {/* Map Legend */}
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-md p-4 text-sm">
-              <div className="font-semibold text-gray-800 mb-3">Cobertura disponible</div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-700">Zona cubierta - 700 m</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-gray-700">Buena (750-350m)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-gray-700">Limitada (350-150m)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-gray-700">Sin cobertura</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            {/* Controles del mapa (Zoom) */}
+            <Box sx={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
+                <IconButton size="small"><Add fontSize="small" /></IconButton>
+                <Box sx={{ borderBottom: '1px solid #e2e8f0' }} />
+                <IconButton size="small"><Remove fontSize="small" /></IconButton>
+              </Paper>
+              <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+                <IconButton size="small"><LayersIcon fontSize="small" /></IconButton>
+              </Paper>
+            </Box>
 
-        {/* Right Sidebar */}
-        <div className="w-64">
-          <div className="space-y-4">
-            {/* Search */}
-            <input
-              type="text"
-              placeholder="Buscar dirección o colonia"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            {/* Simbología / Leyenda */}
+            <Paper variant="outlined" sx={{ 
+              position: 'absolute', 
+              bottom: 16, 
+              left: 16, 
+              p: 2, 
+              borderRadius: 2,
+              maxWidth: { xs: 200, sm: 250 }, 
+              backgroundColor: 'rgba(255, 255, 255, 0.95)'
+            }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.1 }}>
+                Cobertura disponible
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#22c55e', flexShrink: 0 }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>Zona cubierta (0-100m)</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#eab308', flexShrink: 0 }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>Buena (150-350m)</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#3b82f6', flexShrink: 0 }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>Limitada (350-550m)</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ef4444', flexShrink: 0 }} />
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>Sin cobertura</Typography>
+                </Box>
+              </Box>
+            </Paper>
 
-            {/* Legend */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-800 text-sm mb-3">Capas del mapa</h3>
-              <div className="space-y-2 text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-4 h-4" />
-                  <span className="text-gray-700">Cobertura disponible</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-4 h-4" />
-                  <span className="text-gray-700">Zona no (IWIFI)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-4 h-4" />
-                  <span className="text-gray-700">Clientes</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4" />
-                  <span className="text-gray-700">Colonias</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4" />
-                  <span className="text-gray-700">Área de expansión</span>
-                </label>
-              </div>
-            </div>
+          </Card>
+        </Box>
 
-            {/* Filter Button */}
-            <button className="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-              Filtrar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        {/* ZONA DE FILTROS (Ancho fijo en PC, 100% en celular) */}
+        <Box sx={{ flexShrink: 0, width: { xs: '100%', md: '320px' } }}>
+          <Card variant="outlined" sx={{ borderRadius: 3, position: 'sticky', top: 24, width: '100%' }}>
+            <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              
+              <TextField 
+                size="small" 
+                placeholder="Buscar dirección o colonia..." 
+                fullWidth 
+              />
+              
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#334155' }}>
+                  Capas del mapa
+                </Typography>
+                <FormGroup>
+                  <FormControlLabel control={<Checkbox checked={capas.cobertura} onChange={handleChangeCapa} name="cobertura" />} label={<Typography variant="body2">Cobertura disponible</Typography>} />
+                  <FormControlLabel control={<Checkbox checked={capas.zonaNo} onChange={handleChangeCapa} name="zonaNo" />} label={<Typography variant="body2">Zonas No (IWIFI)</Typography>} />
+                  <FormControlLabel control={<Checkbox checked={capas.clientes} onChange={handleChangeCapa} name="clientes" />} label={<Typography variant="body2">Clientes instalados</Typography>} />
+                  <FormControlLabel control={<Checkbox checked={capas.colonias} onChange={handleChangeCapa} name="colonias" />} label={<Typography variant="body2">Límites de Colonias</Typography>} />
+                  <FormControlLabel control={<Checkbox checked={capas.expansion} onChange={handleChangeCapa} name="expansion" />} label={<Typography variant="body2">Áreas de expansión</Typography>} />
+                </FormGroup>
+              </Box>
+
+              <Button variant="contained" fullWidth color="primary" sx={{ py: 1.5, fontWeight: 700 }}>
+                Aplicar Filtros
+              </Button>
+
+            </CardContent>
+          </Card>
+        </Box>
+
+      </Box>
+    </Box>
   );
 };
 

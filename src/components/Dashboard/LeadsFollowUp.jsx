@@ -1,101 +1,103 @@
 import React, { useState } from 'react';
-import { 
-  Card, CardHeader, CardContent, TableContainer, Table, TableHead, TableRow, TableCell, 
-  TableBody, Chip, IconButton, Box, Button, Tabs, Tab, Typography, Divider 
+import {
+  Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Button, Chip, Dialog, DialogTitle, DialogContent, 
+  DialogActions, TextField, MenuItem, Stack, IconButton, Tooltip
 } from '@mui/material';
-import PhoneIcon from '@mui/icons-material/Phone';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import AddIcon from '@mui/icons-material/Add';
+import { Phone, WhatsApp, DirectionsWalk, Close, History } from '@mui/icons-material';
 
 const LeadsFollowUp = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const [leads, setLeads] = useState([
+    { id: 'L-001', nombre: 'Carlos Mendoza', telefono: '5512345678', interes: '500 Megas', estatus: 'Seguimiento', ultimaInteraccion: 'Llamada (Ayer)' },
+    { id: 'L-002', nombre: 'Ana Gómez', telefono: '5598765432', interes: '1 Giga', estatus: 'No Contesta', ultimaInteraccion: 'WhatsApp (Hace 2 hrs)' },
+    { id: 'L-003', nombre: 'Luis Torres', telefono: '5544332211', interes: '600 Megas', estatus: 'Interesado', ultimaInteraccion: 'Visita en sitio (Hoy)' }
+  ]);
 
-  const leads = [
-    { id: 1, name: 'María Fernández', status: 'Interesado', color: 'success', plan: '600 Megas', time: 'Hace 2 horas', location: 'Col. Jardines del Sur', phone: '9871234567' },
-    { id: 2, name: 'Juan Pérez', status: 'Volver a llamar', color: 'warning', plan: 'Llamada perdida', time: 'Hace 3 horas', location: 'Vimar a futuro', phone: '9875551234' },
-    { id: 3, name: 'Ana Gómez', status: 'Interesado', color: 'success', plan: '1 Giga', time: 'Ayer 5:15 PM', location: 'Mundo Normal', phone: '9879876543' },
-    { id: 4, name: 'Luis Martínez', status: 'Rechazado', color: 'error', plan: 'No especificó', time: 'Hace 1 día', location: 'Mitacar del Sur', phone: '9872223333' }
-  ];
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [leadSeleccionado, setLeadSeleccionado] = useState(null);
+  const [tipoInteraccion, setTipoInteraccion] = useState('llamada');
+  const [notas, setNotas] = useState('');
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
+  const abrirModal = (lead) => {
+    setLeadSeleccionado(lead);
+    setTipoInteraccion('llamada');
+    setNotas('');
+    setModalAbierto(true);
+  };
+
+  const guardarInteraccion = (e) => {
+    e.preventDefault();
+    // Actualizamos el lead simulando el registro en base de datos
+    setLeads(leads.map(l => l.id === leadSeleccionado.id 
+      ? { ...l, ultimaInteraccion: `${tipoInteraccion.charAt(0).toUpperCase() + tipoInteraccion.slice(1)} (Justo ahora)` } 
+      : l
+    ));
+    setModalAbierto(false);
   };
 
   return (
-    <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 3 }}>
-      <CardHeader 
-        title={<Typography variant="subtitle1" fontWeight="bold">Leads y Seguimiento</Typography>}
-        subheader="Gestión y estado actual de interacciones en campo"
-        action={
-          <Button variant="contained" color="primary" startIcon={<AddIcon />} disableElevation sx={{ mt: 1 }}>
-            Nuevo Lead
-          </Button>
-        }
-        sx={{ borderBottom: '1px solid #e0e0e0', bgcolor: '#fafafa' }}
-      />
-      
-      <Box sx={{ borderBottom: '1px solid #e0e0e0', px: 2, bgcolor: '#fdfdfd' }}>
-        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-          <Tab label="Todos" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
-          <Tab label="Interesado" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
-          <Tab label="Volver a llamar" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
-          <Tab label="Rechazado" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
-        </Tabs>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>Seguimiento Comercial (Leads)</Typography>
+        <Typography variant="body2" color="text.secondary">Gestiona los prospectos que requieren labor de convencimiento para cerrar el contrato en campo.</Typography>
       </Box>
 
-      <CardContent sx={{ p: 0 }}>
-        <TableContainer>
-          <Table sx={{ minWidth: 650 }}>
-            <TableHead sx={{ bgcolor: '#f9fafb' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>NOMBRE</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>ESTADO</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>PLAN</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>UBICACIÓN</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>ACTIVIDAD</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary', pr: 3 }}>ACCIONES</TableCell>
+      <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600 }}>Nombre del Lead</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Teléfono</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Interés</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Última Interacción</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600 }}>Registrar Acción</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {leads.map((lead) => (
+              <TableRow key={lead.id} hover>
+                <TableCell sx={{ fontWeight: 600 }}>{lead.nombre}</TableCell>
+                <TableCell>{lead.telefono}</TableCell>
+                <TableCell><Chip label={lead.interes} size="small" variant="outlined" color="primary" /></TableCell>
+                <TableCell>
+                  <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: '#64748b' }}>
+                    <History fontSize="small" /> {lead.ultimaInteraccion}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Button variant="contained" size="small" onClick={() => abrirModal(lead)} sx={{ textTransform: 'none' }}>
+                    Añadir Interacción
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {leads.map((lead) => (
-                <TableRow key={lead.id} sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
-                  <TableCell sx={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{lead.name}</TableCell>
-                  <TableCell>
-                    <Chip label={lead.status} color={lead.color} size="small" variant="light" sx={{ fontWeight: 'bold', borderRadius: 1 }} />
-                  </TableCell>
-                  <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>{lead.plan}</TableCell>
-                  <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <LocationOnIcon sx={{ fontSize: 16, color: 'action.disabled' }} />
-                      {lead.location}
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <AccessTimeIcon sx={{ fontSize: 16, color: 'action.disabled' }} />
-                      {lead.time}
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right" sx={{ pr: 2 }}>
-                    <IconButton size="small" color="primary" sx={{ mr: 1 }}><PhoneIcon fontSize="small" /></IconButton>
-                    <IconButton size="small" color="success"><WhatsAppIcon fontSize="small" /></IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </CardContent>
-      <Divider />
-      <Box sx={{ p: 2, textCenter: 'center', bgcolor: '#fafafa' }}>
-        <Button fullWidth size="small" color="primary" sx={{ fontWeight: 'bold' }}>
-          Ver todos los leads de la zona
-        </Button>
-      </Box>
-    </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Modal de Registro de Interacción */}
+      <Dialog open={modalAbierto} onClose={() => setModalAbierto(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>Bitácora de {leadSeleccionado?.nombre}</Typography>
+          <IconButton onClick={() => setModalAbierto(false)} size="small"><Close /></IconButton>
+        </DialogTitle>
+        <form onSubmit={guardarInteraccion}>
+          <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField select label="Tipo de Interacción" fullWidth value={tipoInteraccion} onChange={(e) => setTipoInteraccion(e.target.value)}>
+              <MenuItem value="llamada"><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Phone fontSize="small" color="primary"/> Llamada Telefónica</Box></MenuItem>
+              <MenuItem value="whatsapp"><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><WhatsApp fontSize="small" color="success"/> Mensaje de WhatsApp</Box></MenuItem>
+              <MenuItem value="visita fallida"><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><DirectionsWalk fontSize="small" color="error"/> Visita Física (No encontrado/Rechazo)</Box></MenuItem>
+              <MenuItem value="visita exitosa"><Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><DirectionsWalk fontSize="small" color="success"/> Visita Física (Recuperado/Cierre)</Box></MenuItem>
+            </TextField>
+            <TextField label="Notas Comerciales" multiline rows={3} fullWidth placeholder="Ej. Dijo que le marcara mañana a las 5 PM..." value={notas} onChange={(e) => setNotas(e.target.value)} required />
+          </DialogContent>
+          <DialogActions sx={{ p: 2, px: 3 }}>
+            <Button onClick={() => setModalAbierto(false)} color="inherit">Cancelar</Button>
+            <Button type="submit" variant="contained">Guardar en Historial</Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Box>
   );
 };
-
 export default LeadsFollowUp;

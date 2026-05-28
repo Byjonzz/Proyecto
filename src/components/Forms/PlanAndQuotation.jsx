@@ -219,28 +219,27 @@ const PlanAndQuotation = () => {
         );
       case 2:
         return (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: 2 }} id="area-contrato-pdf">
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Evidencias Documentales</Typography>
-            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-              <Button variant="outlined" startIcon={<AddPhotoAlternate />} fullWidth>Frente INE</Button>
-              <Button variant="outlined" startIcon={<AddPhotoAlternate />} fullWidth>Reverso INE</Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
+              {/* Botón que abre la CÁMARA del celular */}
+              <Button variant={formData.fotoFrente ? "contained" : "outlined"} color={formData.fotoFrente ? "success" : "primary"} component="label" startIcon={formData.fotoFrente ? <CheckCircle /> : <AddPhotoAlternate />} fullWidth>
+                {formData.fotoFrente ? "Frente Capturado" : "Foto Frente INE"}
+                <input type="file" hidden accept="image/*" capture="environment" onChange={(e) => setFormData({...formData, fotoFrente: true})} />
+              </Button>
+              
+              <Button variant={formData.fotoReverso ? "contained" : "outlined"} color={formData.fotoReverso ? "success" : "primary"} component="label" startIcon={formData.fotoReverso ? <CheckCircle /> : <AddPhotoAlternate />} fullWidth>
+                {formData.fotoReverso ? "Reverso Capturado" : "Foto Reverso INE"}
+                <input type="file" hidden accept="image/*" capture="environment" onChange={(e) => setFormData({...formData, fotoReverso: true})} />
+              </Button>
             </Stack>
 
             <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f8fafc', mb: 3, borderRadius: 2 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Desglose de Cobros (A pagar hoy)</Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="body2">Instalación:</Typography>
-                <Typography variant="body2">$0.00</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Primer mes por adelantado:</Typography>
-                <Typography variant="body2">$499.00</Typography>
-              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}><Typography variant="body2">Instalación:</Typography><Typography variant="body2">$0.00</Typography></Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}><Typography variant="body2">Primer mes por adelantado:</Typography><Typography variant="body2">$499.00</Typography></Box>
               <Divider sx={{ mb: 1 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total a Pagar:</Typography>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#16a34a' }}>$499.00</Typography>
-              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}><Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total a Pagar:</Typography><Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#16a34a' }}>$499.00</Typography></Box>
             </Paper>
 
             <Alert severity="info" icon={<InfoOutlined />} sx={{ mb: 3 }}>
@@ -253,7 +252,11 @@ const PlanAndQuotation = () => {
             <Box sx={{ backgroundColor: '#fff', border: '2px dashed #cbd5e1', borderRadius: 2, height: 200, touchAction: 'none' }}>
               <canvas ref={canvasRef} width={800} height={200} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ width: '100%', height: '100%', cursor: 'crosshair' }} />
             </Box>
-            <Button size="small" onClick={limpiarFirma} sx={{ mt: 1 }}>Limpiar Firma</Button>
+            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                <Button size="small" onClick={limpiarFirma} color="error">Limpiar Firma</Button>
+                {/* Función nativa de impresión / Generar PDF */}
+                <Button size="small" onClick={() => window.print()} color="secondary">Generar PDF del Contrato</Button>
+            </Stack>
           </Box>
         );
       default: return 'Desconocido';

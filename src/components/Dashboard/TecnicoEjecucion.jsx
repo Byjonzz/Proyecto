@@ -1,59 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Box, Card, CardContent, Typography, Switch, FormControlLabel,
     Stack, Button, Alert, Chip, Divider
 } from '@mui/material';
-import { PhotoCamera, CheckCircle } from '@mui/icons-material';
+import { PhotoCamera, CheckCircle, BorderColor } from '@mui/icons-material';
 
 const TecnicoEjecucion = () => {
     const [checklist, setChecklist] = useState({
         verificarEquipos: false,
         tendidoCable: false,
-        configONT: false, // Corregido: sin espacios
-        firmaConformidad: false
+        configONT: false,
     });
 
     const [completado, setCompletado] = useState(false);
+    const [fotoEvidencia, setFotoEvidencia] = useState(false);
+    const [tieneFirma, setTieneFirma] = useState(false);
 
-    const handleToggle = (e) => {
-        // Tomamos el atributo "name" del Switch para actualizar el estado correcto
-        setChecklist({ ...checklist, [e.target.name]: e.target.checked });
+    // --- LÓGICA DE FIRMA DIGITAL ---
+    const canvasRef = useRef(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+
+    const startDrawing = (e) => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+        ctx.beginPath(); ctx.moveTo(x, y); setIsDrawing(true); setTieneFirma(true);
     };
 
-    // Validamos que los 4 booleanos sean "true" para habilitar el botón
-    const isComplete =
-        checklist.verificarEquipos &&
-        checklist.tendidoCable &&
-        checklist.configONT &&
-        checklist.firmaConformidad;
+    const draw = (e) => {
+        if (!isDrawing) return; e.preventDefault();
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+        ctx.lineTo(x, y); ctx.stroke();
+    };
+
+    const stopDrawing = () => setIsDrawing(false);
+
+    const limpiarFirma = () => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
+        setTieneFirma(false);
+    };
+
+    const handleToggle = (e) => setChecklist({ ...checklist, [e.target.name]: e.target.checked });
+
+    // Se habilita "Cerrar Orden" solo si el checklist está listo, hay foto y el cliente firmó.
+    const isComplete = checklist.verificarEquipos && checklist.tendidoCable && checklist.configONT && fotoEvidencia && tieneFirma;
 
     return (
         <Box sx={{ maxWidth: 700, margin: 'auto' }}>
             <Box sx={{ mb: 3 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                    Módulo de Trabajo de Campo Técnico
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Ejecuta las instalaciones activas asignadas a tu ruta del día.
-                </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>Módulo de Trabajo de Campo Técnico</Typography>
+                <Typography variant="body2" color="text.secondary">Ejecuta las instalaciones activas asignadas a tu ruta del día.</Typography>
             </Box>
 
             {completado ? (
                 <Alert severity="success" sx={{ borderRadius: 2 }}>
-                    ¡Instalación marcada como finalizada! El reporte e imágenes se subieron al servidor de Solit System.
-                    <Button
-                        variant="outlined"
-                        sx={{ mt: 2, display: 'block' }}
-                        onClick={() => {
-                            setCompletado(false);
-                            setChecklist({
-                                verificarEquipos: false,
-                                tendidoCable: false,
-                                configONT: false,
-                                firmaConformidad: false
-                            });
-                        }}
-                    >
+                    ¡Instalación marcada como finalizada! El reporte, imágenes y firma de conformidad se subieron al servidor de Solit System.
+                    <Button variant="outlined" sx={{ mt: 2, display: 'block' }} onClick={() => window.location.reload()}>
                         Abrir Siguiente Orden
                     </Button>
                 </Alert>
@@ -69,56 +79,39 @@ const TecnicoEjecucion = () => {
 
                         <Divider sx={{ my: 2.5 }} />
 
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2 }}>
-                            Protocolo Técnico Obligatorio
-                        </Typography>
-
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2 }}>Protocolo Técnico Obligatorio</Typography>
                         <Stack spacing={1.5}>
-                            <FormControlLabel
-                                control={<Switch checked={checklist.verificarEquipos} onChange={handleToggle} name="verificarEquipos" color="secondary" />}
-                                label="1. Validación y desempaque de equipos ONT/Router"
-                            />
-                            <FormControlLabel
-                                control={<Switch checked={checklist.tendidoCable} onChange={handleToggle} name="tendidoCable" color="secondary" />}
-                                label="2. Tendido e instalación de Cable de Fibra Óptica"
-                            />
-                            <FormControlLabel
-                                control={<Switch checked={checklist.configONT} onChange={handleToggle} name="configONT" color="secondary" />}
-                                label="3. Configuración, fusión y pruebas de potencia de internet"
-                            />
-                            <FormControlLabel
-                                control={<Switch checked={checklist.firmaConformidad} onChange={handleToggle} name="firmaConformidad" color="secondary" />}
-                                label="4. Verificación de navegación conforme con el cliente"
-                            />
+                            <FormControlLabel control={<Switch checked={checklist.verificarEquipos} onChange={handleToggle} name="verificarEquipos" color="secondary" />} label="1. Validación y desempaque de equipos ONT/Router" />
+                            <FormControlLabel control={<Switch checked={checklist.tendidoCable} onChange={handleToggle} name="tendidoCable" color="secondary" />} label="2. Tendido e instalación de Cable de Fibra Óptica" />
+                            <FormControlLabel control={<Switch checked={checklist.configONT} onChange={handleToggle} name="configONT" color="secondary" />} label="3. Configuración, fusión y pruebas de potencia de internet" />
                         </Stack>
 
-                        <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #e2e8f0' }}>
-                            <Button
-                                variant="outlined"
-                                fullWidth
-                                startIcon={<PhotoCamera />}
-                                sx={{ textTransform: 'none', mb: 2 }}
-                            >
-                                Capturar Evidencia Fotográfica (Fachada / ONT)
-                            </Button>
-
-                            <Button
-                                variant="contained"
-                                fullWidth
-                                color="success"
-                                disabled={!isComplete}
-                                onClick={() => setCompletado(true)}
-                                startIcon={<CheckCircle />}
-                                sx={{ textTransform: 'none', py: 1.2, fontWeight: 600 }}
-                            >
-                                Cerrar Orden e Informar Éxito
+                        <Box sx={{ mt: 3, mb: 3 }}>
+                            <Button variant={fotoEvidencia ? "contained" : "outlined"} color={fotoEvidencia ? "success" : "primary"} component="label" startIcon={fotoEvidencia ? <CheckCircle /> : <PhotoCamera />} fullWidth sx={{ py: 1.5 }}>
+                                {fotoEvidencia ? "Evidencia Guardada (Ver)" : "Activar Cámara: Capturar Evidencia (ONT/Fachada)"}
+                                {/* Este input abre la cámara trasera del dispositivo móvil automáticamente */}
+                                <input type="file" hidden accept="image/*" capture="environment" onChange={() => setFotoEvidencia(true)} />
                             </Button>
                         </Box>
+
+                        <Divider sx={{ my: 2.5 }} />
+
+                        {/* FIRMA DEL CLIENTE PARA EL TÉCNICO */}
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <BorderColor sx={{ fontSize: 18 }} /> 4. Firma de Conformidad (El cliente valida que navega correctamente)
+                        </Typography>
+                        <Box sx={{ backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: 2, height: 150, touchAction: 'none', mb: 1 }}>
+                            <canvas ref={canvasRef} width={800} height={150} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ width: '100%', height: '100%', cursor: 'crosshair' }} />
+                        </Box>
+                        <Button size="small" onClick={limpiarFirma} color="error" sx={{ mb: 3 }}>Borrar Firma</Button>
+
+                        <Button variant="contained" fullWidth color="success" disabled={!isComplete} onClick={() => setCompletado(true)} startIcon={<CheckCircle />} sx={{ textTransform: 'none', py: 1.5, fontWeight: 700, fontSize: '1.05rem' }}>
+                            Cerrar Orden e Informar Éxito
+                        </Button>
                     </CardContent>
                 </Card>
             )}
         </Box>
     );
 };
-
 export default TecnicoEjecucion;
