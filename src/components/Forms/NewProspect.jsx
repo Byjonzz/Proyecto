@@ -1,161 +1,123 @@
-import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { 
+  Card, CardContent, CardHeader, CardActions, Typography, 
+  TextField, Button, Grid, Box, Chip, Divider 
+} from '@mui/material';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const NewProspect = () => {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    reference: ''
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const steps = ['Información general', 'Ubicación', 'Referencias'];
-
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">Nuevo prospecto</h2>
+    <Card elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
       
-      {/* Steps */}
-      <div className="flex gap-4 mb-8">
-        {steps.map((stepLabel, index) => (
-          <div key={index} className="flex items-center gap-2 flex-1">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
-              step > index ? 'bg-primary text-white' : 
-              step === index + 1 ? 'bg-primary text-white' : 
-              'bg-gray-200 text-gray-600'
-            }`}>
-              {index + 1}
-            </div>
-            <span className={`text-sm font-medium ${step > index || step === index + 1 ? 'text-primary' : 'text-gray-500'}`}>
-              {stepLabel}
-            </span>
-            {index < steps.length - 1 && <ChevronRight className="w-4 h-4 text-gray-400 flex-1" />}
-          </div>
-        ))}
-      </div>
-
-      {/* Form Step 1 */}
-      {step === 1 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Nombre completo"
-              value={formData.name}
-              onChange={handleChange}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Teléfono"
-              value={formData.phone}
-              onChange={handleChange}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <input
-            type="email"
-            name="email"
-            placeholder="Correo electrónico"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      {/* Cabecera del formulario */}
+      <CardHeader 
+        title={<Typography variant="h6" fontWeight="bold">Registro en Campo</Typography>}
+        subheader="Captura los datos del cliente durante el recorrido."
+        action={
+          <Chip 
+            icon={<EditNoteIcon />} 
+            label="Estado: Prospecto (Falta contrato)" 
+            color="warning" 
+            variant="outlined" 
+            sx={{ mt: 1, fontWeight: 'bold' }}
           />
-        </div>
-      )}
+        }
+        sx={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e0e0e0' }}
+      />
 
-      {/* Form Step 2 */}
-      {step === 2 && (
-        <div className="space-y-4">
-          <input
-            type="text"
-            name="address"
-            placeholder="Dirección"
-            value={formData.address}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="city"
-              placeholder="Ciudad"
-              value={formData.city}
-              onChange={handleChange}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="text"
-              name="postalCode"
-              placeholder="Código postal"
-              value={formData.postalCode}
-              onChange={handleChange}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-        </div>
-      )}
+      <CardContent sx={{ p: 4 }}>
+        <Grid container spacing={4}>
+          
+          {/* Columna Izquierda */}
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+              Datos Personales
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <TextField 
+                label="Nombre Completo" 
+                variant="outlined" 
+                fullWidth 
+                placeholder="Ej. Juan Pérez"
+              />
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField 
+                    label="Teléfono" 
+                    variant="outlined" 
+                    fullWidth 
+                    type="tel"
+                    placeholder="10 dígitos"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField 
+                    label="Correo (Opcional)" 
+                    variant="outlined" 
+                    fullWidth 
+                    type="email"
+                    placeholder="correo@ejemplo.com"
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
 
-      {/* Form Step 3 */}
-      {step === 3 && (
-        <div className="space-y-4">
-          <input
-            type="text"
-            name="reference"
-            placeholder="Referencia (opcional)"
-            value={formData.reference}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Resumen:</strong><br/>
-              Nombre: {formData.name || 'No ingresado'}<br/>
-              Teléfono: {formData.phone || 'No ingresado'}<br/>
-              Email: {formData.email || 'No ingresado'}<br/>
-              Dirección: {formData.address || 'No ingresada'}
-            </p>
-          </div>
-        </div>
-      )}
+          {/* Columna Derecha */}
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
+              Ubicación y Cobertura
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <TextField 
+                label="Dirección Exacta" 
+                variant="outlined" 
+                fullWidth 
+                placeholder="Calle, Número, Colonia"
+              />
+              <TextField 
+                label="Referencias del domicilio" 
+                variant="outlined" 
+                fullWidth 
+                multiline
+                rows={3}
+                placeholder="Ej. Casa color verde, portón negro..."
+              />
+            </Box>
+          </Grid>
 
-      {/* Buttons */}
-      <div className="flex gap-3 mt-6">
-        <button
-          onClick={() => setStep(Math.max(1, step - 1))}
-          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-          disabled={step === 1}
+        </Grid>
+      </CardContent>
+
+      <Divider />
+      
+      {/* Botones de acción */}
+      <CardActions sx={{ justifyContent: 'flex-end', p: 3, backgroundColor: '#f9fafb' }}>
+        <Button 
+          variant="text" 
+          color="inherit" 
+          startIcon={<CancelIcon />}
+          sx={{ mr: 1 }}
         >
           Cancelar
-        </button>
-        {step < steps.length ? (
-          <button
-            onClick={() => setStep(step + 1)}
-            className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors ml-auto"
-          >
-            Siguiente
-          </button>
-        ) : (
-          <button
-            onClick={() => { setStep(1); alert('Prospecto guardado'); }}
-            className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors ml-auto"
-          >
-            Guardar prospecto
-          </button>
-        )}
-      </div>
-    </div>
+        </Button>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          startIcon={<SaveIcon />}
+          disableElevation
+        >
+          Guardar Prospecto
+        </Button>
+      </CardActions>
+    </Card>
   );
 };
 

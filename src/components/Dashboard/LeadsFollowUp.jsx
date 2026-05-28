@@ -1,145 +1,100 @@
 import React, { useState } from 'react';
-import { Phone, MessageCircle, Clock, MapPin, DollarSign, Plus } from 'lucide-react';
+import { 
+  Card, CardHeader, CardContent, TableContainer, Table, TableHead, TableRow, TableCell, 
+  TableBody, Chip, IconButton, Box, Button, Tabs, Tab, Typography, Divider 
+} from '@mui/material';
+import PhoneIcon from '@mui/icons-material/Phone';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AddIcon from '@mui/icons-material/Add';
 
 const LeadsFollowUp = () => {
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [tabValue, setTabValue] = useState(0);
 
   const leads = [
-    {
-      id: 1,
-      name: 'María Fernández',
-      status: 'Interesado',
-      statusColor: 'bg-green-100 text-green-700',
-      amount: '600 Megas',
-      time: 'Hace 2 horas',
-      location: 'Col. Jardines del Sur',
-      contact: '9871234567'
-    },
-    {
-      id: 2,
-      name: 'Juan Pérez',
-      status: 'Volver a llamar',
-      statusColor: 'bg-orange-100 text-orange-700',
-      amount: 'Llamada perdida',
-      time: 'Hace 3 horas',
-      location: 'Vimar a futuro',
-      contact: '9875551234'
-    },
-    {
-      id: 3,
-      name: 'Ana Gómez',
-      status: 'Interesado',
-      statusColor: 'bg-green-100 text-green-700',
-      amount: '1 Giga',
-      time: 'Ayer 5:15 PM',
-      location: 'Mundo Normal',
-      contact: '9879876543'
-    },
-    {
-      id: 4,
-      name: 'Luis Martínez',
-      status: 'Rechazado',
-      statusColor: 'bg-red-100 text-red-700',
-      amount: 'No especificó',
-      time: 'Hace 1 día',
-      location: 'Mitacar del Sur',
-      contact: '9872223333'
-    },
-    {
-      id: 5,
-      name: 'Carmen Rodríguez',
-      status: 'Interesado',
-      statusColor: 'bg-green-100 text-green-700',
-      amount: '500 Megas',
-      time: 'Ayer 1:30 PM',
-      location: 'La Aurora',
-      contact: '9871110000'
-    }
+    { id: 1, name: 'María Fernández', status: 'Interesado', color: 'success', plan: '600 Megas', time: 'Hace 2 horas', location: 'Col. Jardines del Sur', phone: '9871234567' },
+    { id: 2, name: 'Juan Pérez', status: 'Volver a llamar', color: 'warning', plan: 'Llamada perdida', time: 'Hace 3 horas', location: 'Vimar a futuro', phone: '9875551234' },
+    { id: 3, name: 'Ana Gómez', status: 'Interesado', color: 'success', plan: '1 Giga', time: 'Ayer 5:15 PM', location: 'Mundo Normal', phone: '9879876543' },
+    { id: 4, name: 'Luis Martínez', status: 'Rechazado', color: 'error', plan: 'No especificó', time: 'Hace 1 día', location: 'Mitacar del Sur', phone: '9872223333' }
   ];
 
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-gray-800">Leads y seguimiento</h2>
-        <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-          <Plus className="w-4 h-4" />
-          Nuevo lead
-        </button>
-      </div>
+    <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 3 }}>
+      <CardHeader 
+        title={<Typography variant="subtitle1" fontWeight="bold">Leads y Seguimiento</Typography>}
+        subheader="Gestión y estado actual de interacciones en campo"
+        action={
+          <Button variant="contained" color="primary" startIcon={<AddIcon />} disableElevation sx={{ mt: 1 }}>
+            Nuevo Lead
+          </Button>
+        }
+        sx={{ borderBottom: '1px solid #e0e0e0', bgcolor: '#fafafa' }}
+      />
+      
+      <Box sx={{ borderBottom: '1px solid #e0e0e0', px: 2, bgcolor: '#fdfdfd' }}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
+          <Tab label="Todos" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
+          <Tab label="Interesado" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
+          <Tab label="Volver a llamar" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
+          <Tab label="Rechazado" sx={{ fontSize: '0.8rem', fontWeight: 'bold' }} />
+        </Tabs>
+      </Box>
 
-      {/* Filters */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {['Todos', 'Interesado', 'Volver a llamar', 'Rechazado'].map((status, index) => (
-          <button
-            key={index}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-              filterStatus === status.toLowerCase() || (filterStatus === 'all' && status === 'Todos')
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            onClick={() => setFilterStatus(status.toLowerCase() === 'todos' ? 'all' : status.toLowerCase())}
-          >
-            {status} ({status === 'Todos' ? leads.length : leads.filter(l => l.status.toLowerCase() === status.toLowerCase()).length})
-          </button>
-        ))}
-      </div>
-
-      {/* Leads Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Nombre</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Estado</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Plan</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Ubicación</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Contacto</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Última actividad</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((lead) => (
-              <tr key={lead.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="py-4 px-4">
-                  <p className="font-medium text-gray-800">{lead.name}</p>
-                </td>
-                <td className="py-4 px-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${lead.statusColor}`}>
-                    {lead.status}
-                  </span>
-                </td>
-                <td className="py-4 px-4 text-sm text-gray-600">{lead.amount}</td>
-                <td className="py-4 px-4 text-sm text-gray-600 flex items-center gap-1">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  {lead.location}
-                </td>
-                <td className="py-4 px-4 text-sm text-gray-600">{lead.contact}</td>
-                <td className="py-4 px-4 text-sm text-gray-600 flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  {lead.time}
-                </td>
-                <td className="py-4 px-4">
-                  <div className="flex gap-2">
-                    <button className="p-2 hover:bg-blue-100 rounded transition-colors">
-                      <Phone className="w-4 h-4 text-blue-600" />
-                    </button>
-                    <button className="p-2 hover:bg-green-100 rounded transition-colors">
-                      <MessageCircle className="w-4 h-4 text-green-600" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bottom Button */}
-      <button className="w-full mt-4 py-3 border border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-white transition-colors">
-        Ver todos los leads
-      </button>
-    </div>
+      <CardContent sx={{ p: 0 }}>
+        <TableContainer>
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead sx={{ bgcolor: '#f9fafb' }}>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>NOMBRE</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>ESTADO</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>PLAN</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>UBICACIÓN</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary' }}>ACTIVIDAD</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '0.75rem', color: 'text.secondary', pr: 3 }}>ACCIONES</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {leads.map((lead) => (
+                <TableRow key={lead.id} sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
+                  <TableCell sx={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{lead.name}</TableCell>
+                  <TableCell>
+                    <Chip label={lead.status} color={lead.color} size="small" variant="light" sx={{ fontWeight: 'bold', borderRadius: 1 }} />
+                  </TableCell>
+                  <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>{lead.plan}</TableCell>
+                  <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <LocationOnIcon sx={{ fontSize: 16, color: 'action.disabled' }} />
+                      {lead.location}
+                    </Box>
+                  </TableCell>
+                  <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <AccessTimeIcon sx={{ fontSize: 16, color: 'action.disabled' }} />
+                      {lead.time}
+                    </Box>
+                  </TableCell>
+                  <TableCell align="right" sx={{ pr: 2 }}>
+                    <IconButton size="small" color="primary" sx={{ mr: 1 }}><PhoneIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" color="success"><WhatsAppIcon fontSize="small" /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+      <Divider />
+      <Box sx={{ p: 2, textCenter: 'center', bgcolor: '#fafafa' }}>
+        <Button fullWidth size="small" color="primary" sx={{ fontWeight: 'bold' }}>
+          Ver todos los leads de la zona
+        </Button>
+      </Box>
+    </Card>
   );
 };
 

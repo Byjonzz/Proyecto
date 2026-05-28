@@ -1,46 +1,56 @@
 import React from 'react';
-import { TrendingUp, Eye, CheckCircle, Zap } from 'lucide-react';
+import { Grid, Card, CardContent, Typography, Box, Avatar } from '@mui/material';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import BoltIcon from '@mui/icons-material/Bolt';
 
-const MetricsCard = ({ icon: Icon, label, value, change, color }) => {
-  const colors = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    red: 'bg-red-100 text-red-600',
-    orange: 'bg-orange-100 text-orange-600',
-  };
-
+const MetricCard = ({ title, value, change, icon: Icon, colorBg, colorText }) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-gray-600 text-sm font-medium">{label}</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">{value}</p>
-          <p className="text-xs text-gray-500 mt-2">
-            <span className="text-green-600 font-semibold">{change}</span> vs ayer
-          </p>
-        </div>
-        <div className={`p-3 rounded-lg ${colors[color] || colors.blue}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-      </div>
-    </div>
+    <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 3 }}>
+      <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+              {title}
+            </Typography>
+            <Typography variant="h4" fontWeight="bold" sx={{ mt: 0.5, trackingTight: -1 }}>
+              {value}
+            </Typography>
+          </Box>
+          <Avatar sx={{ bgcolor: colorBg, color: colorText, width: 48, height: 48, borderRadius: 2 }}>
+            <Icon />
+          </Avatar>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, pt: 1.5, borderTop: '1px solid #f3f4f6' }}>
+          <Typography variant="caption" fontWeight="bold" sx={{ bgcolor: colorBg, color: colorText, px: 1, py: 0.2, borderRadius: 1 }}>
+            {change}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            vs ayer
+          </Typography>
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 
 const MetricsSection = () => {
   const metrics = [
-    { icon: TrendingUp, label: 'Leads nuevos', value: '12', change: '+35% vs ayer', color: 'blue' },
-    { icon: Eye, label: 'Visitas programadas', value: '5', change: '+7% vs ayer', color: 'green' },
-    { icon: CheckCircle, label: 'Ventas cerradas', value: '3', change: '+56% vs ayer', color: 'red' },
-    { icon: Zap, label: 'Instalaciones hoy', value: '4', change: '+200% vs ayer', color: 'orange' },
+    { title: 'Leads nuevos', value: '12', change: '+35%', icon: TrendingUpIcon, colorBg: '#eff6ff', colorText: '#2563eb' },
+    { title: 'Visitas agendadas', value: '5', change: '+7%', icon: VisibilityIcon, colorBg: '#ecfdf5', colorText: '#059669' },
+    { title: 'Ventas cerradas', value: '3', change: '+56%', icon: CheckCircleIcon, colorBg: '#fef2f2', colorText: '#dc2626' },
+    { title: 'Instalaciones hoy', value: '4', change: '+200%', icon: BoltIcon, colorBg: '#fff7ed', colorText: '#ea580c' },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <Grid container spacing={3}>
       {metrics.map((metric, index) => (
-        <MetricsCard key={index} {...metric} />
+        <Grid item xs={12} sm={6} md={3} key={index}>
+          <MetricCard {...metric} />
+        </Grid>
       ))}
-    </div>
+    </Grid>
   );
 };
 

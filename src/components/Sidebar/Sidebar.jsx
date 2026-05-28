@@ -1,79 +1,87 @@
-import React, { useState } from 'react';
-import { LayoutDashboard, Map, FileText, Users, ClipboardList, Calendar, BarChart3, Settings, LogOut, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { 
+  Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, 
+  Toolbar, Box, Typography, Divider 
+} from '@mui/material';
 
-const Sidebar = () => {
-  const [openMenu, setOpenMenu] = useState(null);
+// Íconos oficiales de Material UI
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import MapIcon from '@mui/icons-material/Map';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import DrawIcon from '@mui/icons-material/Draw';
+import LogoutIcon from '@mui/icons-material/Logout';
 
+const Sidebar = ({ drawerWidth }) => {
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: true },
-    { icon: Map, label: 'Mapa de cobertura' },
-    { icon: FileText, label: 'Proyectos' },
-    { 
-      icon: Users, 
-      label: 'Leads y seguimiento',
-      submenu: [
-        { label: 'Leads nuevos' },
-        { label: 'En seguimiento' }
-      ]
-    },
-    { icon: ClipboardList, label: 'Planes y cotizaciones' },
-    { icon: FileText, label: 'Contratos y firmas' },
-    { icon: BarChart3, label: 'Evidencias' },
-    { icon: Calendar, label: 'Agenda de instalaciones' },
-    { icon: FileText, label: 'Reportes' },
-    { icon: BarChart3, label: 'Órdenes activas' },
-    { icon: Settings, label: 'Configuración' },
-    { icon: LogOut, label: 'Cerrar sesión' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+    { text: 'Mapa cobertura', icon: <MapIcon />, path: '/mapa-cobertura' },
+    { text: 'Prospectos', icon: <GroupAddIcon />, path: '/prospectos' },
+    { text: 'Leads y seguimientos', icon: <AssignmentIcon />, path: '/leads' },
+    { text: 'Contratos y firmas', icon: <DrawIcon />, path: '/contratos' },
   ];
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-primary to-indigo-900 text-white h-screen overflow-y-auto">
-      {/* Logo */}
-      <div className="p-6 border-b border-indigo-700">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-primary font-bold">CN</span>
-          </div>
-          <span className="font-bold text-lg">ConectaNet</span>
-        </div>
-      </div>
-
-      {/* Menu Items */}
-      <nav className="p-4 space-y-2">
-        {menuItems.map((item, index) => (
-          <div key={index}>
-            <button
-              onClick={() => setOpenMenu(openMenu === index ? null : index)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                item.active
-                  ? 'bg-white bg-opacity-20 text-white'
-                  : 'text-indigo-100 hover:bg-white hover:bg-opacity-10'
-              }`}
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          backgroundColor: 'primary.main', // Azul SOLIT
+          color: 'white',
+        },
+      }}
+    >
+      <Toolbar sx={{ display: 'flex', flexDirection: 'column', py: 2, height: 100 }}>
+        <Typography variant="h5" fontWeight="bold" letterSpacing={2}>
+          SOLIT®
+        </Typography>
+        <Typography variant="caption" sx={{ opacity: 0.7, letterSpacing: 1 }}>
+          WIRELESS & FIBRA ÓPTICA
+        </Typography>
+      </Toolbar>
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+      
+      <List sx={{ flexGrow: 1, pt: 2 }}>
+        {menuItems.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            {/* NavLink maneja la ruta, ListItemButton le da el estilo de botón Material */}
+            <ListItemButton 
+              component={NavLink} 
+              to={item.path}
+              sx={{
+                '&.active': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  borderLeft: '4px solid white',
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                }
+              }}
             >
-              <item.icon className="w-5 h-5" />
-              <span className="text-sm font-medium">{item.label}</span>
-              {item.submenu && (
-                <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${openMenu === index ? 'rotate-180' : ''}`} />
-              )}
-            </button>
-
-            {/* Submenu */}
-            {item.submenu && openMenu === index && (
-              <div className="ml-8 mt-2 space-y-2">
-                {item.submenu.map((subitem, subindex) => (
-                  <button
-                    key={subindex}
-                    className="w-full text-left text-sm text-indigo-100 hover:text-white py-2 px-2 rounded transition-colors"
-                  >
-                    {subitem.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+              <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.9rem' }} />
+            </ListItemButton>
+          </ListItem>
         ))}
-      </nav>
-    </aside>
+      </List>
+
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.08)' } }}>
+            <ListItemIcon sx={{ color: 'white', minWidth: 40 }}><LogoutIcon /></ListItemIcon>
+            <ListItemText primary="Cerrar sesión" primaryTypographyProps={{ fontSize: '0.9rem' }} />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </Drawer>
   );
 };
 
