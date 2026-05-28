@@ -1,131 +1,288 @@
-import React, { useState } from 'react';
-import { Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import {
+  Box, Paper, Typography, TextField, Button, MenuItem, 
+  Alert, Stack, Stepper, Step, StepLabel, StepContent, Divider,
+  Radio, RadioGroup, FormControlLabel, FormControl, FormLabel,
+  CircularProgress, InputAdornment, Tooltip, IconButton
+} from '@mui/material';
+import { 
+  BorderColor, Save, CheckCircle, AddPhotoAlternate, InfoOutlined,
+  MyLocation, ContentCopy, WhatsApp, PinDrop
+} from '@mui/icons-material';
+
+const pasosContrato = [
+  { label: 'Datos Personales y Contacto', description: 'INE, teléfonos y correo (Obligatorios).' },
+  { label: 'Ubicación y Plan', description: 'Dirección, referencias y paquete comercial.' },
+  { label: 'Evidencias y Cierre', description: 'Fotos del INE, Desglose de cobro y Firma.' }
+];
 
 const PlanAndQuotation = () => {
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [guardado, setGuardado] = useState(false);
+  const [errorDireccion, setErrorDireccion] = useState(false);
 
-  const plans = [
-    {
-      id: 1,
-      name: '600 Megas',
-      price: '$400000',
-      downloadSpeed: '600 Mbps',
-      uploadSpeed: '384000',
-      storage: '300 Mbps de descarga',
-      features: [
-        '300 Mbps de descarga',
-        'Router incluido',
-        'Instalación gratis'
-      ]
-    },
-    {
-      id: 2,
-      name: '500 Megas',
-      price: '$500000',
-      downloadSpeed: '500 Mbps',
-      uploadSpeed: '$6884000',
-      storage: '500 Mbps de descarga',
-      features: [
-        '500 Mbps de descarga',
-        'Router incluido',
-        'Instalación gratis'
-      ],
-      highlighted: true
-    },
-    {
-      id: 3,
-      name: '1 Giga',
-      price: '$900000',
-      downloadSpeed: '1 Giga',
-      uploadSpeed: '$8884000',
-      storage: 'Instalacion gratis',
-      features: [
-        '1 Giga de descarga',
-        'Router x 4',
-        'Instalación GRATIS'
-      ]
+  // Estados del Formulario
+  const [formData, setFormData] = useState({
+    ine: '',
+    nombre: '',
+    telefono1: '',
+    telefono2: '',
+    correo: '',
+    plan: 'familiar',
+    calleNumero: '',
+    referencias: '',
+    detallesCasa: ''
+  });
+
+  // Estados para la lógica de Ubicación
+  const [metodoUbicacion, setMetodoUbicacion] = useState('manual');
+  const [loadingGps, setLoadingGps] = useState(false);
+  const [coordenadas, setCoordenadas] = useState('');
+  const [linkCopiado, setLinkCopiado] = useState(false);
+  const [mapPin, setMapPin] = useState(null); 
+
+  // Estados para la firma
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  // --- Funciones de Firma ---
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    ctx.beginPath(); ctx.moveTo(x, y); setIsDrawing(true);
+  };
+  const draw = (e) => {
+    if (!isDrawing) return; e.preventDefault();
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    ctx.lineTo(x, y); ctx.stroke();
+  };
+  const stopDrawing = () => setIsDrawing(false);
+  const limpiarFirma = () => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // --- Funciones de Ubicación ---
+  const obtenerUbicacionGPS = () => {
+    setLoadingGps(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoordenadas(`${position.coords.latitude}, ${position.coords.longitude}`);
+          setLoadingGps(false);
+        },
+        (error) => {
+          console.error("Error obteniendo ubicación:", error);
+          alert("Por favor, permite el acceso a la ubicación en tu navegador.");
+          setLoadingGps(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      alert("Tu navegador no soporta geolocalización.");
+      setLoadingGps(false);
     }
-  ];
+  };
+
+  const copiarLinkCliente = () => {
+    navigator.clipboard.writeText("https://solitsystem.app/loc/req-98x7");
+    setLinkCopiado(true);
+    setTimeout(() => setLinkCopiado(false), 3000);
+  };
+
+  const handleMapClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Simulación de coordenadas
+    const simLat = (18.4628 - (y * 0.0005)).toFixed(6); 
+    const simLng = (-97.3928 + (x * 0.0005)).toFixed(6);
+    
+    setMapPin({ x, y });
+    setCoordenadas(`${simLat}, ${simLng}`);
+  };
+
+  // --- Control del Stepper ---
+  const handleNext = () => {
+    if (activeStep === 1 && metodoUbicacion === 'manual' && !formData.calleNumero.trim()) {
+      setErrorDireccion(true);
+      return;
+    }
+    setErrorDireccion(false);
+    setActiveStep((prev) => prev + 1);
+  };
+  const handleBack = () => setActiveStep((prev) => prev - 1);
+  const handleSubmit = (e) => { e.preventDefault(); setGuardado(true); };
+
+  const renderStepContent = (step) => {
+    switch (step) {
+      case 0: 
+        return (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <TextField label="ID del INE (16 dígitos traseros)" required fullWidth size="small" inputProps={{ maxLength: 16 }} helperText="Encuentra este número al reverso de la credencial." value={formData.ine} onChange={(e) => setFormData({...formData, ine: e.target.value.replace(/\D/g, '')})} />
+            <TextField label="Nombre Completo del Titular" required fullWidth size="small" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})} />
+            <TextField label="Teléfono Móvil 1" required fullWidth size="small" inputProps={{ maxLength: 10 }} value={formData.telefono1} onChange={(e) => setFormData({...formData, telefono1: e.target.value.replace(/\D/g, '')})} />
+            <TextField label="Teléfono Móvil 2 (Opcional)" fullWidth size="small" inputProps={{ maxLength: 10 }} value={formData.telefono2} onChange={(e) => setFormData({...formData, telefono2: e.target.value.replace(/\D/g, '')})} />
+            <TextField label="Correo Electrónico" type="email" required fullWidth size="small" value={formData.correo} onChange={(e) => setFormData({...formData, correo: e.target.value})} />
+          </Stack>
+        );
+      case 1:
+        return (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <TextField select label="Paquete Comercial" value={formData.plan} onChange={(e) => setFormData({...formData, plan: e.target.value})} fullWidth size="small">
+              <MenuItem value="basico">600 Megas ($499/mes)</MenuItem>
+              <MenuItem value="familiar">500 Megas ($649/mes)</MenuItem>
+              <MenuItem value="gamer">1 Giga ($899/mes)</MenuItem>
+            </TextField>
+
+            <Divider />
+
+            <FormControl component="fieldset">
+              <FormLabel component="legend" sx={{ fontWeight: 600, mb: 1, color: '#1e293b' }}>Método de Ubicación del Servicio</FormLabel>
+              <RadioGroup value={metodoUbicacion} onChange={(e) => setMetodoUbicacion(e.target.value)}>
+                <FormControlLabel value="manual" control={<Radio />} label="1. Dirección Manual (Calle y Número)" />
+                <FormControlLabel value="gps" control={<Radio />} label="2. GPS en Tiempo Real (Estoy en el sitio)" />
+                <FormControlLabel value="link" control={<Radio />} label="3. Link por WhatsApp (Pedir ubicación al cliente)" />
+                <FormControlLabel value="mapa" control={<Radio />} label="4. Fijar Pin en el Mapa (Zonas sin calles)" />
+              </RadioGroup>
+            </FormControl>
+
+            <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+              
+              {/* BLOQUE DINÁMICO: Obtención de Dirección/Coordenadas */}
+              {metodoUbicacion === 'manual' && (
+                <TextField label="Dirección (Calle y Número Obligatorio)" required error={errorDireccion} helperText={errorDireccion ? "Requerido" : ""} fullWidth size="small" value={formData.calleNumero} onChange={(e) => setFormData({...formData, calleNumero: e.target.value})} sx={{ mb: 2 }} />
+              )}
+
+              {metodoUbicacion === 'gps' && (
+                <Box sx={{ textAlign: 'center', py: 2, mb: 2 }}>
+                  <Button variant="contained" color="primary" startIcon={loadingGps ? <CircularProgress size={20} color="inherit" /> : <MyLocation />} onClick={obtenerUbicacionGPS} disabled={loadingGps} sx={{ mb: 2 }}>
+                    {loadingGps ? 'Calculando GPS...' : 'Obtener Ubicación Actual'}
+                  </Button>
+                  {coordenadas && <Alert severity="success" icon={<CheckCircle />}>Coordenadas: <strong>{coordenadas}</strong></Alert>}
+                </Box>
+              )}
+
+              {metodoUbicacion === 'link' && (
+                <Box sx={{ textAlign: 'center', py: 2, mb: 2 }}>
+                  <Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>Envía este link para que el cliente comparta su ubicación exacta.</Typography>
+                  <TextField fullWidth size="small" value="https://solitsystem.app/loc/req-98x7" InputProps={{ readOnly: true, endAdornment: ( <InputAdornment position="end"> <Tooltip title={linkCopiado ? "¡Copiado!" : "Copiar Link"}> <IconButton onClick={copiarLinkCliente} color={linkCopiado ? "success" : "default"}> {linkCopiado ? <CheckCircle /> : <ContentCopy />} </IconButton> </Tooltip> </InputAdornment> )}} />
+                  <Button variant="outlined" color="success" startIcon={<WhatsApp />} sx={{ mt: 2, textTransform: 'none' }}>Enviar por WhatsApp</Button>
+                </Box>
+              )}
+
+              {metodoUbicacion === 'mapa' && (
+                <Box sx={{ textAlign: 'center', py: 1, mb: 2 }}>
+                  <Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>Haz clic en el mapa para soltar un marcador de ubicación.</Typography>
+                  <Box 
+                    onClick={handleMapClick}
+                    sx={{ 
+                      width: '100%', height: 250, backgroundColor: '#e2e8f0', borderRadius: 2, 
+                      position: 'relative', overflow: 'hidden', cursor: 'crosshair',
+                      backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")' 
+                    }}
+                  >
+                    {!mapPin && (
+                      <Typography variant="caption" sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#64748b', backgroundColor: 'rgba(255,255,255,0.7)', px: 1, borderRadius: 1 }}>
+                        Clic aquí para fijar Pin
+                      </Typography>
+                    )}
+                    {mapPin && (
+                      <PinDrop color="error" sx={{ position: 'absolute', top: mapPin.y - 24, left: mapPin.x - 12, fontSize: 30 }} />
+                    )}
+                  </Box>
+                  {coordenadas && <Alert severity="success" sx={{ mt: 2 }}>Pin fijado en: <strong>{coordenadas}</strong></Alert>}
+                </Box>
+              )}
+
+              <Divider sx={{ my: 3 }} />
+
+              {/* BLOQUE FIJO: Detalles que el instalador siempre necesita */}
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#334155' }}>
+                Detalles Adicionales del Domicilio (Requerido en todos los métodos)
+              </Typography>
+              <Stack spacing={3}>
+                <TextField label="Referencias de Ubicación" multiline rows={2} fullWidth size="small" placeholder="Ej. Entre calle Juárez y Morelos" value={formData.referencias} onChange={(e) => setFormData({...formData, referencias: e.target.value})} />
+                <TextField label="Detalles de Fachada / Casa" multiline rows={2} fullWidth size="small" placeholder="Ej. Portón negro, fachada color naranja de dos pisos" value={formData.detallesCasa} onChange={(e) => setFormData({...formData, detallesCasa: e.target.value})} />
+              </Stack>
+            </Box>
+          </Stack>
+        );
+      case 2:
+        return (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Evidencias Documentales</Typography>
+            <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+              <Button variant="outlined" startIcon={<AddPhotoAlternate />} fullWidth>Frente INE</Button>
+              <Button variant="outlined" startIcon={<AddPhotoAlternate />} fullWidth>Reverso INE</Button>
+            </Stack>
+
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f8fafc', mb: 3, borderRadius: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Desglose de Cobros (A pagar hoy)</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="body2">Instalación:</Typography>
+                <Typography variant="body2">$0.00</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2">Primer mes por adelantado:</Typography>
+                <Typography variant="body2">$499.00</Typography>
+              </Box>
+              <Divider sx={{ mb: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total a Pagar:</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#16a34a' }}>$499.00</Typography>
+              </Box>
+            </Paper>
+
+            <Alert severity="info" icon={<InfoOutlined />} sx={{ mb: 3 }}>
+              **Información al Cliente:** El tiempo estimado para agendar su instalación es de **3 a 5 días hábiles**. Nos comunicaremos para confirmar la fecha exacta.
+            </Alert>
+
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <BorderColor sx={{ fontSize: 18 }} /> Firma del Cliente
+            </Typography>
+            <Box sx={{ backgroundColor: '#fff', border: '2px dashed #cbd5e1', borderRadius: 2, height: 200, touchAction: 'none' }}>
+              <canvas ref={canvasRef} width={800} height={200} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ width: '100%', height: '100%', cursor: 'crosshair' }} />
+            </Box>
+            <Button size="small" onClick={limpiarFirma} sx={{ mt: 1 }}>Limpiar Firma</Button>
+          </Box>
+        );
+      default: return 'Desconocido';
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <h2 className="text-lg font-bold text-gray-800 mb-4">Plan y cotización</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <div
-            key={plan.id}
-            onClick={() => setSelectedPlan(plan.id)}
-            className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-              selectedPlan === plan.id
-                ? 'border-primary bg-primary bg-opacity-5'
-                : 'border-gray-200'
-            } ${plan.highlighted ? 'ring-2 ring-primary' : ''}`}
-          >
-            <div className="relative">
-              {plan.highlighted && (
-                <div className="absolute -top-4 -right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold">
-                  Recomendado
-                </div>
-              )}
-              
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{plan.name}</h3>
-              <p className="text-2xl font-bold text-primary mb-4">{plan.price}</p>
-              
-              <div className="space-y-3 mb-6">
-                <p className="text-sm text-gray-600">
-                  <strong>Download:</strong> {plan.downloadSpeed}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Upload:</strong> {plan.uploadSpeed}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>Storage:</strong> {plan.storage}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                {plan.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                    <Check className="w-4 h-4 text-primary" />
-                    {feature}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              className={`w-full mt-6 py-2 rounded-lg font-medium transition-colors ${
-                selectedPlan === plan.id
-                  ? 'bg-primary text-white hover:bg-indigo-700'
-                  : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {selectedPlan === plan.id ? 'Seleccionado' : 'Seleccionar'}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Observations */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="font-semibold text-gray-800 mb-2">Observaciones / Notas</h3>
-        <textarea
-          placeholder="Agregar notas adicionales sobre la cotización..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm h-24"
-        />
-      </div>
-
-      {/* Buttons */}
-      <div className="flex gap-3 mt-6">
-        <button className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-          Atrás
-        </button>
-        <button className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors ml-auto">
-          Siguiente
-        </button>
-      </div>
-    </div>
+    <Box sx={{ maxWidth: 850, margin: 'auto', p: 1 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Contrato y Firma</Typography>
+      <Paper variant="outlined" sx={{ p: 4, borderRadius: 3 }}>
+        <Stepper activeStep={activeStep} orientation="vertical">
+          {pasosContrato.map((paso, index) => (
+            <Step key={paso.label}>
+              <StepLabel><Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paso.label}</Typography></StepLabel>
+              <StepContent>
+                {renderStepContent(index)}
+                <Box sx={{ mt: 3 }}>
+                  <Button variant="contained" onClick={index === 2 ? handleSubmit : handleNext}>{index === 2 ? 'Finalizar' : 'Siguiente'}</Button>
+                  <Button disabled={index === 0} onClick={handleBack} sx={{ ml: 1 }}>Atrás</Button>
+                </Box>
+              </StepContent>
+            </Step>
+          ))}
+        </Stepper>
+        {guardado && (
+          <Alert severity="success" sx={{ mt: 2 }}>Contrato guardado exitosamente y enviado a logística.</Alert>
+        )}
+      </Paper>
+    </Box>
   );
 };
 

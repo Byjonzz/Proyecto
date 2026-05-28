@@ -1,90 +1,157 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Button, Chip, TextField, MenuItem, Stack, Alert,
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton
+} from '@mui/material';
+import { CalendarMonth, Close } from '@mui/icons-material';
 
 const InstallationSchedule = () => {
-  const [currentWeek, setCurrentWeek] = useState(0);
+  const [ordenes, setOrdenes] = useState([
+    { id: 'C-98765', cliente: 'Juan Pérez García', plan: 'Familiar 50MB', direccion: 'Av. Reforma 402, Centro', estatus: 'Pendiente Asignar' },
+    { id: 'C-98766', cliente: 'María Elena Solís', plan: 'Ultra Gamer 100MB', direccion: 'Calle 5 Poniente 12, Las Palmas', estatus: 'Pendiente Asignar' }
+  ]);
 
-  const schedule = [
-    {
-      day: 'Lun 20',
-      date: 'Mar 21',
-      events: [
-        { time: '08:30', name: 'Luis Hernández', location: 'Jrds del Sur', color: 'bg-green-100 border-green-500' },
-        { time: '09:30', name: 'Juan Pérez', location: 'Carbajal La Aurora', color: 'bg-blue-100 border-blue-500' },
-        { time: '10:30', name: 'Carla de Vr', location: 'Carbajal La Aurora', color: 'bg-yellow-100 border-yellow-500' },
-      ]
-    },
-    { day: 'Mar 21', events: [] },
-    { day: 'Miér 22', events: [] },
-    { day: 'Jue 23', events: [] },
-    { day: 'Vie 24', events: [] },
-    { day: 'Sáb 25', events: [] },
-    { day: 'Dom 26', events: [] }
-  ];
+  const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
+  const [fecha, setFecha] = useState('');
+  const [tecnico, setTecnico] = useState('');
+  const [mensajeExito, setMensajeExito] = useState(false);
 
-  const hours = Array.from({ length: 8 }, (_, i) => `0${8 + i}:00`);
+  const handleAbrirModal = (orden) => {
+    setOrdenSeleccionada(orden);
+    setFecha(''); // Limpiamos campos
+    setTecnico('');
+    setMensajeExito(false);
+  };
+
+  const handleCerrarModal = () => {
+    setOrdenSeleccionada(null);
+  };
+
+  const handleGuardarAsignacion = (e) => {
+    e.preventDefault();
+    setOrdenes(ordenes.map(o => o.id === ordenSeleccionada.id ? { ...o, estatus: 'Asignado' } : o));
+    setMensajeExito(true);
+    handleCerrarModal(); // Cierra el modal tras guardar
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-bold text-gray-800">Agenda de instalaciones</h2>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setCurrentWeek(Math.max(0, currentWeek - 1))} className="p-2 hover:bg-gray-100 rounded">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <span className="text-sm font-semibold text-gray-700">20 de mayo - 26 de mayo, 2026</span>
-          <button onClick={() => setCurrentWeek(currentWeek + 1)} className="p-2 hover:bg-gray-100 rounded">
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div>
+        <h2 className="text-xl font-bold text-slate-800">Mesa de Control y Asignación de Logística</h2>
+        <p className="text-sm text-slate-500">Asigna fecha, hora y personal técnico a los contratos entrantes.</p>
       </div>
 
-      {/* Calendar View */}
-      <div className="border border-gray-200 rounded-lg overflow-x-auto">
-        <div className="inline-block min-w-full">
-          {/* Header */}
-          <div className="flex bg-gray-50 border-b border-gray-200">
-            <div className="w-20 p-3 border-r border-gray-200 text-xs font-semibold text-gray-700">Hora</div>
-            {schedule.map((day, index) => (
-              <div key={index} className="flex-1 p-3 text-center border-r border-gray-200 last:border-r-0 text-xs font-semibold text-gray-700 bg-gradient-to-b from-primary from-20% to-transparent text-white">
-                {day.day}
-              </div>
+      {mensajeExito && (
+        <Alert severity="success" onClose={() => setMensajeExito(false)}>
+          Instalación agendada con éxito. Notificación enviada al dispositivo del técnico asignado.
+        </Alert>
+      )}
+
+      {/* TABLA DE SEGUIMIENTO */}
+      <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 600 }}>Folio</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Cliente</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Plan contratado</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Dirección de Servicio</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Estatus</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600 }}>Acción</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {ordenes.map((orden) => (
+              <TableRow key={orden.id} hover>
+                <TableCell sx={{ fontWeight: 600 }}>{orden.id}</TableCell>
+                <TableCell>{orden.cliente}</TableCell>
+                <TableCell>{orden.plan}</TableCell>
+                <TableCell>{orden.direccion}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={orden.estatus}
+                    color={orden.estatus === 'Asignado' ? 'success' : 'warning'}
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="contained"
+                    size="small"
+                    disabled={orden.estatus === 'Asignado'}
+                    onClick={() => handleAbrirModal(orden)}
+                    sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                  >
+                    Asignar Cita
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-          </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-          {/* Time Grid */}
-          {hours.map((hour, hourIndex) => (
-            <div key={hourIndex} className="flex border-b border-gray-200 last:border-b-0">
-              <div className="w-20 p-3 border-r border-gray-200 text-xs font-semibold text-gray-700 bg-gray-50">
-                {hour}
-              </div>
-              {schedule.map((day, dayIndex) => (
-                <div key={dayIndex} className="flex-1 p-2 border-r border-gray-200 last:border-r-0 min-h-16 bg-white">
-                  {day.events
-                    .filter(event => event.time === hour)
-                    .map((event, eventIndex) => (
-                      <div
-                        key={eventIndex}
-                        className={`p-2 rounded text-xs border-l-2 ${event.color} mb-1 cursor-pointer hover:shadow-md transition-shadow`}
-                      >
-                        <p className="font-semibold text-gray-800">{event.time}</p>
-                        <p className="text-gray-700">{event.name}</p>
-                        <p className="text-gray-600 text-xs">{event.location}</p>
-                      </div>
-                    ))}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* MODAL (DIALOG) DE ASIGNACIÓN */}
+      <Dialog 
+        open={Boolean(ordenSeleccionada)} 
+        onClose={handleCerrarModal}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3 } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1d4ed8' }}>
+            Agendar Folio: {ordenSeleccionada?.id}
+          </Typography>
+          <IconButton onClick={handleCerrarModal} size="small">
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        
+        <form onSubmit={handleGuardarAsignacion}>
+          <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              Cliente: <strong>{ordenSeleccionada?.cliente}</strong><br/>
+              Dirección: {ordenSeleccionada?.direccion}
+            </Typography>
 
-      {/* Info */}
-      <div className="mt-4 text-sm text-gray-600">
-        <p><strong>Semana:</strong> 20 de mayo - 26 de mayo, 2026</p>
-        <p><strong>Instalaciones programadas:</strong> 3</p>
-      </div>
-    </div>
+            <TextField
+              label="Programar Fecha y Hora"
+              type="datetime-local"
+              fullWidth
+              required
+              InputLabelProps={{ shrink: true }}
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+            />
+            
+            <TextField
+              select
+              label="Asignar Técnico Responsable"
+              fullWidth
+              required
+              value={tecnico}
+              onChange={(e) => setTecnico(e.target.value)}
+            >
+              <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
+              <MenuItem value="t2">Téc. Carlos Soto - Zona Sur</MenuItem>
+              <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
+            </TextField>
+          </DialogContent>
+          
+          <DialogActions sx={{ p: 2, px: 3 }}>
+            <Button onClick={handleCerrarModal} color="inherit">
+              Cancelar
+            </Button>
+            <Button type="submit" variant="contained" startIcon={<CalendarMonth />}>
+              Confirmar Agenda
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+    </Box>
   );
 };
 
