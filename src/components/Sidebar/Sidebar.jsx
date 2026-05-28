@@ -87,7 +87,7 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
               </ListItemButton>
               <ListItemButton onClick={() => handleNavigate('ventas-seguimiento')} selected={isActive('ventas-seguimiento')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('ventas-seguimiento') ? '#34d399' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(16, 185, 129, 0.15)' } }}>
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assessment sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Seguimiento Leads" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+                <ListItemText primary="Seguimiento" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
             </List>
           </Collapse>
