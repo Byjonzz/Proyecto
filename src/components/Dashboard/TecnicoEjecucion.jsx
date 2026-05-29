@@ -103,7 +103,7 @@ const TecnicoEjecucion = () => {
                         {/* Diseño en Lista Vertical Fluida para Teléfonos */}
                         <Stack spacing={2.5} sx={{ backgroundColor: '#f8fafc', p: 2.5, borderRadius: 2, border: '1px solid #e2e8f0' }}>
                             <TextField
-                                label="Tipo de Servicio:"
+                                label="Tipo de Servici999o:"
                                 variant="outlined"
                                 fullWidth
                                 size="small"
