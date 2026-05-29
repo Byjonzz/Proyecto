@@ -2,32 +2,57 @@ import React, { useState } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Button, Chip, TextField, MenuItem, Stack, Alert,
-  Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Grid
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Grid, 
+  Card, Divider
 } from '@mui/material';
-import { CalendarMonth, Close, EventAvailableOutlined } from '@mui/icons-material';
+import { 
+  CalendarMonth, Close, EventAvailableOutlined, AssignmentOutlined,
+  PieChartOutlined, BarChartOutlined // <-- Corregido a PieChartOutlined
+} from '@mui/icons-material';
 
 const InstallationSchedule = () => {
   const [ordenes, setOrdenes] = useState([
     { id: 'C-98765', cliente: 'Juan Pérez García', plan: 'Familiar 50MB', direccion: 'Av. Reforma 402, Centro', estatus: 'Pendiente Asignar' },
-    { id: 'C-98766', cliente: 'María Elena Solís', plan: 'Ultra Gamer 100MB', direccion: 'Calle 5 Poniente 12, Las Palmas', estatus: 'Pendiente Asignar' }
+    { id: 'C-98766', cliente: 'María Elena Solís', plan: 'Ultra Gamer 100MB', direccion: 'Calle 5 Poniente 12, Las Palmas', estatus: 'Pendiente Asignar' },
+    { id: 'C-98767', cliente: 'Roberto Gómez', plan: 'Básico 20MB', direccion: 'Privada Juárez 14, San José', estatus: 'Pendiente Asignar' }
   ]);
 
-  // Datos del Tablero de Disponibilidad Técnica (Imagen 2)
   const disponibilidadTecnicos = [
-    { nombre: 'Téc. Ana Ramírez', m900: 'Disponible', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Disponible' },
-    { nombre: 'Téc. Carlos Soto', m900: 'Ocupado', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Ocupado' },
-    { nombre: 'Téc. Luis Pérez', m900: 'Disponible', m1130: 'Disponible', m1400: 'Ocupado', m1635: 'Disponible' }
+    { id: 't1', nombre: 'Téc. Ana Ramírez', m900: 'Disponible', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Disponible' },
+    { id: 't2', nombre: 'Téc. Carlos Soto', m900: 'Ocupado', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Ocupado' },
+    { id: 't3', nombre: 'Téc. Luis Pérez', m900: 'Disponible', m1130: 'Disponible', m1400: 'Ocupado', m1635: 'Disponible' }
+  ];
+
+  const horasDisponiblesPorTecnico = {
+    t1: ['09:00 AM', '02:00 PM', '04:30 PM'],
+    t2: ['02:00 PM'],
+    t3: ['09:00 AM', '11:30 AM', '04:30 PM']
+  };
+
+  const datosPastel = [
+    { label: 'Completadas', value: 55, color: '#10b981' },
+    { label: 'Pendientes', value: 30, color: '#f59e0b' }
+  ];
+
+  const datosBarras = [
+    { dia: 'Lun', cantidad: 12, altura: '60%' },
+    { dia: 'Mar', cantidad: 18, altura: '90%' },
+    { dia: 'Mié', cantidad: 10, altura: '50%' },
+    { dia: 'Jue', cantidad: 20, altura: '100%' },
+    { dia: 'Vie', cantidad: 14, altura: '70%' }
   ];
 
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [fecha, setFecha] = useState('');
   const [tecnico, setTecnico] = useState('');
+  const [horaSeleccionada, setHoraSeleccionada] = useState('');
   const [mensajeExito, setMensajeExito] = useState(false);
 
   const handleAbrirModal = (orden) => {
     setOrdenSeleccionada(orden);
     setFecha('');
     setTecnico('');
+    setHoraSeleccionada('');
     setMensajeExito(false);
   };
 
@@ -47,11 +72,16 @@ const InstallationSchedule = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div>
-        <h2 className="text-xl font-bold text-slate-800">Mesa de Control y Asignación de Logística</h2>
-        <p className="text-sm text-slate-500">Asigna fecha, hora y personal técnico a los contratos entrantes de Solit System.</p>
-      </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
+      
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AssignmentOutlined color="primary" /> Mesa de Control y Asignación de Logística
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Asigna citas y gestiona las agendas de instalación técnica en campo.
+        </Typography>
+      </Box>
 
       {mensajeExito && (
         <Alert severity="success" onClose={() => setMensajeExito(false)} sx={{ borderRadius: 2 }}>
@@ -59,7 +89,6 @@ const InstallationSchedule = () => {
         </Alert>
       )}
 
-      {/* TABLA DE CONTRATOS ENTRANTES */}
       <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
@@ -75,8 +104,8 @@ const InstallationSchedule = () => {
           <TableBody>
             {ordenes.map((orden) => (
               <TableRow key={orden.id} hover>
-                <TableCell sx={{ fontWeight: 600 }}>{orden.id}</TableCell>
-                <TableCell>{orden.cliente}</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{orden.id}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{orden.cliente}</TableCell>
                 <TableCell>{orden.plan}</TableCell>
                 <TableCell>{orden.direccion}</TableCell>
                 <TableCell>
@@ -104,7 +133,6 @@ const InstallationSchedule = () => {
         </Table>
       </TableContainer>
 
-      {/* NUEVO APARTADO: TABLERO VISUAL DE DISPONIBILIDAD HORARIA POR TÉCNICO (IMAGEN 2) */}
       <Box sx={{ mt: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
           <EventAvailableOutlined color="primary" />
@@ -125,8 +153,8 @@ const InstallationSchedule = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {disponibilidadTecnicos.map((tech, index) => (
-                <TableRow key={index} hover>
+              {disponibilidadTecnicos.map((tech) => (
+                <TableRow key={tech.id} hover>
                   <TableCell sx={{ fontWeight: 600, py: 1.5, color: '#334155' }}>{tech.nombre}</TableCell>
                   <TableCell align="center"><Chip label={tech.m900} size="small" sx={getChipStyle(tech.m900)} /></TableCell>
                   <TableCell align="center"><Chip label={tech.m1130} size="small" sx={getChipStyle(tech.m1130)} /></TableCell>
@@ -139,7 +167,53 @@ const InstallationSchedule = () => {
         </TableContainer>
       </Box>
 
-      {/* MODAL DE AGENDAMIENTO */}
+      <Divider sx={{ my: 1 }} />
+
+      <Box sx={{ width: '100%' }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={5}>
+            <Card variant="outlined" sx={{ borderRadius: 3, p: 3, height: '100%' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <PieChartOutlined color="primary" fontSize="small" /> Estatus Global
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
+                <Box sx={{ 
+                  width: 120, height: 120, borderRadius: '50%', 
+                  background: `conic-gradient(${datosPastel[0].color} 0% ${datosPastel[0].value}%, ${datosPastel[1].color} ${datosPastel[0].value}% 100%)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Box sx={{ width: 80, height: 80, backgroundColor: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>100%</Typography>
+                  </Box>
+                </Box>
+                <Stack spacing={1}>
+                  {datosPastel.map((item, i) => (
+                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Box sx={{ width: 12, height: 12, borderRadius: '2px', backgroundColor: item.color }} /><Typography variant="caption" sx={{ fontWeight: 600 }}>{item.label} ({item.value}%)</Typography></Box>
+                  ))}
+                </Stack>
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={7}>
+            <Card variant="outlined" sx={{ borderRadius: 3, p: 3, height: '100%' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <BarChartOutlined color="secondary" fontSize="small" /> Volumen por Día
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, borderBottom: '1px solid #e2e8f0', pb: 1 }}>
+                {datosBarras.map((barra, index) => (
+                  <Box key={index} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5, width: '15%' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: '#3b82f6' }}>{barra.cantidad}</Typography>
+                    <Box sx={{ width: '100%', maxWidth: 30, height: barra.altura, backgroundColor: '#3b82f6', borderRadius: '4px 4px 0 0' }} />
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#64748b', mt: 0.5 }}>{barra.dia}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+
       <Dialog 
         open={Boolean(ordenSeleccionada)} 
         onClose={handleCerrarModal}
@@ -151,9 +225,7 @@ const InstallationSchedule = () => {
           <Typography variant="h6" sx={{ fontWeight: 700, color: '#1d4ed8' }}>
             Agendar Folio: {ordenSeleccionada?.id}
           </Typography>
-          <IconButton onClick={handleCerrarModal} size="small">
-            <Close />
-          </IconButton>
+          <IconButton onClick={handleCerrarModal} size="small"><Close /></IconButton>
         </DialogTitle>
         
         <form onSubmit={handleGuardarAsignacion}>
@@ -164,8 +236,8 @@ const InstallationSchedule = () => {
             </Typography>
 
             <TextField
-              label="Programar Fecha y Hora"
-              type="datetime-local"
+              label="Seleccionar Día de Visita"
+              type="date"
               fullWidth
               required
               InputLabelProps={{ shrink: true }}
@@ -179,18 +251,36 @@ const InstallationSchedule = () => {
               fullWidth
               required
               value={tecnico}
-              onChange={(e) => setTecnico(e.target.value)}
+              onChange={(e) => {
+                setTecnico(e.target.value);
+                setHoraSeleccionada('');
+              }}
             >
               <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
               <MenuItem value="t2">Téc. Carlos Soto - Zona Sur</MenuItem>
               <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
             </TextField>
+
+            <TextField
+              select
+              label="Horas Disponibles del Técnico"
+              fullWidth
+              required
+              disabled={!tecnico}
+              value={horaSeleccionada}
+              onChange={(e) => setHoraSeleccionada(e.target.value)}
+              helperText={!tecnico ? "Por favor, selecciona primero un técnico para ver sus bloques libres" : ""}
+            >
+              {tecnico && horasDisponiblesPorTecnico[tecnico]?.map((hora, index) => (
+                <MenuItem key={index} value={hora}>
+                  {hora} - Bloque Libre Asignable
+                </MenuItem>
+              ))}
+            </TextField>
           </DialogContent>
           
           <DialogActions sx={{ p: 2, px: 3 }}>
-            <Button onClick={handleCerrarModal} color="inherit">
-              Cancelar
-            </Button>
+            <Button onClick={handleCerrarModal} color="inherit">Cancelar</Button>
             <Button type="submit" variant="contained" startIcon={<CalendarMonth />}>
               Confirmar Agenda
             </Button>

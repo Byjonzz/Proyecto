@@ -15,9 +15,9 @@ const TecnicoEjecucion = () => {
 
     // Lista simulada de instalaciones asignadas al técnico para la semana actual
     const [instalacionesSemana, setInstalacionesSemana] = useState([
-        { folio: 'OS-2026-0984', cliente: 'Juan Pérez García', direccion: 'Av. Reforma 402, Centro', paquete: 'Familiar - 50 Megas', fechaHora: 'Hoy - 11:30 AM', estatus: 'Pendiente', cajaNap: 'NAP-CE-04', puerto: '3', telefono: '5512345678' },
-        { folio: 'OS-2026-0985', cliente: 'María Elena Solís', direccion: 'Calle 5 Poniente 12, Las Palmas', paquete: 'Ultra Gamer - 100 Megas', fechaHora: 'Mañana - 09:00 AM', estatus: 'Pendiente', cajaNap: 'NAP-LP-01', puerto: '7', telefono: '5598765432' },
-        { folio: 'OS-2026-0986', cliente: 'Roberto Gómez Díaz', direccion: 'Privada Juárez 14, San José', paquete: 'Básico - 20 Megas', fechaHora: 'Viernes 29 - 04:30 PM', estatus: 'Pendiente', cajaNap: 'NAP-SJ-02', puerto: '1', telefono: '5544332211' }
+        { tipoDeServicio: 'Instalacion de Fibra Optica', cliente: 'Juan Pérez García', direccion: 'Av. Reforma 402, Centro', colonia: 'Reforma', fecha: '20-03-2023', estatus: 'Pendiente', entre: '21 norte y 23 norte', telefono: '5512345678' },
+        { tipoDeServicio: 'Cambio de Modem', cliente: 'María Elena Solís', direccion: 'Calle 5 Poniente 12, Las Palmas', colonia: 'Las Palmas', fecha: '21-03-2023', estatus: 'Pendiente', entre: '5 oriente y 7 oriente', telefono: '5598765432' },
+        { tipoDeServicio: 'Reparacion de Cableado', cliente: 'Roberto Gómez Díaz', direccion: 'Privada Juárez 14, San José', colonia: 'San José', fecha: '29-03-2023', estatus: 'Pendiente', entre: 'entre 2 norte y 4 norte', telefono: '5544332211' }
     ]);
 
     // Estado para la orden seleccionada que se va a instalar en el momento
@@ -89,7 +89,7 @@ const TecnicoEjecucion = () => {
     const handleFinalizarOrdenOrden = () => {
         // Marcamos la instalación como completada en nuestra lista local simulada
         setInstalacionesSemana(instalacionesSemana.map(inst =>
-            inst.folio === ordenActiva.folio ? { ...inst, estatus: 'Completado' } : inst
+            inst.tipoDeServicio === ordenActiva.tipoDeServicio ? { ...inst, estatus: 'Completado' } : inst
         ));
         setCompletado(true);
         setTimeout(() => {
@@ -128,10 +128,10 @@ const TecnicoEjecucion = () => {
                         <Table>
                             <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 600 }}>Folio</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Tipo de Servicio</TableCell>
                                     <TableCell sx={{ fontWeight: 600 }}>Cliente</TableCell>
                                     <TableCell sx={{ fontWeight: 600 }}>Dirección de Servicio</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Paquete</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Colonia</TableCell>
                                     <TableCell sx={{ fontWeight: 600 }}>Agenda programada</TableCell>
                                     <TableCell sx={{ fontWeight: 600 }}>Estatus</TableCell>
                                     <TableCell align="center" sx={{ fontWeight: 600 }}>Acción</TableCell>
@@ -139,12 +139,12 @@ const TecnicoEjecucion = () => {
                             </TableHead>
                             <TableBody>
                                 {instalacionesSemana.map((row) => (
-                                    <TableRow key={row.folio} hover>
-                                        <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{row.folio}</TableCell>
+                                    <TableRow key={row.tipoDeServicio} hover>
+                                        <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{row.tipoDeServicio}</TableCell>
                                         <TableCell sx={{ fontWeight: 600 }}>{row.cliente}</TableCell>
                                         <TableCell>{row.direccion}</TableCell>
-                                        <TableCell><Chip label={row.paquete} size="small" variant="outlined" color="primary" /></TableCell>
-                                        <TableCell sx={{ color: '#475569', fontWeight: 500 }}>{row.fechaHora}</TableCell>
+                                        <TableCell><Chip label={row.colonia} size="small" variant="outlined" color="primary" /></TableCell>
+                                        <TableCell sx={{ color: '#475569', fontWeight: 500 }}>{row.fecha}</TableCell>
                                         <TableCell>
                                             <Chip
                                                 label={row.estatus}
@@ -174,8 +174,8 @@ const TecnicoEjecucion = () => {
             )}
 
             {/* =========================================================
-          VISTA 2: FORMULARIO DIGITAL DE LA ORDEN DE SERVICIO
-          ========================================================= */}
+            VISTA 2: FORMULARIO DIGITAL DE LA ORDEN DE SERVICIO
+            ========================================================= */}
             {vistaActual === 'formulario' && ordenActiva && (
                 <Box sx={{ maxWidth: 700, margin: 'auto' }}>
                     <Button
@@ -204,44 +204,14 @@ const TecnicoEjecucion = () => {
                                 </Box>
 
                                 <Stack spacing={2.5} sx={{ backgroundColor: '#f8fafc', p: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', mb: 4 }}>
-                                    <TextField label="No. de Folio / Orden" variant="outlined" fullWidth size="small" value={ordenActiva.folio} InputProps={{ readOnly: true }} />
-                                    <TextField label="Agenda de Visita" variant="outlined" fullWidth size="small" value={ordenActiva.fechaHora} InputProps={{ readOnly: true }} />
+                                    <TextField label="Tipo de Servicio" variant="outlined" fullWidth size="small" value={ordenActiva.tipoDeServicio} InputProps={{ readOnly: true }} />
+                                    <TextField label="Fecha" variant="outlined" fullWidth size="small" value={ordenActiva.fecha} InputProps={{ readOnly: true }} />
                                     <TextField label="Nombre Completo del Cliente" variant="outlined" fullWidth size="small" value={ordenActiva.cliente} InputProps={{ readOnly: true }} />
-                                    <TextField label="Dirección / Domicilio Completo" variant="outlined" fullWidth size="small" multiline rows={2} value={ordenActiva.direccion} InputProps={{ readOnly: true }} />
                                     <TextField label="Teléfono de Contacto" variant="outlined" fullWidth size="small" value={ordenActiva.telefono} InputProps={{ readOnly: true }} />
-                                    <TextField label="Paquete / Servicio Contratado" variant="outlined" fullWidth size="small" value={ordenActiva.paquete} InputProps={{ readOnly: true }} />
-                                    <Stack direction="row" spacing={2}>
-                                        <TextField label="Caja NAP Asignada" variant="outlined" fullWidth size="small" value={ordenActiva.cajaNap} InputProps={{ readOnly: true }} />
-                                        <TextField label="Puerto" variant="outlined" fullWidth size="small" value={ordenActiva.puerto} InputProps={{ readOnly: true }} />
-                                    </Stack>
+                                    <TextField label="Dirección" variant="outlined" fullWidth size="small" multiline rows={2} value={ordenActiva.direccion} InputProps={{ readOnly: true }} />
+                                    <TextField label="Colonia" variant="outlined" fullWidth size="small" value={ordenActiva.colonia} InputProps={{ readOnly: true }} />
+                                    <TextField label="Entre Calles" variant="outlined" fullWidth size="small" value={ordenActiva.entre} InputProps={{ readOnly: true }} />
                                 </Stack>
-
-                                <Divider sx={{ my: 3 }} />
-
-                                {/* ESPECIFICACIONES TÉCNICAS */}
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <ConstructionOutlined color="secondary" />
-                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                                        Especificaciones Técnicas e Inventario de Red
-                                    </Typography>
-                                </Box>
-
-                                <Grid container spacing={2.5} sx={{ mb: 4 }}>
-                                    <Grid item xs={12}>
-                                        <TextField label="Número de Serie de la ONT / Módem" required fullWidth size="small" placeholder="Ej. SSNK12345678" value={datosTecnicos.serialOnt} onChange={(e) => setDatosTecnicos({ ...datosTecnicos, serialOnt: e.target.value })} />
-                                    </Grid>
-                                    <Grid item xs={12}>
-                                        <TextField label="Número de Serie del Router Adicional (Opcional)" fullWidth size="small" placeholder="Ej. RT-987654321" value={datosTecnicos.serialRouter} onChange={(e) => setDatosTecnicos({ ...datosTecnicos, serialRouter: e.target.value })} />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField label="Fibra Óptica Utilizada (Metros)" required type="number" fullWidth size="small" placeholder="Ej. 120" value={datosTecnicos.metrajeFibra} onChange={(e) => setDatosTecnicos({ ...datosTecnicos, metrajeFibra: e.target.value })} />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField label="Potencia de Señal Medida (dBm)" required fullWidth size="small" placeholder="Ej. -22.5" value={datosTecnicos.potenciaDbm} onChange={(e) => setDatosTecnicos({ ...datosTecnicos, potenciaDbm: e.target.value })} />
-                                    </Grid>
-                                </Grid>
-
-                                <Divider sx={{ my: 3 }} />
 
                                 {/* CHECKLIST */}
                                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2 }}>Protocolo Técnico Obligatorio</Typography>
