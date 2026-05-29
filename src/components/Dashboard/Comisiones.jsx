@@ -9,7 +9,6 @@ import {
     WarningAmberOutlined, PersonSearchOutlined, AccountBalanceWalletOutlined
 } from '@mui/icons-material';
 
-// Precios oficiales de los paquetes (como en Ventas)
 const PRECIOS = {
     basico: 499,
     familiar: 649,
@@ -17,32 +16,30 @@ const PRECIOS = {
 };
 
 const Comisiones = () => {
-    // Lógica de Configuración Semanal
     const [configuracion, setConfiguracion] = useState({
-        modalidad: 'solo_metas', // solo_metas | base_mas_comision | comision_pura
+        modalidad: 'solo_metas',
         salarioBase: 1000,
-        comisionPlana: 50 // Solo se usa si eligen "comision pura"
+        comisionPlana: 50
     });
 
-    // Datos del Equipo de Canvaceadores (Desglose por tipo de paquete semanal)
     const [equipo, setEquipo] = useState([
         {
             id: 1, nombre: 'Carlos Ruiz', zonaAsignada: 'Polígono Norte',
-            paquetes: { basico: 2, familiar: 4, gamer: 1 }, // Total: 7 ventas
+            paquetes: { basico: 2, familiar: 4, gamer: 1 },
             horasApp: 42,
-            contratosDiarios: [1, 2, 0, 2, 1, 1], // L a S
+            contratosDiarios: [1, 2, 0, 2, 1, 1],
             estatus: 'Excelente'
         },
         {
             id: 2, nombre: 'Ana Gómez', zonaAsignada: 'Polígono Sur',
-            paquetes: { basico: 2, familiar: 0, gamer: 0 }, // Total: 2 ventas
+            paquetes: { basico: 2, familiar: 0, gamer: 0 },
             horasApp: 30,
             contratosDiarios: [1, 0, 1, 0, 0, 0],
             estatus: 'Bajo Rendimiento'
         },
         {
             id: 3, nombre: 'Luis Pérez', zonaAsignada: 'Polígono Centro',
-            paquetes: { basico: 2, familiar: 3, gamer: 0 }, // Total: 5 ventas
+            paquetes: { basico: 2, familiar: 3, gamer: 0 },
             horasApp: 38,
             contratosDiarios: [1, 1, 1, 0, 2, 0],
             estatus: 'Regular'
@@ -53,33 +50,26 @@ const Comisiones = () => {
         setConfiguracion({ ...configuracion, [prop]: value });
     };
 
-    // --- MOTOR DE CÁLCULO DE COMISIONES (Reglas de Negocio Semanales) ---
     const calcularRendimientoAgente = (paquetes) => {
-        // 1. Calcular total de ventas y volumen de dinero (cada paquete cuesta diferente)
         const totalVentas = paquetes.basico + paquetes.familiar + paquetes.gamer;
         const volumenDinero = (paquetes.basico * PRECIOS.basico) + (paquetes.familiar * PRECIOS.familiar) + (paquetes.gamer * PRECIOS.gamer);
 
-        // 2. Definir el nivel de comisión según la regla: 1-3 (30%), 4-5 (60%), 6-10 (100%)
         let porcentajeNivel = 0;
         if (totalVentas >= 6) {
-            porcentajeNivel = 1.00; // 100%
+            porcentajeNivel = 1.00;
         } else if (totalVentas >= 4) {
-            porcentajeNivel = 0.60; // 60%
+            porcentajeNivel = 0.60;
         } else if (totalVentas >= 1) {
-            porcentajeNivel = 0.30; // 30%
+            porcentajeNivel = 0.30;
         }
 
-        // 3. Calcular el pago según la modalidad seleccionada
         let pagoCalculado = 0;
 
         if (configuracion.modalidad === 'solo_metas') {
             pagoCalculado = volumenDinero * porcentajeNivel;
-
         } else if (configuracion.modalidad === 'base_mas_comision') {
             pagoCalculado = configuracion.salarioBase + (volumenDinero * porcentajeNivel);
-
         } else if (configuracion.modalidad === 'comision_pura') {
-            // Si el coordinador decide un % fijo parejo para todos sin importar metas
             pagoCalculado = volumenDinero * (configuracion.comisionPlana / 100);
         }
 
@@ -106,7 +96,6 @@ const Comisiones = () => {
 
             <Grid container spacing={3}>
 
-                {/* PANEL DE CONFIGURACIÓN DE ESQUEMA */}
                 <Grid item xs={12} lg={4}>
                     <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
                         <CardContent>
@@ -128,7 +117,6 @@ const Comisiones = () => {
                                     <MenuItem value="comision_pura">Comisión Pura (Fija %)</MenuItem>
                                 </TextField>
 
-                                {/* Mostrar tabla de reglas activa si usan el sistema escalonado */}
                                 {(configuracion.modalidad === 'solo_metas' || configuracion.modalidad === 'base_mas_comision') && (
                                     <Box sx={{ backgroundColor: '#f0fdf4', p: 2, borderRadius: 2, border: '1px solid #bbf7d0' }}>
                                         <Typography variant="caption" sx={{ fontWeight: 700, color: '#166534', display: 'block', mb: 1 }}>
@@ -170,7 +158,6 @@ const Comisiones = () => {
                     </Card>
                 </Grid>
 
-                {/* TABLA DE DESEMPEÑO DEL EQUIPO */}
                 <Grid item xs={12} lg={8}>
                     <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
                         <CardContent>
@@ -251,7 +238,6 @@ const Comisiones = () => {
                     </Card>
                 </Grid>
 
-                {/* GRÁFICA LOGÍSTICA: CONTRATOS POR DÍA */}
                 <Grid item xs={12}>
                     <Card variant="outlined" sx={{ borderRadius: 3 }}>
                         <CardContent>
@@ -266,11 +252,10 @@ const Comisiones = () => {
                                             <Typography variant="caption" sx={{ fontWeight: 700, color: '#334155', mb: 1, display: 'block' }}>
                                                 {agente.nombre}
                                             </Typography>
-                                            {/* Gráfica de barras CSS nativa */}
                                             <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 80, borderBottom: '1px solid #cbd5e1', pb: 0.5 }}>
                                                 {['L', 'M', 'M', 'J', 'V', 'S'].map((dia, index) => {
                                                     const cantidad = agente.contratosDiarios[index];
-                                                    const altura = cantidad * 20; // Factor visual responsivo
+                                                    const altura = cantidad * 20;
                                                     return (
                                                         <Box key={index} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '14%' }}>
                                                             <Typography variant="caption" sx={{ fontSize: '0.6rem', color: '#64748b' }}>{cantidad}</Typography>
