@@ -7,28 +7,38 @@ import {
 } from '@mui/material';
 import { 
   CalendarMonth, Close, EventAvailableOutlined, AssignmentOutlined,
-  PieChartOutlined, BarChartOutlined // <-- Corregido a PieChartOutlined
+  PieChartOutlined, BarChartOutlined
 } from '@mui/icons-material';
 
 const InstallationSchedule = () => {
+  // Lista de contratos listos desde Ventas
   const [ordenes, setOrdenes] = useState([
     { id: 'C-98765', cliente: 'Juan Pérez García', plan: 'Familiar 50MB', direccion: 'Av. Reforma 402, Centro', estatus: 'Pendiente Asignar' },
     { id: 'C-98766', cliente: 'María Elena Solís', plan: 'Ultra Gamer 100MB', direccion: 'Calle 5 Poniente 12, Las Palmas', estatus: 'Pendiente Asignar' },
     { id: 'C-98767', cliente: 'Roberto Gómez', plan: 'Básico 20MB', direccion: 'Privada Juárez 14, San José', estatus: 'Pendiente Asignar' }
   ]);
 
-  const disponibilidadTecnicos = [
+  // SOLUCIÓN: Convertimos el tablero en un estado para que sea dinámico
+  const [tecnicos, setTecnicos] = useState([
     { id: 't1', nombre: 'Téc. Ana Ramírez', m900: 'Disponible', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Disponible' },
     { id: 't2', nombre: 'Téc. Carlos Soto', m900: 'Ocupado', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Ocupado' },
     { id: 't3', nombre: 'Téc. Luis Pérez', m900: 'Disponible', m1130: 'Disponible', m1400: 'Ocupado', m1635: 'Disponible' }
-  ];
+  ]);
 
-  const horasDisponiblesPorTecnico = {
-    t1: ['09:00 AM', '02:00 PM', '04:30 PM'],
-    t2: ['02:00 PM'],
-    t3: ['09:00 AM', '11:30 AM', '04:30 PM']
+  // FUNCIÓN INTELIGENTE: Calcula las horas disponibles leyendo el tablero en tiempo real
+  const obtenerHorasDisponibles = (idTecnico) => {
+    const tech = tecnicos.find(t => t.id === idTecnico);
+    if (!tech) return [];
+    
+    const horasLibres = [];
+    if (tech.m900 === 'Disponible') horasLibres.push('09:00 AM');
+    if (tech.m1130 === 'Disponible') horasLibres.push('11:30 AM');
+    if (tech.m1400 === 'Disponible') horasLibres.push('02:00 PM');
+    if (tech.m1635 === 'Disponible') horasLibres.push('04:30 PM');
+    return horasLibres;
   };
 
+  // Datos fijos para las gráficas visuales inferiores
   const datosPastel = [
     { label: 'Completadas', value: 55, color: '#10b981' },
     { label: 'Pendientes', value: 30, color: '#f59e0b' }
@@ -42,6 +52,7 @@ const InstallationSchedule = () => {
     { dia: 'Vie', cantidad: 14, altura: '70%' }
   ];
 
+  // Estados de Control de Modal y Formulario
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [fecha, setFecha] = useState('');
   const [tecnico, setTecnico] = useState('');
@@ -60,7 +71,23 @@ const InstallationSchedule = () => {
 
   const handleGuardarAsignacion = (e) => {
     e.preventDefault();
+    
+    // 1. Cambiar estatus de la orden/contrato de instalación
     setOrdenes(ordenes.map(o => o.id === ordenSeleccionada.id ? { ...o, estatus: 'Asignado' } : o));
+    
+    // 2. SOLUCIÓN: Buscar al técnico asignado y cambiar su celda horaria a "Ocupado"
+    setTecnicos(tecnicos.map(t => {
+      if (t.id === tecnico) {
+        const clonTecnico = { ...t };
+        if (horaSeleccionada === '09:00 AM') clonTecnico.m900 = 'Ocupado';
+        if (horaSeleccionada === '11:30 AM') clonTecnico.m1130 = 'Ocupado';
+        if (horaSeleccionada === '02:00 PM') clonTecnico.m1400 = 'Ocupado';
+        if (horaSeleccionada === '04:30 PM') clonTecnico.m1635 = 'Ocupado';
+        return clonTecnico;
+      }
+      return t;
+    }));
+
     setMensajeExito(true);
     handleCerrarModal();
   };
@@ -74,6 +101,7 @@ const InstallationSchedule = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
       
+      {/* CABECERA */}
       <Box>
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
           <AssignmentOutlined color="primary" /> Mesa de Control y Asignación de Logística
@@ -85,10 +113,11 @@ const InstallationSchedule = () => {
 
       {mensajeExito && (
         <Alert severity="success" onClose={() => setMensajeExito(false)} sx={{ borderRadius: 2 }}>
-          Instalación agendada con éxito. Notificación enviada al dispositivo del técnico asignado.
+          Instalación agendada con éxito. El tablero se ha actualizado y se notificó al técnico.
         </Alert>
       )}
 
+      {/* TABLA DE CONTRATOS ENTRANTES */}
       <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
@@ -133,6 +162,7 @@ const InstallationSchedule = () => {
         </Table>
       </TableContainer>
 
+      {/* TABLERO DE DISPONIBILIDAD TÉCNICA */}
       <Box sx={{ mt: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
           <EventAvailableOutlined color="primary" />
@@ -153,7 +183,7 @@ const InstallationSchedule = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {disponibilidadTecnicos.map((tech) => (
+              {tecnicos.map((tech) => (
                 <TableRow key={tech.id} hover>
                   <TableCell sx={{ fontWeight: 600, py: 1.5, color: '#334155' }}>{tech.nombre}</TableCell>
                   <TableCell align="center"><Chip label={tech.m900} size="small" sx={getChipStyle(tech.m900)} /></TableCell>
@@ -169,6 +199,7 @@ const InstallationSchedule = () => {
 
       <Divider sx={{ my: 1 }} />
 
+      {/* REPORTE GRÁFICO INFERIOR */}
       <Box sx={{ width: '100%' }}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={5}>
@@ -214,6 +245,7 @@ const InstallationSchedule = () => {
         </Grid>
       </Box>
 
+      {/* MODAL DE AGENDAMIENTO */}
       <Dialog 
         open={Boolean(ordenSeleccionada)} 
         onClose={handleCerrarModal}
@@ -253,7 +285,7 @@ const InstallationSchedule = () => {
               value={tecnico}
               onChange={(e) => {
                 setTecnico(e.target.value);
-                setHoraSeleccionada('');
+                setHoraSeleccionada(''); // Limpia la hora si cambias de técnico
               }}
             >
               <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
@@ -261,6 +293,7 @@ const InstallationSchedule = () => {
               <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
             </TextField>
 
+            {/* LAS HORAS AHORA SE FILTRAN AUTOMÁTICAMENTE */}
             <TextField
               select
               label="Horas Disponibles del Técnico"
@@ -271,7 +304,7 @@ const InstallationSchedule = () => {
               onChange={(e) => setHoraSeleccionada(e.target.value)}
               helperText={!tecnico ? "Por favor, selecciona primero un técnico para ver sus bloques libres" : ""}
             >
-              {tecnico && horasDisponiblesPorTecnico[tecnico]?.map((hora, index) => (
+              {tecnico && obtenerHorasDisponibles(tecnico).map((hora, index) => (
                 <MenuItem key={index} value={hora}>
                   {hora} - Bloque Libre Asignable
                 </MenuItem>
