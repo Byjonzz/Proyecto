@@ -125,6 +125,10 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Build sx={{ fontSize: 18 }} /></ListItemIcon>
                 <ListItemText primary="Ejecución en Campo" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
+              <ListItemButton onClick={() => handleNavigate('tecnico-ejecucion')} selected={isActive('tecnico-ejecucion')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('tecnico-ejecucion') ? '#a78bfa' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(167, 139, 250, 0.15)' } }}>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Build sx={{ fontSize: 18 }} /></ListItemIcon>
+                <ListItemText primary="Instalaciones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+              </ListItemButton>
             </List>
           </Collapse>
         </ListItem>
