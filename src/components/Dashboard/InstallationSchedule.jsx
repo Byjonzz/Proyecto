@@ -268,7 +268,6 @@ const InstallationSchedule = () => {
             </Typography>
 
             <TextField
-              label="Seleccionar Día de Visita"
               type="date"
               fullWidth
               required
