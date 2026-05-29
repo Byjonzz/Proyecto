@@ -13,7 +13,7 @@ const drawerWidth = 260;
 
 const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }) => {
   const [openMenus, setOpenMenus] = useState({
-    canvaceo: true, ventas: false, logistica: false, tecnico: false
+    canvaceo: true, ventas: false, logistica: false, tecnico: false, Administracion_Ventas: false
   });
 
   const handleToggle = (menu) => {
@@ -124,6 +124,24 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
               <ListItemButton onClick={() => handleNavigate('tecnico-ejecucion')} selected={isActive('tecnico-ejecucion')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('tecnico-ejecucion') ? '#a78bfa' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(167, 139, 250, 0.15)' } }}>
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Build sx={{ fontSize: 18 }} /></ListItemIcon>
                 <ListItemText primary="Ejecución en Campo" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+              </ListItemButton>
+            </List>
+          </Collapse>
+        </ListItem>
+
+       {/* Administracion Ventas */}
+        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
+          <ListItemButton onClick={() => handleToggle('Administracion_Ventas')} sx={{ borderRadius: '8px', color: openMenus.Administracion_Ventas ? '#fbbf24' : '#cbd5e1' }}>
+            <ListItemIcon sx={{ color: openMenus.Administracion_Ventas ? '#fbbf24' : '#94a3b8', minWidth: 40 }}><LocalShippingOutlined /></ListItemIcon>
+            <ListItemText primary="Administración de Ventas" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
+            {openMenus.Administracion_Ventas ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={openMenus.Administracion_Ventas} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
+              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
+              <ListItemButton onClick={() => handleNavigate('logistica-agenda')} selected={isActive('logistica-agenda')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('logistica-agenda') ? '#fbbf24' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(245, 158, 11, 0.15)' } }}>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assignment sx={{ fontSize: 18 }} /></ListItemIcon>
+                <ListItemText primary="Comisiones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
             </List>
           </Collapse>
