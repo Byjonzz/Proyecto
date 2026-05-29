@@ -6,14 +6,20 @@ import {
 import {
   MapOutlined, MonetizationOnOutlined, LocalShippingOutlined,
   EngineeringOutlined, ExpandLess, ExpandMore, Layers, Map,
-  PersonAdd, DirectionsRun, Assignment, Assessment, Build
+  PersonAdd, DirectionsRun, Assignment, Assessment, Build,
+  ManageAccountsOutlined, AttachMoney // <-- Agregamos estos íconos
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
 
 const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }) => {
+  // 1. Agregamos el estado para el nuevo menú 'adminVentas'
   const [openMenus, setOpenMenus] = useState({
-    canvaceo: true, ventas: false, logistica: false, tecnico: false, Administracion_Ventas: false
+    canvaceo: true, 
+    ventas: false, 
+    logistica: false, 
+    tecnico: false,
+    adminVentas: false // <-- Nuevo Módulo
   });
 
   const handleToggle = (menu) => {
@@ -22,7 +28,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
 
   const isActive = (viewName) => currentView === viewName;
 
-  // Nueva función para navegar y cerrar el menú automáticamente en celular
   const handleNavigate = (view) => {
     setCurrentView(view);
     if (mobileOpen) {
@@ -30,7 +35,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
     }
   };
 
-  // Extraemos el contenido para no repetir código en los dos Drawers
   const drawerContent = (
     <>
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, backgroundColor: '#0f172a' }}>
@@ -87,7 +91,7 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
               </ListItemButton>
               <ListItemButton onClick={() => handleNavigate('ventas-seguimiento')} selected={isActive('ventas-seguimiento')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('ventas-seguimiento') ? '#34d399' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(16, 185, 129, 0.15)' } }}>
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assessment sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Seguimiento" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+                <ListItemText primary="Seguimiento Leads" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
             </List>
           </Collapse>
@@ -129,36 +133,37 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
           </Collapse>
         </ListItem>
 
-       {/* Administracion Ventas */}
+        {/* ==============================================
+            NUEVO: ADMINISTRACIÓN VENTAS (INDIVIDUAL)
+            ============================================== */}
         <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('Administracion_Ventas')} sx={{ borderRadius: '8px', color: openMenus.Administracion_Ventas ? '#fbbf24' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.Administracion_Ventas ? '#fbbf24' : '#94a3b8', minWidth: 40 }}><LocalShippingOutlined /></ListItemIcon>
-            <ListItemText primary="Administración de Ventas" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.Administracion_Ventas ? <ExpandLess /> : <ExpandMore />}
+          <ListItemButton onClick={() => handleToggle('adminVentas')} sx={{ borderRadius: '8px', color: openMenus.adminVentas ? '#f43f5e' : '#cbd5e1' }}>
+            <ListItemIcon sx={{ color: openMenus.adminVentas ? '#f43f5e' : '#94a3b8', minWidth: 40 }}><ManageAccountsOutlined /></ListItemIcon>
+            <ListItemText primary="Administración Ventas" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
+            {openMenus.adminVentas ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
-          <Collapse in={openMenus.Administracion_Ventas} timeout="auto" unmountOnExit>
+          <Collapse in={openMenus.adminVentas} timeout="auto" unmountOnExit>
             <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
               <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-              <ListItemButton onClick={() => handleNavigate('logistica-agenda')} selected={isActive('logistica-agenda')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('logistica-agenda') ? '#fbbf24' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(245, 158, 11, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assignment sx={{ fontSize: 18 }} /></ListItemIcon>
+              <ListItemButton onClick={() => handleNavigate('admin-comisiones')} selected={isActive('admin-comisiones')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-comisiones') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AttachMoney sx={{ fontSize: 18 }} /></ListItemIcon>
                 <ListItemText primary="Comisiones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
             </List>
           </Collapse>
         </ListItem>
+
       </List>
     </>
   );
 
   return (
     <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
-      
-      {/* 1. VERSIÓN MÓVIL (Temporal, oculta la pantalla al abrirse) */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }} // Mejora el rendimiento en celulares
+        ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
           [`& .MuiDrawer-paper`]: { boxSizing: 'border-box', width: drawerWidth, backgroundColor: '#1e293b', color: '#f8fafc' },
@@ -167,7 +172,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
         {drawerContent}
       </Drawer>
 
-      {/* 2. VERSIÓN COMPUTADORA (Permanente y fija) */}
       <Drawer
         variant="permanent"
         sx={{

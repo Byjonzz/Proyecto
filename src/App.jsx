@@ -16,11 +16,14 @@ import LeadsFollowUp from './components/Dashboard/LeadsFollowUp';
 import InstallationSchedule from './components/Dashboard/InstallationSchedule';
 import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
 
+// NUEVO: Minimódulo de Administración Ventas
+import Comisiones from './components/Dashboard/Comisiones';
+
 const drawerWidth = 260;
 
 function App() {
   const [currentView, setCurrentView] = useState('canvaceo-dashboard');
-  const [mobileOpen, setMobileOpen] = useState(false); // Estado para menú en celular
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -28,13 +31,24 @@ function App() {
 
   const renderContent = () => {
     switch (currentView) {
+      // Bloque Canvaceo
       case 'canvaceo-dashboard': return <CoverageMap />;
       case 'canvaceo-registro': return <NewProspect />;
       case 'canvaceo-ruta': return <CanvaceadorRuta />;
+      
+      // Bloque Ventas
       case 'ventas-contrato-directo': return <PlanAndQuotation />;
       case 'ventas-seguimiento': return <LeadsFollowUp />;
+      
+      // Bloque Logística
       case 'logistica-agenda': return <InstallationSchedule />;
+      
+      // Bloque Técnico
       case 'tecnico-ejecucion': return <TecnicoEjecucion />;
+
+      // NUEVO: Bloque Administración Ventas
+      case 'admin-comisiones': return <Comisiones />;
+
       default: return <CoverageMap />;
     }
   };
@@ -43,13 +57,12 @@ function App() {
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       <CssBaseline />
       
-      {/* BARRA SUPERIOR (SOLO VISIBLE EN MÓVILES) */}
       <AppBar
         position="fixed"
         sx={{
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
-          display: { md: 'none' }, // Se oculta en computadoras
+          display: { md: 'none' },
           backgroundColor: '#0f172a'
         }}
       >
@@ -68,7 +81,6 @@ function App() {
         </Toolbar>
       </AppBar>
       
-      {/* SIDEBAR RESPONSIVO */}
       <Sidebar 
         currentView={currentView} 
         setCurrentView={setCurrentView} 
@@ -76,13 +88,12 @@ function App() {
         handleDrawerToggle={handleDrawerToggle}
       />
       
-      {/* CONTENEDOR PRINCIPAL */}
       <Box 
         component="main" 
         sx={{ 
           flexGrow: 1, 
-          p: { xs: 2, md: 4 }, // Menos padding en celular
-          mt: { xs: 7, md: 0 }, // Margen superior en celular para que la AppBar no tape el contenido
+          p: { xs: 2, md: 4 }, 
+          mt: { xs: 7, md: 0 }, 
           width: { md: `calc(100% - ${drawerWidth}px)` },
           overflowY: 'auto' 
         }}
