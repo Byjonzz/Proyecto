@@ -146,16 +146,16 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
             <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
               <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
 
+              {/* NUEVO BOTÓN: Asignación de Rutas */}
+              <ListItemButton onClick={() => handleNavigate('admin-rutas')} selected={isActive('admin-rutas')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-rutas') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><MapOutlined sx={{ fontSize: 18 }} /></ListItemIcon>
+                <ListItemText primary="Asignación de Rutas" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+              </ListItemButton>
+
               {/* Botón existente de Comisiones */}
               <ListItemButton onClick={() => handleNavigate('admin-comisiones')} selected={isActive('admin-comisiones')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-comisiones') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AttachMoney sx={{ fontSize: 18 }} /></ListItemIcon>
                 <ListItemText primary="Comisiones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-
-              {/* NUEVO BOTÓN: Asignar Rutas */}
-              <ListItemButton onClick={() => handleNavigate('admin-asignacion-rutas')} selected={isActive('admin-asignacion-rutas')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-asignacion-rutas') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AssignmentInd sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Asignar Rutas" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
 
             </List>

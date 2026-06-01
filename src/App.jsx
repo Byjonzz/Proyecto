@@ -50,6 +50,7 @@ function App() {
       // NUEVO: Bloque Administración Ventas
       case 'admin-comisiones': return <Comisiones />;
       case 'admin-asignacion-rutas': return <AsignacionRutas />;
+      case 'admin-rutas': return <AsignacionRutas />; // <--- NUEVA RUTA AGREGADA
 
       default: return <CoverageMap />;
     }
