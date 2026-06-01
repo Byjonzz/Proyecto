@@ -9,6 +9,10 @@ import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 // Solución para que los íconos por defecto de Leaflet se vean bien en React
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -199,7 +203,7 @@ const AsignacionRutas = () => {
                         <MapContainer
                             center={mapCenter}
                             zoom={14}
-                            style={{ height: '100%', width: '100%', zIndex: 1 }}
+                            style={{ height: '400px', width: '100%', zIndex: 1 }}
                         >
                             <TileLayer
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
