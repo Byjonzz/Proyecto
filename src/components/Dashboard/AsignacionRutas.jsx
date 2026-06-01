@@ -2,26 +2,26 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Card, CardContent, Typography, Grid, FormControl, InputLabel,
     Select, MenuItem, Button, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, Chip, Avatar, IconButton, Tooltip
+    TableHead, TableRow, Paper, Chip, Avatar
 } from '@mui/material';
 import { AddLocationAlt, AssignmentInd, MapOutlined, DeleteOutlined } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
+// Importamos las imágenes directamente desde node_modules para que Vite las empaquete correctamente
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Solución para que los íconos por defecto de Leaflet se vean bien en React
+// Configuramos Leaflet para usar nuestras imágenes importadas
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
 });
 
-// Componente auxiliar para mover el mapa cuando cambia la zona
+// Componente auxiliar para mover el mapa cuando cambia la zona seleccionada
 const MapUpdater = ({ center }) => {
     const map = useMap();
     useEffect(() => {
@@ -32,7 +32,7 @@ const MapUpdater = ({ center }) => {
     return null;
 };
 
-// Componente auxiliar para capturar los clics en el mapa
+// Componente auxiliar para capturar los clics del administrador en el mapa
 const MapClickHandler = ({ onMapClick }) => {
     useMapEvents({
         click(e) {
@@ -45,16 +45,16 @@ const MapClickHandler = ({ onMapClick }) => {
 const AsignacionRutas = () => {
     const [canvaceador, setCanvaceador] = useState('');
     const [zonaId, setZonaId] = useState('');
-    const [routePoints, setRoutePoints] = useState([]); // Guarda los puntos dibujados
+    const [routePoints, setRoutePoints] = useState([]);
 
-    // Datos del equipo
+    // Datos simulados del equipo (puedes conectarlo a tu backend después)
     const canvaceadores = [
         'Jonathan Alexis Alta Bravo',
         'María de los Ángeles',
         'Luis Fernando López'
     ];
 
-    // Zonas con coordenadas centrales simuladas
+    // Coordenadas base simuladas (usando Tehuacán como referencia)
     const zonasDisponibles = [
         { id: 'z1', nombre: 'Sector A - Centro', coords: [18.4628, -97.3928] },
         { id: 'z2', nombre: 'Sector B - Norte', coords: [18.4750, -97.3900] },
@@ -66,7 +66,7 @@ const AsignacionRutas = () => {
         { id: 1, canvaceador: 'Jonathan Alexis Alta Bravo', zona: 'Fraccionamiento Las Palmas', puntos: 4, estado: 'En Progreso' },
     ]);
 
-    // Centro por defecto (ej. Centro de Tehuacán)
+    // Centro por defecto al abrir la pantalla
     const defaultCenter = [18.4628, -97.3928];
     const [mapCenter, setMapCenter] = useState(defaultCenter);
 
@@ -81,7 +81,6 @@ const AsignacionRutas = () => {
     };
 
     const handleMapClick = (latlng) => {
-        // Si ya seleccionaron una zona, permitimos trazar la ruta
         if (zonaId) {
             setRoutePoints((prev) => [...prev, latlng]);
         } else {
@@ -103,12 +102,11 @@ const AsignacionRutas = () => {
                     id: rutasAsignadas.length + 1,
                     canvaceador,
                     zona: zonaInfo.nombre,
-                    puntos: routePoints.length, // Guardamos cuántos puntos de control tiene
+                    puntos: routePoints.length,
                     estado: 'Pendiente'
                 }
             ]);
 
-            // Limpiar formulario y mapa
             setCanvaceador('');
             setZonaId('');
             setRoutePoints([]);
@@ -139,11 +137,14 @@ const AsignacionRutas = () => {
                             </Typography>
 
                             <FormControl fullWidth size="small">
-                                <InputLabel>Canvaceador</InputLabel>
+                                <InputLabel id="label-canvaceador">Canvaceador</InputLabel>
                                 <Select
+                                    labelId="label-canvaceador"
+                                    id="select-canvaceador"
                                     value={canvaceador}
                                     label="Canvaceador"
                                     onChange={(e) => setCanvaceador(e.target.value)}
+                                    MenuProps={{ disableScrollLock: true }}
                                 >
                                     {canvaceadores.map((nombre, index) => (
                                         <MenuItem key={index} value={nombre}>{nombre}</MenuItem>
@@ -152,11 +153,14 @@ const AsignacionRutas = () => {
                             </FormControl>
 
                             <FormControl fullWidth size="small">
-                                <InputLabel>Zona de Cobertura</InputLabel>
+                                <InputLabel id="label-zona">Zona de Cobertura</InputLabel>
                                 <Select
+                                    labelId="label-zona"
+                                    id="select-zona"
                                     value={zonaId}
                                     label="Zona de Cobertura"
                                     onChange={handleZonaChange}
+                                    MenuProps={{ disableScrollLock: true }}
                                 >
                                     {zonasDisponibles.map((z) => (
                                         <MenuItem key={z.id} value={z.id}>{z.nombre}</MenuItem>
@@ -210,7 +214,6 @@ const AsignacionRutas = () => {
                                 attribution='&copy; OpenStreetMap contributors'
                             />
 
-                            {/* Lógica de eventos y actualización */}
                             <MapUpdater center={mapCenter} />
                             <MapClickHandler onMapClick={handleMapClick} />
 
