@@ -18,10 +18,10 @@ const PRECIOS = {
   gamer: 899
 };
 
-// ESTILO PERSONALIZADO PARA LOS INPUTS DE LAS REGLAS (Oculta flechas, ajusta ancho y color)
+// ESTILO PERSONALIZADO PARA LOS INPUTS DE LAS REGLAS
 const inputReglaStyle = {
   width: 40,
-  mx: 1, // Margen horizontal para separarlo del texto
+  mx: 1, 
   '& .MuiInput-root': {
     color: '#15803d',
     fontWeight: 800,
@@ -34,9 +34,9 @@ const inputReglaStyle = {
     textAlign: 'center',
     p: 0,
     pb: 0.5,
-    MozAppearance: 'textfield', // Oculta flechas en Firefox
+    MozAppearance: 'textfield', 
     '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-      WebkitAppearance: 'none', // Oculta flechas en Chrome/Edge/Safari
+      WebkitAppearance: 'none', 
       m: 0
     }
   }
@@ -55,26 +55,27 @@ const Comisiones = () => {
     { min: 6, porcentaje: 100 }
   ]);
 
+  // Datos del Equipo (contratosDiarios ordenados ahora de Sábado a Viernes)
   const [equipo, setEquipo] = useState([
     { 
       id: 1, nombre: 'Carlos Ruiz', zonaAsignada: 'Polígono Norte', 
       paquetes: { basico: 2, familiar: 4, gamer: 1 },
       horasApp: 42, 
-      contratosDiarios: [1, 2, 0, 2, 1, 1], 
+      contratosDiarios: [1, 1, 2, 0, 2, 1], // [Sáb, Lun, Mar, Mié, Jue, Vie]
       estatus: 'Excelente' 
     },
     { 
       id: 2, nombre: 'Ana Gómez', zonaAsignada: 'Polígono Sur', 
       paquetes: { basico: 2, familiar: 0, gamer: 0 },
       horasApp: 30, 
-      contratosDiarios: [1, 0, 1, 0, 0, 0], 
+      contratosDiarios: [0, 1, 0, 1, 0, 0], 
       estatus: 'Bajo Rendimiento' 
     },
     { 
       id: 3, nombre: 'Luis Pérez', zonaAsignada: 'Polígono Centro', 
       paquetes: { basico: 2, familiar: 3, gamer: 0 },
       horasApp: 38, 
-      contratosDiarios: [1, 1, 1, 0, 2, 0], 
+      contratosDiarios: [0, 1, 1, 1, 0, 2], 
       estatus: 'Regular' 
     }
   ]);
@@ -334,7 +335,8 @@ const Comisiones = () => {
                       </Box>
                       
                       <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 80, borderBottom: '1px solid #cbd5e1', pb: 0.5 }}>
-                        {['L', 'M', 'M', 'J', 'V', 'S'].map((dia, index) => {
+                        {/* DÍAS ORDENADOS DE SÁBADO A VIERNES */}
+                        {['S', 'L', 'M', 'M', 'J', 'V'].map((dia, index) => {
                           const cantidad = agente.contratosDiarios[index];
                           const maxVentas = Math.max(...agente.contratosDiarios, 1);
                           const alturaPx = (cantidad / maxVentas) * 55;
@@ -370,11 +372,12 @@ const Comisiones = () => {
           {agenteGrafica && (
             <Box>
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 4, textAlign: 'center' }}>
-                Distribución de contratos generados de Lunes a Sábado.
+                Distribución de contratos generados de Sábado a Viernes.
               </Typography>
 
               <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: 280, borderBottom: '2px solid #cbd5e1', pb: 1, px: { xs: 1, sm: 4 } }}>
-                {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((dia, index) => {
+                {/* DÍAS ORDENADOS DE SÁBADO A VIERNES */}
+                {['Sábado', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((dia, index) => {
                   const cantidad = agenteGrafica.contratosDiarios[index];
                   const maxVentas = Math.max(...agenteGrafica.contratosDiarios, 1);
                   const alturaPorcentaje = (cantidad / maxVentas) * 100;
