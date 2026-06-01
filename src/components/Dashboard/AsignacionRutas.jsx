@@ -4,7 +4,7 @@ import {
     Select, MenuItem, Button, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, Chip, Avatar, IconButton, Tooltip
 } from '@mui/material';
-import { AddLocationAlt, AssignmentInd, MapOutlined, DeleteOutline } from '@mui/icons-material';
+import { AddLocationAlt, AssignmentInd, MapOutlined, DeleteOutlined } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -169,7 +169,7 @@ const AsignacionRutas = () => {
                                     <Button
                                         size="small"
                                         color="error"
-                                        startIcon={<DeleteOutline />}
+                                        startIcon={<DeleteOutlined />}
                                         onClick={handleClearRoute}
                                         sx={{ mt: 1, textTransform: 'none' }}
                                     >
