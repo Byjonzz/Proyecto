@@ -18,6 +18,7 @@ import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
 
 // NUEVO: Minimódulo de Administración Ventas
 import Comisiones from './components/Dashboard/Comisiones';
+import AsignacionRutas from './components/Dashboard/AsignacionRutas';
 
 const drawerWidth = 260;
 
@@ -48,6 +49,7 @@ function App() {
 
       // NUEVO: Bloque Administración Ventas
       case 'admin-comisiones': return <Comisiones />;
+      case 'admin-asignacion-rutas': return <AsignacionRutas />;
 
       default: return <CoverageMap />;
     }

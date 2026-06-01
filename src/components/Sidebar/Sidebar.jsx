@@ -7,7 +7,7 @@ import {
   MapOutlined, MonetizationOnOutlined, LocalShippingOutlined,
   EngineeringOutlined, ExpandLess, ExpandMore, Layers, Map,
   PersonAdd, DirectionsRun, Assignment, Assessment, Build,
-  ManageAccountsOutlined, AttachMoney // <-- Agregamos estos íconos
+  ManageAccountsOutlined, AttachMoney, AssignmentInd // <-- Agregamos estos íconos
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
@@ -15,11 +15,11 @@ const drawerWidth = 260;
 const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }) => {
   // 1. Agregamos el estado para el nuevo menú 'adminVentas'
   const [openMenus, setOpenMenus] = useState({
-    canvaceo: true, 
-    ventas: false, 
-    logistica: false, 
+    canvaceo: true,
+    ventas: false,
+    logistica: false,
     tecnico: false,
-    adminVentas: false // <-- Nuevo Módulo
+    adminVentas: false
   });
 
   const handleToggle = (menu) => {
@@ -48,7 +48,7 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
       <Divider sx={{ borderColor: '#334155' }} />
 
       <List sx={{ px: 1.5, py: 2, flexGrow: 1 }} component="nav">
-        
+
         {/* CANVACEO */}
         <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
           <ListItemButton onClick={() => handleToggle('canvaceo')} sx={{ borderRadius: '8px', color: openMenus.canvaceo ? '#60a5fa' : '#cbd5e1' }}>
@@ -145,10 +145,19 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
           <Collapse in={openMenus.adminVentas} timeout="auto" unmountOnExit>
             <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
               <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
+
+              {/* Botón existente de Comisiones */}
               <ListItemButton onClick={() => handleNavigate('admin-comisiones')} selected={isActive('admin-comisiones')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-comisiones') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AttachMoney sx={{ fontSize: 18 }} /></ListItemIcon>
                 <ListItemText primary="Comisiones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
+
+              {/* NUEVO BOTÓN: Asignar Rutas */}
+              <ListItemButton onClick={() => handleNavigate('admin-asignacion-rutas')} selected={isActive('admin-asignacion-rutas')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-asignacion-rutas') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AssignmentInd sx={{ fontSize: 18 }} /></ListItemIcon>
+                <ListItemText primary="Asignar Rutas" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+              </ListItemButton>
+
             </List>
           </Collapse>
         </ListItem>
