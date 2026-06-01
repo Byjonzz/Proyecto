@@ -8,20 +8,15 @@ import { AddLocationAlt, AssignmentInd, MapOutlined, DeleteOutlined } from '@mui
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-// Importamos las imágenes directamente desde node_modules para que Vite las empaquete correctamente
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// Configuramos Leaflet para usar nuestras imágenes importadas
+// FIX: Usamos los íconos oficiales desde un CDN seguro para evitar que Vite los rompa
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: markerIcon2x,
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Componente auxiliar para mover el mapa cuando cambia la zona seleccionada
+// Componente para mover el mapa cuando cambia la zona
 const MapUpdater = ({ center }) => {
     const map = useMap();
     useEffect(() => {
@@ -32,7 +27,7 @@ const MapUpdater = ({ center }) => {
     return null;
 };
 
-// Componente auxiliar para capturar los clics del administrador en el mapa
+// Componente para capturar los clics en el mapa
 const MapClickHandler = ({ onMapClick }) => {
     useMapEvents({
         click(e) {
@@ -47,14 +42,12 @@ const AsignacionRutas = () => {
     const [zonaId, setZonaId] = useState('');
     const [routePoints, setRoutePoints] = useState([]);
 
-    // Datos simulados del equipo (puedes conectarlo a tu backend después)
     const canvaceadores = [
         'Jonathan Alexis Alta Bravo',
         'María de los Ángeles',
         'Luis Fernando López'
     ];
 
-    // Coordenadas base simuladas (usando Tehuacán como referencia)
     const zonasDisponibles = [
         { id: 'z1', nombre: 'Sector A - Centro', coords: [18.4628, -97.3928] },
         { id: 'z2', nombre: 'Sector B - Norte', coords: [18.4750, -97.3900] },
@@ -66,7 +59,6 @@ const AsignacionRutas = () => {
         { id: 1, canvaceador: 'Jonathan Alexis Alta Bravo', zona: 'Fraccionamiento Las Palmas', puntos: 4, estado: 'En Progreso' },
     ]);
 
-    // Centro por defecto al abrir la pantalla
     const defaultCenter = [18.4628, -97.3928];
     const [mapCenter, setMapCenter] = useState(defaultCenter);
 
@@ -84,7 +76,7 @@ const AsignacionRutas = () => {
         if (zonaId) {
             setRoutePoints((prev) => [...prev, latlng]);
         } else {
-            alert("Por favor, selecciona una zona primero para comenzar a trazar la ruta.");
+            alert("Por favor, selecciona una Zona de Cobertura primero para poder trazar la ruta.");
         }
     };
 
@@ -111,13 +103,12 @@ const AsignacionRutas = () => {
             setZonaId('');
             setRoutePoints([]);
         } else if (routePoints.length <= 1) {
-            alert("Haz clic en el mapa para trazar al menos 2 puntos para la ruta.");
+            alert("Debes hacer clic en el mapa al menos dos veces para trazar un camino.");
         }
     };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Encabezado */}
             <Box>
                 <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
                     Trazado y Asignación de Rutas
@@ -128,7 +119,6 @@ const AsignacionRutas = () => {
             </Box>
 
             <Grid container spacing={3}>
-                {/* Formulario de Asignación */}
                 <Grid item xs={12} md={4}>
                     <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
                         <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -168,7 +158,6 @@ const AsignacionRutas = () => {
                                 </Select>
                             </FormControl>
 
-                            {/* Estadísticas de la ruta dibujada */}
                             <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2, border: '1px dashed #cbd5e1' }}>
                                 <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569' }}>
                                     Puntos trazados en mapa: {routePoints.length}
@@ -201,13 +190,12 @@ const AsignacionRutas = () => {
                     </Card>
                 </Grid>
 
-                {/* Mapa Interactivo */}
                 <Grid item xs={12} md={8}>
-                    <Card variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', height: '400px', zIndex: 1 }}>
+                    <Card variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', height: '400px' }}>
                         <MapContainer
                             center={mapCenter}
                             zoom={14}
-                            style={{ height: '400px', width: '100%', zIndex: 1 }}
+                            style={{ height: '100%', width: '100%', position: 'relative' }}
                         >
                             <TileLayer
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -217,17 +205,14 @@ const AsignacionRutas = () => {
                             <MapUpdater center={mapCenter} />
                             <MapClickHandler onMapClick={handleMapClick} />
 
-                            {/* Dibujar la ruta (línea) */}
                             {routePoints.length > 1 && (
                                 <Polyline positions={routePoints} color="#f43f5e" weight={4} dashArray="5, 10" />
                             )}
 
-                            {/* Marcador de Inicio (punto A) */}
                             {routePoints.length > 0 && (
                                 <Marker position={routePoints[0]} />
                             )}
 
-                            {/* Marcador de Fin (punto B o actual) */}
                             {routePoints.length > 1 && (
                                 <Marker position={routePoints[routePoints.length - 1]} />
                             )}
@@ -235,7 +220,6 @@ const AsignacionRutas = () => {
                     </Card>
                 </Grid>
 
-                {/* Tabla de Rutas Activas */}
                 <Grid item xs={12}>
                     <Card variant="outlined" sx={{ borderRadius: 3 }}>
                         <CardContent sx={{ p: 3 }}>
@@ -288,7 +272,6 @@ const AsignacionRutas = () => {
                         </CardContent>
                     </Card>
                 </Grid>
-
             </Grid>
         </Box>
     );

@@ -38,3 +38,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
+
+.leaflet-container img {
+  max-width: none !important;
+  height: auto !important;
+}
+
+.leaflet-container {
+  z-index: 10 !important;
+}
