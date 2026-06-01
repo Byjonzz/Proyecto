@@ -8,13 +8,29 @@ import { AddLocationAlt, AssignmentInd, MapOutlined, DeleteOutlined } from '@mui
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-// FIX: Usamos los íconos oficiales desde un CDN seguro para evitar que Vite los rompa
+// 1. FORZAR EL CSS DE LEAFLET AQUÍ MISMO PARA QUE NO FALLE
+import 'leaflet/dist/leaflet.css';
+
+// FIX ÍCONOS: Usamos los íconos oficiales desde un CDN seguro
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+// 2. EL COMPONENTE MÁGICO: Obliga al mapa a redibujarse y arregla el error de "mapa en blanco"
+const MapFixer = () => {
+    const map = useMap();
+    useEffect(() => {
+        // Un pequeño retraso para asegurar que Material UI ya terminó de pintar la tarjeta
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+};
 
 // Componente para mover el mapa cuando cambia la zona
 const MapUpdater = ({ center }) => {
@@ -191,17 +207,20 @@ const AsignacionRutas = () => {
                 </Grid>
 
                 <Grid item xs={12} md={8}>
-                    <Card variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', height: '400px' }}>
+                    {/* 3. ALTURA FIJA ESTRICTA AQUÍ */}
+                    <Card variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden', height: '450px' }}>
                         <MapContainer
                             center={mapCenter}
                             zoom={14}
-                            style={{ height: '100%', width: '100%', position: 'relative' }}
+                            style={{ height: '450px', width: '100%', zIndex: 1 }}
                         >
                             <TileLayer
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 attribution='&copy; OpenStreetMap contributors'
                             />
 
+                            {/* Agregamos el MapFixer aquí */}
+                            <MapFixer />
                             <MapUpdater center={mapCenter} />
                             <MapClickHandler onMapClick={handleMapClick} />
 
