@@ -10,13 +10,13 @@ import {
 } from '@mui/icons-material';
 
 const CanvaceadorRuta = () => {
-    // === DATOS SIMULADOS DEL USUARIO ACTIVO (CANVACEADOR) ===
+    
     const canvaceadorActivo = {
         nombre: 'Jonathan Alexis Alta Bravo',
         ventasSemana: 7,
         paquetes: { basico: 2, familiar: 4, gamer: 1 },
-        volumenDinero: 4497, // (2x499) + (4x649) + (1x899)
-        pagoEstimado: 4497, // Asumiendo que alcanzó la meta del 100%
+        volumenDinero: 4497, 
+        pagoEstimado: 4497, 
         rangoAlcanzado: '100%'
     };
 
@@ -48,9 +48,7 @@ const CanvaceadorRuta = () => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-            {/* =========================================================
-          NUEVO: PANEL DE BIENVENIDA Y RENDIMIENTO DEL CANVACEADOR
-          ========================================================= */}
+        
             <Card variant="outlined" sx={{ borderRadius: 3, background: 'linear-gradient(to right, #0f172a, #1e293b)', color: 'white' }}>
                 <CardContent sx={{ p: 3 }}>
                     <Grid container spacing={3} alignItems="center">
@@ -104,9 +102,9 @@ const CanvaceadorRuta = () => {
                 </CardContent>
             </Card>
 
-            {/* =========================================================
-          MÓDULO EXISTENTE: CONTROL DE RUTA Y MAPA
-          ========================================================= */}
+            {/* 
+            CONTROL DE RUTA Y MAPA
+          */}
             <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2, p: 3, '&:last-child': { pb: 3 } }}>
                     <Box>
@@ -214,9 +212,7 @@ const CanvaceadorRuta = () => {
                 </CardContent>
             </Card>
 
-            {/* =========================================================
-          NUEVO: MODAL EXPLICATIVO DE CÁLCULO DE COMISIONES
-          ========================================================= */}
+            {/*NUEVO: MODAL EXPLICATIVO DE CÁLCULO DE COMISIONES*/}
             <Dialog open={modalInfoPago} onClose={() => setModalInfoPago(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
                 <DialogTitle sx={{ pb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>

@@ -7,13 +7,12 @@ import {
   MapOutlined, MonetizationOnOutlined, LocalShippingOutlined,
   EngineeringOutlined, ExpandLess, ExpandMore, Layers, Map,
   PersonAdd, DirectionsRun, Assignment, Assessment, Build,
-  ManageAccountsOutlined, AttachMoney, AssignmentInd // <-- Agregamos estos íconos
+  ManageAccountsOutlined, AttachMoney, AssignmentInd 
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
 
 const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }) => {
-  // 1. Agregamos el estado para el nuevo menú 'adminVentas'
   const [openMenus, setOpenMenus] = useState({
     canvaceo: true,
     ventas: false,

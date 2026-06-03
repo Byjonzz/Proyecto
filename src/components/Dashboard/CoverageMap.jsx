@@ -29,7 +29,6 @@ const CoverageMap = () => {
         </Typography>
       </Box>
 
-      {/* CONTENEDOR FLEX ROBUSTO (Garantiza que no se encoja en PC) */}
       <Box sx={{ 
         display: 'flex', 
         flexDirection: { xs: 'column', md: 'row' }, 
@@ -37,7 +36,6 @@ const CoverageMap = () => {
         width: '100%' 
       }}>
         
-        {/* ZONA DEL MAPA (Toma todo el espacio restante en PC, y 100% en Celular) */}
         <Box sx={{ flexGrow: 1, width: { xs: '100%', md: 'calc(100% - 340px)' } }}>
           <Card variant="outlined" sx={{ 
             width: '100%', 
@@ -48,7 +46,6 @@ const CoverageMap = () => {
             overflow: 'hidden' // Evita que elementos internos desborden
           }}>
             
-            {/* Fondo simulado del mapa */}
             <Box sx={{ 
               width: '100%', 
               height: '100%', 
@@ -61,7 +58,6 @@ const CoverageMap = () => {
                 <MapIcon sx={{ fontSize: 100, color: '#94a3b8', opacity: 0.5 }} />
             </Box>
 
-            {/* Controles del mapa (Zoom) */}
             <Box sx={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
                 <IconButton size="small"><Add fontSize="small" /></IconButton>
@@ -73,7 +69,6 @@ const CoverageMap = () => {
               </Paper>
             </Box>
 
-            {/* Simbología / Leyenda */}
             <Paper variant="outlined" sx={{ 
               position: 'absolute', 
               bottom: 16, 
@@ -110,7 +105,6 @@ const CoverageMap = () => {
           </Card>
         </Box>
 
-        {/* ZONA DE FILTROS (Ancho fijo en PC, 100% en celular) */}
         <Box sx={{ flexShrink: 0, width: { xs: '100%', md: '320px' } }}>
           <Card variant="outlined" sx={{ borderRadius: 3, position: 'sticky', top: 24, width: '100%' }}>
             <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

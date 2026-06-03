@@ -11,14 +11,12 @@ import {
   InfoOutlined, Close, ZoomOutMap
 } from '@mui/icons-material';
 
-// Precios oficiales de los paquetes
 const PRECIOS = {
   basico: 499,
   familiar: 649,
   gamer: 899
 };
 
-// ESTILO PERSONALIZADO PARA LOS INPUTS DE LAS REGLAS
 const inputReglaStyle = {
   width: 40,
   mx: 1, 
@@ -335,7 +333,6 @@ const Comisiones = () => {
                       </Box>
                       
                       <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 80, borderBottom: '1px solid #cbd5e1', pb: 0.5 }}>
-                        {/* DÍAS ORDENADOS DE SÁBADO A VIERNES */}
                         {['S', 'L', 'M', 'M', 'J', 'V'].map((dia, index) => {
                           const cantidad = agente.contratosDiarios[index];
                           const maxVentas = Math.max(...agente.contratosDiarios, 1);

@@ -11,7 +11,7 @@ const Navbar = ({ drawerWidth }) => {
         ml: `${drawerWidth}px`,
         backgroundColor: '#ffffff',
         color: 'text.primary',
-        boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.05)', // Sombra muy sutil
+        boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.05)', 
       }}
     >
       <Toolbar>

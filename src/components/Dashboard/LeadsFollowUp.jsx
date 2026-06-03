@@ -27,7 +27,6 @@ const LeadsFollowUp = () => {
 
   const guardarInteraccion = (e) => {
     e.preventDefault();
-    // Actualizamos el lead simulando el registro en base de datos
     setLeads(leads.map(l => l.id === leadSeleccionado.id 
       ? { ...l, ultimaInteraccion: `${tipoInteraccion.charAt(0).toUpperCase() + tipoInteraccion.slice(1)} (Justo ahora)` } 
       : l

@@ -10,20 +10,17 @@ import {
 } from '@mui/icons-material';
 
 const TecnicoEjecucion = () => {
-    // Estado para controlar qué vista se muestra ('tabla' o 'formulario')
+    // ('tabla' o 'formulario')
     const [vistaActual, setVistaActual] = useState('tabla');
 
-    // Lista simulada de instalaciones asignadas al técnico para la semana actual
     const [instalacionesSemana, setInstalacionesSemana] = useState([
         { tipoDeServicio: 'Instalacion de Fibra Optica', cliente: 'Juan Pérez García', direccion: 'Av. Reforma 402, Centro', colonia: 'Reforma', fecha: '20-03-2023', estatus: 'Pendiente', entre: '21 norte y 23 norte', telefono: '5512345678' },
         { tipoDeServicio: 'Cambio de Modem', cliente: 'María Elena Solís', direccion: 'Calle 5 Poniente 12, Las Palmas', colonia: 'Las Palmas', fecha: '21-03-2023', estatus: 'Pendiente', entre: '5 oriente y 7 oriente', telefono: '5598765432' },
         { tipoDeServicio: 'Reparacion de Cableado', cliente: 'Roberto Gómez Díaz', direccion: 'Privada Juárez 14, San José', colonia: 'San José', fecha: '29-03-2023', estatus: 'Pendiente', entre: 'entre 2 norte y 4 norte', telefono: '5544332211' }
     ]);
 
-    // Estado para la orden seleccionada que se va a instalar en el momento
     const [ordenActiva, setOrdenActiva] = useState(null);
 
-    // Estados de control para el formulario técnico
     const [datosTecnicos, setDatosTecnicos] = useState({
         serialOnt: '',
         serialRouter: '',
@@ -43,7 +40,6 @@ const TecnicoEjecucion = () => {
     const [fotoEvidencia, setFotoEvidencia] = useState(false);
     const [tieneFirma, setTieneFirma] = useState(false);
 
-    // Canvas para la firma digital
     const canvasRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
 
@@ -87,7 +83,6 @@ const TecnicoEjecucion = () => {
     };
 
     const handleFinalizarOrdenOrden = () => {
-        // Marcamos la instalación como completada en nuestra lista local simulada
         setInstalacionesSemana(instalacionesSemana.map(inst =>
             inst.tipoDeServicio === ordenActiva.tipoDeServicio ? { ...inst, estatus: 'Completado' } : inst
         ));

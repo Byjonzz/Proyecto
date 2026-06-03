@@ -18,14 +18,12 @@ const InstallationSchedule = () => {
     { id: 'C-98767', cliente: 'Roberto Gómez', plan: 'Básico 20MB', direccion: 'Privada Juárez 14, San José', estatus: 'Pendiente Asignar' }
   ]);
 
-  // SOLUCIÓN: Convertimos el tablero en un estado para que sea dinámico
   const [tecnicos, setTecnicos] = useState([
     { id: 't1', nombre: 'Téc. Ana Ramírez', m900: 'Disponible', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Disponible' },
     { id: 't2', nombre: 'Téc. Carlos Soto', m900: 'Ocupado', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Ocupado' },
     { id: 't3', nombre: 'Téc. Luis Pérez', m900: 'Disponible', m1130: 'Disponible', m1400: 'Ocupado', m1635: 'Disponible' }
   ]);
 
-  // FUNCIÓN INTELIGENTE: Calcula las horas disponibles leyendo el tablero en tiempo real
   const obtenerHorasDisponibles = (idTecnico) => {
     const tech = tecnicos.find(t => t.id === idTecnico);
     if (!tech) return [];
@@ -38,7 +36,6 @@ const InstallationSchedule = () => {
     return horasLibres;
   };
 
-  // Datos fijos para las gráficas visuales inferiores
   const datosPastel = [
     { label: 'Completadas', value: 55, color: '#10b981' },
     { label: 'Pendientes', value: 30, color: '#f59e0b' }
@@ -52,7 +49,6 @@ const InstallationSchedule = () => {
     { dia: 'Vie', cantidad: 14, altura: '70%' }
   ];
 
-  // Estados de Control de Modal y Formulario
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [fecha, setFecha] = useState('');
   const [tecnico, setTecnico] = useState('');
@@ -72,10 +68,8 @@ const InstallationSchedule = () => {
   const handleGuardarAsignacion = (e) => {
     e.preventDefault();
     
-    // 1. Cambiar estatus de la orden/contrato de instalación
     setOrdenes(ordenes.map(o => o.id === ordenSeleccionada.id ? { ...o, estatus: 'Asignado' } : o));
     
-    // 2. SOLUCIÓN: Buscar al técnico asignado y cambiar su celda horaria a "Ocupado"
     setTecnicos(tecnicos.map(t => {
       if (t.id === tecnico) {
         const clonTecnico = { ...t };
@@ -284,7 +278,7 @@ const InstallationSchedule = () => {
               value={tecnico}
               onChange={(e) => {
                 setTecnico(e.target.value);
-                setHoraSeleccionada(''); // Limpia la hora si cambias de técnico
+                setHoraSeleccionada(''); 
               }}
             >
               <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
@@ -292,7 +286,6 @@ const InstallationSchedule = () => {
               <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
             </TextField>
 
-            {/* LAS HORAS AHORA SE FILTRAN AUTOMÁTICAMENTE */}
             <TextField
               select
               label="Horas Disponibles del Técnico"
