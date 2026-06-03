@@ -14,7 +14,6 @@ import { MapContainer, TileLayer, Marker, Polyline, GeoJSON, useMap, useMapEvent
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Íconos personalizados
 const createCustomIcon = (color) => new L.DivIcon({
   className: 'custom-icon',
   html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
