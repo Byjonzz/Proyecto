@@ -392,7 +392,4 @@ const AsignacionRutas = () => {
         </Box>
     );
 };
-
-
-kuf
 export default AsignacionRutas;
