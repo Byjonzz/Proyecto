@@ -156,12 +156,33 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AttachMoney sx={{ fontSize: 18 }} /></ListItemIcon>
                 <ListItemText primary="Comisiones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
               </ListItemButton>
-
             </List>
           </Collapse>
         </ListItem>
 
+        {/*Administración General*/ }
+        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
+          <ListItemButton onClick={() => handleToggle('adminGeneral')} sx={{ borderRadius: '8px', color: openMenus.adminGeneral ? '#c722d3' : '#cbd5e1' }}>
+            <ListItemIcon sx={{ color: openMenus.adminGeneral ? '#c722d3' : '#94a3b8', minWidth: 40 }}><ManageAccountsOutlined /></ListItemIcon>
+            <ListItemText primary="Administración General" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
+            {openMenus.adminGeneral ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={openMenus.adminGeneral} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
+              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
+
+              {/* NUEVO BOTÓN: Planes */}
+              <ListItemButton onClick={() => handleNavigate('admin-planes')} selected={isActive('admin-planes')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-planes') ? '#c722d3' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(199, 34, 211, 0.15)' } }}>
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><MapOutlined sx={{ fontSize: 18 }} /></ListItemIcon>
+                <ListItemText primary="Planes" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+              </ListItemButton>
+            </List>
+          </Collapse>
+        </ListItem>
+        
+
       </List>
+
     </>
   );
 

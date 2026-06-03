@@ -43,9 +43,8 @@ const AsignacionRutas = () => {
     { id: 1, canvaceador: 'Jonathan Alexis Alta Bravo', zona: 'Centro, Tehuacán', puntosMarcados: 4, estado: 'En Progreso' }
   ]);
 
-  // ============================================================
-  // 🔍 BÚSQUEDA CON NOMINATIM (OpenStreetMap)
-  // ============================================================
+  
+  // BÚSQUEDA 
   const buscarConNominatim = async (query) => {
     if (!query || query.length < 2) {
       setOpcionesColonias([]);

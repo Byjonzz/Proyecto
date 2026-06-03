@@ -3,6 +3,9 @@ import { Box, CssBaseline, AppBar, Toolbar, IconButton, Typography } from '@mui/
 import { Menu as MenuIcon } from '@mui/icons-material';
 import Sidebar from './components/Sidebar/Sidebar';
 
+// NUEVO: Import del módulo de administración de planes
+import PlansManagement from './components/Admin/PlansManagement';
+
 // Minimódulos de Canvaceo
 import CoverageMap from './components/Dashboard/CoverageMap';
 import NewProspect from './components/Forms/NewProspect';
@@ -16,7 +19,7 @@ import LeadsFollowUp from './components/Dashboard/LeadsFollowUp';
 import InstallationSchedule from './components/Dashboard/InstallationSchedule';
 import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
 
-// NUEVO: Minimódulo de Administración Ventas
+// Minimódulos de Administración Ventas
 import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
 
@@ -47,10 +50,13 @@ function App() {
       // Bloque Técnico
       case 'tecnico-ejecucion': return <TecnicoEjecucion />;
 
-      // NUEVO: Bloque Administración Ventas
+      // Bloque Administración Ventas
       case 'admin-comisiones': return <Comisiones />;
       case 'admin-asignacion-rutas': return <AsignacionRutas />;
-      case 'admin-rutas': return <AsignacionRutas />; // <--- NUEVA RUTA AGREGADA
+      case 'admin-rutas': return <AsignacionRutas />;
+
+      // NUEVO: Bloque Administración General - Planes
+      case 'admin-planes': return <PlansManagement />;
 
       default: return <CoverageMap />;
     }
