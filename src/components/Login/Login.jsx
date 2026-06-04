@@ -36,36 +36,53 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await api.get('/canvaceadores/');
-      const canvaceadores = response.data;
-
-      const usuarioEncontrado = canvaceadores.find(c => {
-        if (c.email?.toLowerCase() === email.toLowerCase()) {
-          return true;
-        }
-        if (c.usuario_email?.toLowerCase() === email.toLowerCase()) {
-          return true;
-        }
-        return false;
+      // ✅ USAR EL ENDPOINT DE LOGIN DEL BACKEND
+      const response = await api.post('/login/', {
+        email: email,
+        password: password
       });
 
-      if (usuarioEncontrado) {
+      const data = response.data;
+
+      if (data.success) {
+        // Construir objeto de usuario
         const datosUsuario = {
-          id: usuarioEncontrado.id,
-          tipo: 'canvaceador',
-          numero_empleado: usuarioEncontrado.numero_empleado,
-          nombre: usuarioEncontrado.nombre_completo || usuarioEncontrado.numero_empleado,
-          email: email
+          id: data.usuario_id,
+          tipo: data.rol,
+          nombre: data.nombre,
+          email: data.email,
+          rol: data.rol,
+          numero_empleado: data.numero_empleado,
+          perfil_id: data.perfil_id
         };
 
+        // Guardar en localStorage
         localStorage.setItem('usuario_actual', JSON.stringify(datosUsuario));
+        
+        // Notificar al componente padre
         onLoginSuccess(datosUsuario);
       } else {
-        setError('Correo o contraseña incorrectos');
+        setError(data.error || 'Error en el login');
       }
     } catch (err) {
-      setError('Error al conectar con el servidor. Intenta de nuevo.');
       console.error('Error en login:', err);
+      
+      // Manejar diferentes tipos de error
+      if (err.response) {
+        if (err.response.status === 401) {
+          setError('Credenciales inválidas. Verifica tu correo o contraseña.');
+        } else if (err.response.status === 403) {
+          setError('Error de permisos. Contacta al administrador.');
+        } else if (err.response.data?.error) {
+          setError(err.response.data.error);
+        } else {
+          setError('Error al iniciar sesión. Intenta de nuevo.');
+        }
+      } else if (err.request) {
+        setError('No se pudo conectar con el servidor. Verifica tu conexión.');
+      } else {
+        setError('Error inesperado. Intenta de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -78,40 +95,26 @@ const Login = ({ onLoginSuccess }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        // Imagen de fondo optimizada
         backgroundImage: `url('https://i.pinimg.com/736x/e0/4c/4f/e04c4f9207ea8c98ee199c4f43013947.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
-        // Optimización para imagen nítida
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url('https://i.pinimg.com/736x/e0/4c/4f/e04c4f9207ea8c98ee199c4f43013947.jpg')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'brightness(0.4)',
-          zIndex: -2
-        },
-        // Overlay con gradiente usando la paleta de colores
-        '&::after': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(135deg, rgba(23, 23, 24, 0.7) 0%, rgba(31, 33, 36, 0.7) 50%, rgba(57, 61, 66, 0.6) 100%)',
-          zIndex: -1
-        },
         p: 2
       }}
     >
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(135deg, rgba(23, 23, 24, 0.85) 0%, rgba(31, 33, 36, 0.85) 50%, rgba(57, 61, 66, 0.8) 100%)',
+          zIndex: 0
+        }}
+      />
+      
       <Paper
         elevation={0}
         sx={{
@@ -121,10 +124,9 @@ const Login = ({ onLoginSuccess }) => {
           borderRadius: 3,
           position: 'relative',
           zIndex: 1,
-          // Fondo con color sólido de la paleta
-          background: 'rgba(31, 33, 36, 0.95)',
+          background: 'rgba(31, 33, 36, 0.98)',
           border: '1px solid rgba(106, 110, 115, 0.3)',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)'
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -139,7 +141,7 @@ const Login = ({ onLoginSuccess }) => {
               justifyContent: 'center',
               mx: 'auto',
               mb: 2,
-              boxShadow: '0 8px 20px rgba(106, 110, 115, 0.4)',
+              boxShadow: '0 8px 20px rgba(106, 110, 115, 0.5)',
             }}
           >
             <LoginIcon sx={{ fontSize: 50, color: '#171718' }} />
@@ -155,7 +157,7 @@ const Login = ({ onLoginSuccess }) => {
           >
             Solit System
           </Typography>
-          <Typography variant="body1" sx={{ color: '#7b7e81', fontWeight: 500, fontSize: '1rem' }}>
+          <Typography variant="body1" sx={{ color: '#6a6e73', fontWeight: 500, fontSize: '1rem' }}>
             Portal de Canvaceadores
           </Typography>
         </Box>
@@ -166,7 +168,6 @@ const Login = ({ onLoginSuccess }) => {
           </Alert>
         )}
 
-        {/* Campo de Correo */}
         <TextField
           label="Correo Electrónico"
           type="email"
@@ -206,7 +207,6 @@ const Login = ({ onLoginSuccess }) => {
           }}
         />
 
-        {/* Campo de Contraseña */}
         <TextField
           label="Contraseña"
           type={showPassword ? 'text' : 'password'}
@@ -296,7 +296,7 @@ const Login = ({ onLoginSuccess }) => {
             display: 'block', 
             textAlign: 'center', 
             mt: 3,
-            color: '#757a80',
+            color: '#393d42',
             fontWeight: 500
           }}
         >
