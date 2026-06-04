@@ -10,8 +10,8 @@ import {
   Download, Upload, Wifi
 } from '@mui/icons-material';
 
-// ✅ Importar el hook
 import { useProspectos } from '../../hooks/useProspectos';
+import { useCanvaceadores } from '../../hooks/useCanvaceadores';
 
 const pasos = [
   { label: 'Información Básica del Prospecto', description: 'Registra los datos de contacto iniciales.' },
@@ -20,15 +20,6 @@ const pasos = [
   { label: 'Resumen y Cierre', description: 'Confirma los datos para enviarlos al sistema.' }
 ];
 
-// ✅ Lista de canvaceadores (puedes obtenerla del backend con useCanvaceadores)
-const CANVACEADORES_DISPONIBLES = [
-  { id: 1, nombre: 'Jonathan Alexis Alta Bravo' },
-  { id: 2, nombre: 'Ana Gómez' },
-  { id: 3, nombre: 'Luis Pérez' },
-  { id: 4, nombre: 'Carlos Ruiz' }
-];
-
-// BASE DE DATOS DE PLANES
 const PLANES_FIBRA_SIMETRICA = [
   { id: 'sim-intermedio', nombre: 'INTERMEDIO', precio: 309, descarga: 30, subida: 30, simetrica: true, ift: '1065567', color: '#d63384', colorGradient: 'linear-gradient(135deg, #d63384 0%, #e83e8c 100%)', destacado: false },
   { id: 'sim-avanzado', nombre: 'AVANZADO', precio: 409, descarga: 60, subida: 60, simetrica: true, ift: '1065572', color: '#d4a017', colorGradient: 'linear-gradient(135deg, #d4a017 0%, #e6b422 100%)', destacado: false },
@@ -56,7 +47,6 @@ const PLANES_ANTENA_WIRELESS = [
   { id: 'wifi-50', nombre: 'WIFI MIX 50 Mbps', velocidad: 50, precio: 500 }
 ];
 
-// COMPONENTE TARJETA DE PLAN
 const TarjetaPlanCanvaceo = ({ plan, seleccionado, onSelect }) => {
   return (
     <Card onClick={() => onSelect(plan)} sx={{ position: 'relative', cursor: 'pointer', borderRadius: 3, overflow: 'hidden', border: seleccionado ? '3px solid #1976d2' : '2px solid #e0e0e0', transition: 'all 0.3s ease', transform: seleccionado ? 'scale(1.02)' : 'scale(1)', boxShadow: seleccionado ? '0 8px 25px rgba(25, 118, 210, 0.35)' : '0 4px 15px rgba(0,0,0,0.08)', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 30px rgba(0,0,0,0.15)' } }}>
@@ -144,24 +134,22 @@ const NewProspect = () => {
   const [errorApi, setErrorApi] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
-  // ✅ Usar el hook para conectar con el backend
   const { createProspecto } = useProspectos();
+  const { canvaceadores, loading: loadingCanvaceadores, error: errorCanvaceadores } = useCanvaceadores();
 
-  // ✅ NUEVO: Estado con los nombres EXACTOS del modelo Django
   const [formData, setFormData] = useState({
-    canvaceador_id: '',                    // ← OBLIGATORIO (ForeignKey)
-    nombre_completo: '',                   // ← Antes: nombre
-    telefono_whatsapp: '',                 // ← Antes: telefono
-    direccion_calle_numero: '',            // ← Antes: calle
-    direccion_colonia: '',                 // ← Antes: colonia
-    referencia_domicilio: '',              // ← Antes: referencia
-    notas_canvaceador: ''                  // ← Antes: notas
+    canvaceador_id: '',
+    nombre_completo: '',
+    telefono_whatsapp: '',
+    direccion_calle_numero: '',
+    direccion_colonia: '',
+    referencia_domicilio: '',
+    notas_canvaceador: ''
   });
 
   const isStepOptional = (step) => step === 1;
   const isStepSkipped = (step) => skipped.has(step);
 
-  // ✅ Validar datos antes de avanzar
   const validarPaso = () => {
     if (activeStep === 0) {
       if (!formData.canvaceador_id) {
@@ -194,15 +182,15 @@ const NewProspect = () => {
     setSkipped(newSkipped);
   };
 
-  // ✅ NUEVA FUNCIÓN: Guardar prospecto con los nombres correctos del modelo Django
+  // ✅ FUNCIÓN CORREGIDA - Estructura try/catch correcta
   const guardarProspecto = async () => {
     setGuardando(true);
     setErrorApi(null);
 
     try {
-      // ✅ Preparar datos con los nombres EXACTOS del modelo Django
+      // 1. Preparar datos
       const datosParaBackend = {
-        canvaceador_id: parseInt(formData.canvaceador_id),  // ← OBLIGATORIO
+        canvaceador_id: parseInt(formData.canvaceador_id),
         nombre_completo: formData.nombre_completo,
         telefono_whatsapp: formData.telefono_whatsapp,
         metodo_ubicacion: metodoUbicacion,
@@ -211,44 +199,48 @@ const NewProspect = () => {
         referencia_domicilio: formData.referencia_domicilio || null,
         plan_interes: planInteres?.nombre || null,
         notas_canvaceador: formData.notas_canvaceador || null,
-        estado: 'Nuevo'  // ← Valor por defecto del modelo
+        estado: 'Nuevo'
       };
 
-      // ✅ Si hay coordenadas GPS, convertirlas a formato GeoJSON Point
+      // 2. Convertir coordenadas a formato WKT (compatible con Django GIS)
       if (coordenadas && coordenadas.includes(',')) {
         const partes = coordenadas.split(',');
         const lat = parseFloat(partes[0].trim());
         const lng = parseFloat(partes[1].trim());
-        
+
         if (!isNaN(lat) && !isNaN(lng)) {
-          datosParaBackend.ubicacion_gps = {
-            type: 'Point',
-            coordinates: [lng, lat]  // ← GeoJSON usa [longitud, latitud]
-          };
+          datosParaBackend.ubicacion_gps = `POINT(${lng} ${lat})`;
         }
       }
 
       console.log('📤 Enviando datos al backend:', datosParaBackend);
 
+      // 3. Enviar al backend
       const nuevoProspecto = await createProspecto(datosParaBackend);
 
       console.log('✅ Prospecto guardado:', nuevoProspecto);
       setActiveStep((prev) => prev + 1);
+      
     } catch (err) {
       console.error('❌ Error al guardar:', err);
-      
+
       if (err.response && err.response.data) {
         console.error('🔴 Error detallado del backend:', err.response.data);
-        
-        // Formatear errores de manera legible
-        const errores = Object.entries(err.response.data)
-          .map(([campo, mensajes]) => {
-            const msg = Array.isArray(mensajes) ? mensajes.join(', ') : mensajes;
-            return `• ${campo}: ${msg}`;
-          })
-          .join('\n');
-        
-        setErrorApi(`Error de validación:\n${errores}`);
+
+        // Manejar diferentes formatos de error
+        if (typeof err.response.data === 'string') {
+          setErrorApi(`Error: ${err.response.data}`);
+        } else if (err.response.data.detail) {
+          setErrorApi(`Error: ${err.response.data.detail}`);
+        } else {
+          const errores = Object.entries(err.response.data)
+            .map(([campo, mensajes]) => {
+              const msg = Array.isArray(mensajes) ? mensajes.join(', ') : mensajes;
+              return `• ${campo}: ${msg}`;
+            })
+            .join('\n');
+          setErrorApi(`Error de validación:\n${errores}`);
+        }
       } else {
         setErrorApi(`Error: ${err.message}`);
       }
@@ -269,7 +261,6 @@ const NewProspect = () => {
     });
   };
 
-  // ✅ NUEVO: Resetear con los nombres correctos
   const handleReset = () => {
     setActiveStep(0);
     setCoordenadas('');
@@ -310,7 +301,6 @@ const NewProspect = () => {
       case 0:
         return (
           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* ✅ NUEVO: Selector de Canvaceador (OBLIGATORIO) */}
             <TextField
               select
               label="Canvaceador Responsable"
@@ -320,17 +310,27 @@ const NewProspect = () => {
               required
               value={formData.canvaceador_id}
               onChange={(e) => setFormData({ ...formData, canvaceador_id: e.target.value })}
-              helperText="Selecciona el canvaceador que está registrando este prospecto"
+              disabled={loadingCanvaceadores}
+              error={!!errorCanvaceadores}
+              helperText={
+                loadingCanvaceadores
+                  ? "Cargando canvaceadores..."
+                  : errorCanvaceadores
+                    ? `Error: ${errorCanvaceadores}`
+                    : canvaceadores.length === 0
+                      ? "No hay canvaceadores registrados. Crea uno primero en el backend."
+                      : `Selecciona el canvaceador (${canvaceadores.length} disponibles)`
+              }
             >
-              {CANVACEADORES_DISPONIBLES.map((canv) => (
+              {canvaceadores.map((canv) => (
                 <MenuItem key={canv.id} value={canv.id}>
-                  {canv.nombre}
+                  {canv.nombreCompleto || canv.numero_empleado || `Canvaceador #${canv.id}`}
                 </MenuItem>
               ))}
             </TextField>
 
             <TextField
-              label="Nombre Completo"
+              label="Nombre Completo del Prospecto"
               variant="outlined"
               fullWidth
               size="small"
@@ -460,6 +460,7 @@ const NewProspect = () => {
           </Box>
         );
       case 3:
+        const canvaceadorSeleccionado = canvaceadores.find(c => c.id == formData.canvaceador_id);
         return (
           <Box sx={{ mt: 2 }}>
             {errorApi && (
@@ -470,8 +471,8 @@ const NewProspect = () => {
             <Alert severity="info" sx={{ mb: 2 }}>
               <strong>Resumen del Prospecto:</strong>
               <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                <li>👤 Canvaceador: <strong>{CANVACEADORES_DISPONIBLES.find(c => c.id == formData.canvaceador_id)?.nombre || 'No seleccionado'}</strong></li>
-                <li>👤 Nombre: <strong>{formData.nombre_completo}</strong></li>
+                <li>👤 Canvaceador: <strong>{canvaceadorSeleccionado?.nombreCompleto || canvaceadorSeleccionado?.numero_empleado || 'No seleccionado'}</strong></li>
+                <li>👤 Nombre prospecto: <strong>{formData.nombre_completo}</strong></li>
                 <li>📱 Teléfono: <strong>{formData.telefono_whatsapp}</strong></li>
                 {formData.direccion_calle_numero && <li>📍 Dirección: {formData.direccion_calle_numero}, {formData.direccion_colonia}</li>}
                 {planInteres && <li>📦 Plan: <strong>{planInteres.nombre}</strong> - ${planInteres.precio}/mes</li>}
@@ -479,7 +480,7 @@ const NewProspect = () => {
               </ul>
             </Alert>
             <Typography variant="body2" color="text.secondary">
-              Al hacer clic en "Finalizar Registro", los datos se enviarán a la base de datos en <strong>10.144.86.55:1423</strong>.
+              Al hacer clic en "Finalizar Registro", los datos se enviarán a la base de datos.
             </Typography>
           </Box>
         );
