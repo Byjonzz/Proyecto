@@ -1,47 +1,31 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Button,
-  Paper,
-  Typography,
-  TextField,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  InputAdornment,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  Alert,
-  Card,
-  CardContent,
-  Grid,
-  Divider,
-  Chip
+  Box, Stepper, Step, StepLabel, StepContent, Button, Paper,
+  Typography, TextField, Radio, RadioGroup, FormControlLabel,
+  FormControl, FormLabel, InputAdornment, IconButton, Tooltip,
+  CircularProgress, Alert, Card, CardContent, Grid, Divider, Chip, MenuItem
 } from '@mui/material';
 import {
-  MyLocation,
-  ContentCopy,
-  CheckCircle,
-  WhatsApp,
-  Download,
-  Upload,
-  Wifi,
-  FiberManualRecord,
-  SignalCellularAlt
+  MyLocation, ContentCopy, CheckCircle, WhatsApp,
+  Download, Upload, Wifi
 } from '@mui/icons-material';
+
+// ✅ Importar el hook
+import { useProspectos } from '../../hooks/useProspectos';
 
 const pasos = [
   { label: 'Información Básica del Prospecto', description: 'Registra los datos de contacto iniciales.' },
   { label: 'Captura de Ubicación', description: 'Selecciona cómo registrarás las coordenadas del domicilio.' },
   { label: 'Interés y Cotización', description: 'Define qué servicio o paquete le interesa.' },
   { label: 'Resumen y Cierre', description: 'Confirma los datos para enviarlos al sistema.' }
+];
+
+// ✅ Lista de canvaceadores (puedes obtenerla del backend con useCanvaceadores)
+const CANVACEADORES_DISPONIBLES = [
+  { id: 1, nombre: 'Jonathan Alexis Alta Bravo' },
+  { id: 2, nombre: 'Ana Gómez' },
+  { id: 3, nombre: 'Luis Pérez' },
+  { id: 4, nombre: 'Carlos Ruiz' }
 ];
 
 // BASE DE DATOS DE PLANES
@@ -76,9 +60,7 @@ const PLANES_ANTENA_WIRELESS = [
 const TarjetaPlanCanvaceo = ({ plan, seleccionado, onSelect }) => {
   return (
     <Card onClick={() => onSelect(plan)} sx={{ position: 'relative', cursor: 'pointer', borderRadius: 3, overflow: 'hidden', border: seleccionado ? '3px solid #1976d2' : '2px solid #e0e0e0', transition: 'all 0.3s ease', transform: seleccionado ? 'scale(1.02)' : 'scale(1)', boxShadow: seleccionado ? '0 8px 25px rgba(25, 118, 210, 0.35)' : '0 4px 15px rgba(0,0,0,0.08)', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 30px rgba(0,0,0,0.15)' } }}>
-      {plan.destacado && (
-        <Box sx={{ position: 'absolute', top: 8, right: -25, backgroundColor: '#ff9800', color: 'white', px: 3, py: 0.5, fontSize: '0.65rem', fontWeight: 700, transform: 'rotate(45deg)', zIndex: 2 }}>POPULAR</Box>
-      )}
+      {plan.destacado && (<Box sx={{ position: 'absolute', top: 8, right: -25, backgroundColor: '#ff9800', color: 'white', px: 3, py: 0.5, fontSize: '0.65rem', fontWeight: 700, transform: 'rotate(45deg)', zIndex: 2 }}>POPULAR</Box>)}
       <Box sx={{ background: plan.colorGradient, py: 1.5, textAlign: 'center' }}>
         <Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 900, letterSpacing: 1, textShadow: '2px 2px 4px rgba(0,0,0,0.2)' }}>{plan.nombre}</Typography>
       </Box>
@@ -110,7 +92,6 @@ const TarjetaPlanCanvaceo = ({ plan, seleccionado, onSelect }) => {
   );
 };
 
-// COMPONENTE TABLA
 const TablaPlanesCanvaceo = ({ planes, seleccionadoId, onSelect, titulo, colorPrincipal }) => {
   const color = colorPrincipal || '#26a69a';
   return (
@@ -130,7 +111,6 @@ const TablaPlanesCanvaceo = ({ planes, seleccionadoId, onSelect, titulo, colorPr
   );
 };
 
-// COMPONENTE PRINCIPAL DE SELECCIÓN
 const SeleccionPlanesCanvaceo = ({ planSeleccionado, onPlanSeleccionado }) => {
   const [categoria, setCategoria] = useState('simetrica');
   const handleSeleccionar = (plan) => { onPlanSeleccionado(plan); };
@@ -161,11 +141,50 @@ const NewProspect = () => {
   const [coordenadas, setCoordenadas] = useState('');
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [planInteres, setPlanInteres] = useState(null);
+  const [errorApi, setErrorApi] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+
+  // ✅ Usar el hook para conectar con el backend
+  const { createProspecto } = useProspectos();
+
+  // ✅ NUEVO: Estado con los nombres EXACTOS del modelo Django
+  const [formData, setFormData] = useState({
+    canvaceador_id: '',                    // ← OBLIGATORIO (ForeignKey)
+    nombre_completo: '',                   // ← Antes: nombre
+    telefono_whatsapp: '',                 // ← Antes: telefono
+    direccion_calle_numero: '',            // ← Antes: calle
+    direccion_colonia: '',                 // ← Antes: colonia
+    referencia_domicilio: '',              // ← Antes: referencia
+    notas_canvaceador: ''                  // ← Antes: notas
+  });
 
   const isStepOptional = (step) => step === 1;
   const isStepSkipped = (step) => skipped.has(step);
 
-  const handleNext = () => {
+  // ✅ Validar datos antes de avanzar
+  const validarPaso = () => {
+    if (activeStep === 0) {
+      if (!formData.canvaceador_id) {
+        setErrorApi('Debes seleccionar un canvaceador');
+        return false;
+      }
+      if (!formData.nombre_completo.trim() || !formData.telefono_whatsapp.trim()) {
+        setErrorApi('Nombre y teléfono son obligatorios');
+        return false;
+      }
+    }
+    setErrorApi(null);
+    return true;
+  };
+
+  const handleNext = async () => {
+    if (!validarPaso()) return;
+
+    if (activeStep === pasos.length - 1) {
+      await guardarProspecto();
+      return;
+    }
+
     let newSkipped = skipped;
     if (isStepSkipped(activeStep)) {
       newSkipped = new Set(newSkipped.values());
@@ -173,6 +192,69 @@ const NewProspect = () => {
     }
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
     setSkipped(newSkipped);
+  };
+
+  // ✅ NUEVA FUNCIÓN: Guardar prospecto con los nombres correctos del modelo Django
+  const guardarProspecto = async () => {
+    setGuardando(true);
+    setErrorApi(null);
+
+    try {
+      // ✅ Preparar datos con los nombres EXACTOS del modelo Django
+      const datosParaBackend = {
+        canvaceador_id: parseInt(formData.canvaceador_id),  // ← OBLIGATORIO
+        nombre_completo: formData.nombre_completo,
+        telefono_whatsapp: formData.telefono_whatsapp,
+        metodo_ubicacion: metodoUbicacion,
+        direccion_calle_numero: formData.direccion_calle_numero || null,
+        direccion_colonia: formData.direccion_colonia || null,
+        referencia_domicilio: formData.referencia_domicilio || null,
+        plan_interes: planInteres?.nombre || null,
+        notas_canvaceador: formData.notas_canvaceador || null,
+        estado: 'Nuevo'  // ← Valor por defecto del modelo
+      };
+
+      // ✅ Si hay coordenadas GPS, convertirlas a formato GeoJSON Point
+      if (coordenadas && coordenadas.includes(',')) {
+        const partes = coordenadas.split(',');
+        const lat = parseFloat(partes[0].trim());
+        const lng = parseFloat(partes[1].trim());
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          datosParaBackend.ubicacion_gps = {
+            type: 'Point',
+            coordinates: [lng, lat]  // ← GeoJSON usa [longitud, latitud]
+          };
+        }
+      }
+
+      console.log('📤 Enviando datos al backend:', datosParaBackend);
+
+      const nuevoProspecto = await createProspecto(datosParaBackend);
+
+      console.log('✅ Prospecto guardado:', nuevoProspecto);
+      setActiveStep((prev) => prev + 1);
+    } catch (err) {
+      console.error('❌ Error al guardar:', err);
+      
+      if (err.response && err.response.data) {
+        console.error('🔴 Error detallado del backend:', err.response.data);
+        
+        // Formatear errores de manera legible
+        const errores = Object.entries(err.response.data)
+          .map(([campo, mensajes]) => {
+            const msg = Array.isArray(mensajes) ? mensajes.join(', ') : mensajes;
+            return `• ${campo}: ${msg}`;
+          })
+          .join('\n');
+        
+        setErrorApi(`Error de validación:\n${errores}`);
+      } else {
+        setErrorApi(`Error: ${err.message}`);
+      }
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const handleBack = () => { setActiveStep((prevActiveStep) => prevActiveStep - 1); };
@@ -187,11 +269,22 @@ const NewProspect = () => {
     });
   };
 
+  // ✅ NUEVO: Resetear con los nombres correctos
   const handleReset = () => {
     setActiveStep(0);
     setCoordenadas('');
     setMetodoUbicacion('manual');
     setPlanInteres(null);
+    setErrorApi(null);
+    setFormData({
+      canvaceador_id: '',
+      nombre_completo: '',
+      telefono_whatsapp: '',
+      direccion_calle_numero: '',
+      direccion_colonia: '',
+      referencia_domicilio: '',
+      notas_canvaceador: ''
+    });
   };
 
   const obtenerUbicacionGPS = () => {
@@ -215,7 +308,47 @@ const NewProspect = () => {
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
-        return (<Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}><TextField label="Nombre Completo" variant="outlined" fullWidth size="small" /><TextField label="Teléfono (WhatsApp)" variant="outlined" fullWidth size="small" /></Box>);
+        return (
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* ✅ NUEVO: Selector de Canvaceador (OBLIGATORIO) */}
+            <TextField
+              select
+              label="Canvaceador Responsable"
+              variant="outlined"
+              fullWidth
+              size="small"
+              required
+              value={formData.canvaceador_id}
+              onChange={(e) => setFormData({ ...formData, canvaceador_id: e.target.value })}
+              helperText="Selecciona el canvaceador que está registrando este prospecto"
+            >
+              {CANVACEADORES_DISPONIBLES.map((canv) => (
+                <MenuItem key={canv.id} value={canv.id}>
+                  {canv.nombre}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              label="Nombre Completo"
+              variant="outlined"
+              fullWidth
+              size="small"
+              required
+              value={formData.nombre_completo}
+              onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
+            />
+            <TextField
+              label="Teléfono (WhatsApp)"
+              variant="outlined"
+              fullWidth
+              size="small"
+              required
+              value={formData.telefono_whatsapp}
+              onChange={(e) => setFormData({ ...formData, telefono_whatsapp: e.target.value })}
+            />
+          </Box>
+        );
       case 1:
         return (
           <Box sx={{ mt: 2 }}>
@@ -228,16 +361,128 @@ const NewProspect = () => {
               </RadioGroup>
             </FormControl>
             <Box sx={{ mt: 3, p: 2, backgroundColor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-              {metodoUbicacion === 'manual' && (<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}><TextField label="Calle y Número" fullWidth size="small" /><TextField label="Colonia" fullWidth size="small" /><TextField label="Referencia (Ej. Casa roja frente al parque)" fullWidth size="small" multiline rows={2} /></Box>)}
-              {metodoUbicacion === 'gps' && (<Box sx={{ textAlign: 'center', py: 2 }}><Button variant="contained" color="primary" startIcon={loadingGps ? <CircularProgress size={20} color="inherit" /> : <MyLocation />} onClick={obtenerUbicacionGPS} disabled={loadingGps} sx={{ mb: 2 }}>{loadingGps ? 'Obteniendo GPS...' : 'Capturar mi Ubicación Actual'}</Button>{coordenadas && (<Alert severity="success" icon={<CheckCircle />}>Coordenadas: <strong>{coordenadas}</strong></Alert>)}</Box>)}
-              {metodoUbicacion === 'link' && (<Box sx={{ textAlign: 'center', py: 2 }}><Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>Genera un enlace para enviarlo al cliente.</Typography><TextField fullWidth size="small" value="https://solitsystem.app/loc/req-98x7" InputProps={{ readOnly: true, endAdornment: (<InputAdornment position="end"><Tooltip title={linkCopiado ? "¡Copiado!" : "Copiar Link"}><IconButton onClick={copiarLinkCliente} color={linkCopiado ? "success" : "default"}>{linkCopiado ? <CheckCircle /> : <ContentCopy />}</IconButton></Tooltip></InputAdornment>) }} /><Button variant="outlined" color="success" startIcon={<WhatsApp />} sx={{ mt: 2, textTransform: 'none' }}>Enviar por WhatsApp</Button></Box>)}
+              {metodoUbicacion === 'manual' && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField
+                    label="Calle y Número"
+                    fullWidth
+                    size="small"
+                    value={formData.direccion_calle_numero}
+                    onChange={(e) => setFormData({ ...formData, direccion_calle_numero: e.target.value })}
+                  />
+                  <TextField
+                    label="Colonia"
+                    fullWidth
+                    size="small"
+                    value={formData.direccion_colonia}
+                    onChange={(e) => setFormData({ ...formData, direccion_colonia: e.target.value })}
+                  />
+                  <TextField
+                    label="Referencia (Ej. Casa roja frente al parque)"
+                    fullWidth
+                    size="small"
+                    multiline
+                    rows={2}
+                    value={formData.referencia_domicilio}
+                    onChange={(e) => setFormData({ ...formData, referencia_domicilio: e.target.value })}
+                  />
+                </Box>
+              )}
+              {metodoUbicacion === 'gps' && (
+                <Box sx={{ textAlign: 'center', py: 2 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={loadingGps ? <CircularProgress size={20} color="inherit" /> : <MyLocation />}
+                    onClick={obtenerUbicacionGPS}
+                    disabled={loadingGps}
+                    sx={{ mb: 2 }}
+                  >
+                    {loadingGps ? 'Obteniendo GPS...' : 'Capturar mi Ubicación Actual'}
+                  </Button>
+                  {coordenadas && (
+                    <Alert severity="success" icon={<CheckCircle />}>
+                      Coordenadas: <strong>{coordenadas}</strong>
+                    </Alert>
+                  )}
+                </Box>
+              )}
+              {metodoUbicacion === 'link' && (
+                <Box sx={{ textAlign: 'center', py: 2 }}>
+                  <Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>
+                    Genera un enlace para enviarlo al cliente.
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    value="https://solitsystem.app/loc/req-98x7"
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Tooltip title={linkCopiado ? "¡Copiado!" : "Copiar Link"}>
+                            <IconButton onClick={copiarLinkCliente} color={linkCopiado ? "success" : "default"}>
+                              {linkCopiado ? <CheckCircle /> : <ContentCopy />}
+                            </IconButton>
+                          </Tooltip>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    color="success"
+                    startIcon={<WhatsApp />}
+                    sx={{ mt: 2, textTransform: 'none' }}
+                  >
+                    Enviar por WhatsApp
+                  </Button>
+                </Box>
+              )}
             </Box>
           </Box>
         );
       case 2:
-        return (<Box sx={{ mt: 2 }}><SeleccionPlanesCanvaceo planSeleccionado={planInteres} onPlanSeleccionado={setPlanInteres} /><TextField label="Notas del Canvaceador" fullWidth size="small" multiline rows={3} sx={{ mt: 3 }} placeholder="Ej. Cliente interesado en instalación rápida..." /></Box>);
+        return (
+          <Box sx={{ mt: 2 }}>
+            <SeleccionPlanesCanvaceo planSeleccionado={planInteres} onPlanSeleccionado={setPlanInteres} />
+            <TextField
+              label="Notas del Canvaceador"
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
+              sx={{ mt: 3 }}
+              placeholder="Ej. Cliente interesado en instalación rápida..."
+              value={formData.notas_canvaceador}
+              onChange={(e) => setFormData({ ...formData, notas_canvaceador: e.target.value })}
+            />
+          </Box>
+        );
       case 3:
-        return (<Alert severity="info" sx={{ mt: 2 }}>Revisa que los datos sean correctos. Al guardar, este prospecto pasará al Módulo de Ventas.{planInteres && (<Box sx={{ mt: 1, fontWeight: 600 }}>Plan seleccionado: <strong>{planInteres.nombre}</strong> - ${planInteres.precio}/mes</Box>)}</Alert>);
+        return (
+          <Box sx={{ mt: 2 }}>
+            {errorApi && (
+              <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+                {errorApi}
+              </Alert>
+            )}
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <strong>Resumen del Prospecto:</strong>
+              <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                <li>👤 Canvaceador: <strong>{CANVACEADORES_DISPONIBLES.find(c => c.id == formData.canvaceador_id)?.nombre || 'No seleccionado'}</strong></li>
+                <li>👤 Nombre: <strong>{formData.nombre_completo}</strong></li>
+                <li>📱 Teléfono: <strong>{formData.telefono_whatsapp}</strong></li>
+                {formData.direccion_calle_numero && <li>📍 Dirección: {formData.direccion_calle_numero}, {formData.direccion_colonia}</li>}
+                {planInteres && <li>📦 Plan: <strong>{planInteres.nombre}</strong> - ${planInteres.precio}/mes</li>}
+                {coordenadas && <li>🗺️ Coordenadas: {coordenadas}</li>}
+              </ul>
+            </Alert>
+            <Typography variant="body2" color="text.secondary">
+              Al hacer clic en "Finalizar Registro", los datos se enviarán a la base de datos en <strong>10.144.86.55:1423</strong>.
+            </Typography>
+          </Box>
+        );
       default:
         return 'Paso desconocido';
     }
@@ -245,23 +490,72 @@ const NewProspect = () => {
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto' }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>Registrar Nuevo Prospecto</Typography>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 3 }}>
+        Registrar Nuevo Prospecto
+      </Typography>
       <Paper variant="outlined" sx={{ p: 4, borderRadius: 3 }}>
         <Stepper activeStep={activeStep} orientation="vertical">
           {pasos.map((paso, index) => {
             const stepProps = {};
             const labelProps = {};
-            if (isStepOptional(index)) { labelProps.optional = (<Typography variant="caption" color="error">Opcional</Typography>); }
-            if (isStepSkipped(index)) { stepProps.completed = false; }
+            if (isStepOptional(index)) {
+              labelProps.optional = (<Typography variant="caption" color="error">Opcional</Typography>);
+            }
+            if (isStepSkipped(index)) {
+              stepProps.completed = false;
+            }
             return (
               <Step key={paso.label} {...stepProps}>
-                <StepLabel {...labelProps}><Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paso.label}</Typography><Typography variant="body2" sx={{ color: '#64748b' }}>{paso.description}</Typography></StepLabel>
-                <StepContent>{renderStepContent(index)}<Box sx={{ mb: 2, mt: 3 }}><div><Button variant="contained" onClick={handleNext} sx={{ mt: 1, mr: 1, boxShadow: 'none' }}>{index === pasos.length - 1 ? 'Finalizar Registro' : 'Continuar'}</Button>{isStepOptional(index) && (<Button color="inherit" onClick={handleSkip} sx={{ mt: 1, mr: 1 }}>Saltar</Button>)}<Button disabled={index === 0} onClick={handleBack} sx={{ mt: 1, mr: 1 }}>Atrás</Button></div></Box></StepContent>
+                <StepLabel {...labelProps}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paso.label}</Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b' }}>{paso.description}</Typography>
+                </StepLabel>
+                <StepContent>
+                  {renderStepContent(index)}
+                  <Box sx={{ mb: 2, mt: 3 }}>
+                    <div>
+                      <Button
+                        variant="contained"
+                        onClick={handleNext}
+                        disabled={guardando}
+                        sx={{ mt: 1, mr: 1, boxShadow: 'none' }}
+                      >
+                        {guardando ? (
+                          <><CircularProgress size={20} color="inherit" sx={{ mr: 1 }} /> Guardando...</>
+                        ) : (
+                          index === pasos.length - 1 ? 'Finalizar Registro' : 'Continuar'
+                        )}
+                      </Button>
+                      {isStepOptional(index) && (
+                        <Button color="inherit" onClick={handleSkip} sx={{ mt: 1, mr: 1 }}>
+                          Saltar
+                        </Button>
+                      )}
+                      <Button disabled={index === 0 || guardando} onClick={handleBack} sx={{ mt: 1, mr: 1 }}>
+                        Atrás
+                      </Button>
+                    </div>
+                  </Box>
+                </StepContent>
               </Step>
             );
           })}
         </Stepper>
-        {activeStep === pasos.length && (<Paper square elevation={0} sx={{ p: 3, textAlign: 'center', backgroundColor: '#f0fdf4', borderRadius: 2, mt: 2 }}><CheckCircle sx={{ fontSize: 60, color: '#22c55e', mb: 2 }} /><Typography variant="h6" sx={{ color: '#166534', fontWeight: 600 }}>¡Prospecto guardado con éxito!</Typography><Typography sx={{ mt: 1, mb: 3, color: '#15803d' }}>La información ha sido enviada.</Typography><Button onClick={handleReset} variant="outlined" color="success">Registrar otro prospecto</Button></Paper>)}
+
+        {activeStep === pasos.length && (
+          <Paper square elevation={0} sx={{ p: 3, textAlign: 'center', backgroundColor: '#f0fdf4', borderRadius: 2, mt: 2 }}>
+            <CheckCircle sx={{ fontSize: 60, color: '#22c55e', mb: 2 }} />
+            <Typography variant="h6" sx={{ color: '#166534', fontWeight: 600 }}>
+              ¡Prospecto guardado con éxito!
+            </Typography>
+            <Typography sx={{ mt: 1, mb: 3, color: '#15803d' }}>
+              La información ha sido enviada a la base de datos.
+            </Typography>
+            <Button onClick={handleReset} variant="outlined" color="success">
+              Registrar otro prospecto
+            </Button>
+          </Paper>
+        )}
       </Paper>
     </Box>
   );
