@@ -123,7 +123,8 @@ const SeleccionPlanesCanvaceo = ({ planSeleccionado, onPlanSeleccionado }) => {
   );
 };
 
-const NewProspect = () => {
+// ✅ MODIFICADO: Recibir usuarioActual como prop
+const NewProspect = ({ usuarioActual }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set());
   const [metodoUbicacion, setMetodoUbicacion] = useState('manual');
@@ -150,9 +151,11 @@ const NewProspect = () => {
   const isStepOptional = (step) => step === 1;
   const isStepSkipped = (step) => skipped.has(step);
 
+  // ✅ MODIFICADO: Validación considerando si es canvaceador logueado
   const validarPaso = () => {
     if (activeStep === 0) {
-      if (!formData.canvaceador_id) {
+      // Si NO es canvaceador, debe seleccionar uno
+      if (usuarioActual?.tipo !== 'canvaceador' && !formData.canvaceador_id) {
         setErrorApi('Debes seleccionar un canvaceador');
         return false;
       }
@@ -182,7 +185,7 @@ const NewProspect = () => {
     setSkipped(newSkipped);
   };
 
-  // ✅ FUNCIÓN CORREGIDA - Estructura try/catch correcta
+  // ✅ MODIFICADO: Usar el ID del usuario logueado si es canvaceador
   const guardarProspecto = async () => {
     setGuardando(true);
     setErrorApi(null);
@@ -190,7 +193,10 @@ const NewProspect = () => {
     try {
       // 1. Preparar datos
       const datosParaBackend = {
-        canvaceador_id: parseInt(formData.canvaceador_id),
+        // ✅ USAR EL ID DEL USUARIO LOGUEADO SI ES CANVACEADOR
+        canvaceador_id: usuarioActual?.tipo === 'canvaceador' 
+          ? usuarioActual.id 
+          : parseInt(formData.canvaceador_id),
         nombre_completo: formData.nombre_completo,
         telefono_whatsapp: formData.telefono_whatsapp,
         metodo_ubicacion: metodoUbicacion,
@@ -227,7 +233,6 @@ const NewProspect = () => {
       if (err.response && err.response.data) {
         console.error('🔴 Error detallado del backend:', err.response.data);
 
-        // Manejar diferentes formatos de error
         if (typeof err.response.data === 'string') {
           setErrorApi(`Error: ${err.response.data}`);
         } else if (err.response.data.detail) {
@@ -301,33 +306,49 @@ const NewProspect = () => {
       case 0:
         return (
           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              select
-              label="Canvaceador Responsable"
-              variant="outlined"
-              fullWidth
-              size="small"
-              required
-              value={formData.canvaceador_id}
-              onChange={(e) => setFormData({ ...formData, canvaceador_id: e.target.value })}
-              disabled={loadingCanvaceadores}
-              error={!!errorCanvaceadores}
-              helperText={
-                loadingCanvaceadores
-                  ? "Cargando canvaceadores..."
-                  : errorCanvaceadores
-                    ? `Error: ${errorCanvaceadores}`
-                    : canvaceadores.length === 0
-                      ? "No hay canvaceadores registrados. Crea uno primero en el backend."
-                      : `Selecciona el canvaceador (${canvaceadores.length} disponibles)`
-              }
-            >
-              {canvaceadores.map((canv) => (
-                <MenuItem key={canv.id} value={canv.id}>
-                  {canv.nombreCompleto || canv.numero_empleado || `Canvaceador #${canv.id}`}
-                </MenuItem>
-              ))}
-            </TextField>
+            {/* ✅ MODIFICADO: Si es canvaceador logueado, mostrar información fija */}
+            {usuarioActual?.tipo === 'canvaceador' ? (
+              <Alert severity="success" icon={<CheckCircle />} sx={{ mb: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  👤 Canvaceador: {usuarioActual.nombre}
+                </Typography>
+                <Typography variant="caption" display="block">
+                  ID: {usuarioActual.id} • Empleado: {usuarioActual.numero_empleado}
+                </Typography>
+                <Typography variant="caption" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+                  Se usará automáticamente tu cuenta para registrar este prospecto.
+                </Typography>
+              </Alert>
+            ) : (
+              // Si NO es canvaceador, mostrar selector
+              <TextField
+                select
+                label="Canvaceador Responsable"
+                variant="outlined"
+                fullWidth
+                size="small"
+                required
+                value={formData.canvaceador_id}
+                onChange={(e) => setFormData({ ...formData, canvaceador_id: e.target.value })}
+                disabled={loadingCanvaceadores}
+                error={!!errorCanvaceadores}
+                helperText={
+                  loadingCanvaceadores
+                    ? "Cargando canvaceadores..."
+                    : errorCanvaceadores
+                      ? `Error: ${errorCanvaceadores}`
+                      : canvaceadores.length === 0
+                        ? "No hay canvaceadores registrados. Crea uno primero en el backend."
+                        : `Selecciona el canvaceador (${canvaceadores.length} disponibles)`
+                }
+              >
+                {canvaceadores.map((canv) => (
+                  <MenuItem key={canv.id} value={canv.id}>
+                    {canv.nombreCompleto || canv.numero_empleado || `Canvaceador #${canv.id}`}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
 
             <TextField
               label="Nombre Completo del Prospecto"
@@ -460,7 +481,15 @@ const NewProspect = () => {
           </Box>
         );
       case 3:
-        const canvaceadorSeleccionado = canvaceadores.find(c => c.id == formData.canvaceador_id);
+        // ✅ MODIFICADO: Obtener nombre del canvaceador según si es logueado o seleccionado
+        let nombreCanvaceador = 'No seleccionado';
+        if (usuarioActual?.tipo === 'canvaceador') {
+          nombreCanvaceador = `${usuarioActual.nombre} (ID: ${usuarioActual.id})`;
+        } else {
+          const canvaceadorSeleccionado = canvaceadores.find(c => c.id == formData.canvaceador_id);
+          nombreCanvaceador = canvaceadorSeleccionado?.nombreCompleto || canvaceadorSeleccionado?.numero_empleado || 'No seleccionado';
+        }
+
         return (
           <Box sx={{ mt: 2 }}>
             {errorApi && (
@@ -471,7 +500,7 @@ const NewProspect = () => {
             <Alert severity="info" sx={{ mb: 2 }}>
               <strong>Resumen del Prospecto:</strong>
               <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                <li>👤 Canvaceador: <strong>{canvaceadorSeleccionado?.nombreCompleto || canvaceadorSeleccionado?.numero_empleado || 'No seleccionado'}</strong></li>
+                <li>👤 Canvaceador: <strong>{nombreCanvaceador}</strong></li>
                 <li>👤 Nombre prospecto: <strong>{formData.nombre_completo}</strong></li>
                 <li>📱 Teléfono: <strong>{formData.telefono_whatsapp}</strong></li>
                 {formData.direccion_calle_numero && <li>📍 Dirección: {formData.direccion_calle_numero}, {formData.direccion_colonia}</li>}

@@ -1,63 +1,77 @@
-import React, { useState } from 'react';
-import { Box, CssBaseline, AppBar, Toolbar, IconButton, Typography } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Box, CssBaseline, AppBar, Toolbar, IconButton, Typography, Avatar, Menu, MenuItem, Divider, ListItemIcon } from '@mui/material';
+import { Menu as MenuIcon, Logout, Person } from '@mui/icons-material';
 import Sidebar from './components/Sidebar/Sidebar';
+import Login from './components/Login/Login';
 
-// NUEVO: Import del módulo de administración de planes
+// Importar módulos
 import PlansManagement from './components/Admin/PlansManagement';
-
-// Minimódulos de Canvaceo
 import CoverageMap from './components/Dashboard/CoverageMap';
 import NewProspect from './components/Forms/NewProspect';
 import CanvaceadorRuta from './components/Dashboard/CanvaceadorRuta';
-
-// Minimódulos de Ventas
 import PlanAndQuotation from './components/Forms/PlanAndQuotation';
 import LeadsFollowUp from './components/Dashboard/LeadsFollowUp';
-
-// Minimódulos de Logística y Técnico
 import InstallationSchedule from './components/Dashboard/InstallationSchedule';
 import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
-
-// Minimódulos de Administración Ventas
 import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
 
 const drawerWidth = 260;
 
 function App() {
+  const [usuarioActual, setUsuarioActual] = useState(null);
   const [currentView, setCurrentView] = useState('canvaceo-dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  // Verificar si hay usuario al cargar
+  useEffect(() => {
+    const usuarioGuardado = localStorage.getItem('usuario_actual');
+    if (usuarioGuardado) {
+      setUsuarioActual(JSON.parse(usuarioGuardado));
+    }
+  }, []);
+
+  const handleLoginSuccess = (datosUsuario) => {
+    setUsuarioActual(datosUsuario);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('usuario_actual');
+    setUsuarioActual(null);
+    setCurrentView('canvaceo-dashboard');
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Si no hay usuario, mostrar login
+  if (!usuarioActual) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
   const renderContent = () => {
     switch (currentView) {
-      // Bloque Canvaceo
       case 'canvaceo-dashboard': return <CoverageMap />;
-      case 'canvaceo-registro': return <NewProspect />;
+      case 'canvaceo-registro': return <NewProspect usuarioActual={usuarioActual} />;
       case 'canvaceo-ruta': return <CanvaceadorRuta />;
-      
-      // Bloque Ventas
       case 'ventas-contrato-directo': return <PlanAndQuotation />;
       case 'ventas-seguimiento': return <LeadsFollowUp />;
-      
-      // Bloque Logística
       case 'logistica-agenda': return <InstallationSchedule />;
-      
-      // Bloque Técnico
       case 'tecnico-ejecucion': return <TecnicoEjecucion />;
-
-      // Bloque Administración Ventas
       case 'admin-comisiones': return <Comisiones />;
       case 'admin-asignacion-rutas': return <AsignacionRutas />;
       case 'admin-rutas': return <AsignacionRutas />;
-
-      // NUEVO: Bloque Administración General - Planes
       case 'admin-planes': return <PlansManagement />;
-
       default: return <CoverageMap />;
     }
   };
@@ -76,12 +90,7 @@ function App() {
         }}
       >
         <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
+          <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2, display: { md: 'none' } }}>
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
@@ -107,6 +116,50 @@ function App() {
           overflowY: 'auto' 
         }}
       >
+        {/* Header con info del usuario */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mb: 2,
+          alignItems: 'center',
+          gap: 2
+        }}>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {usuarioActual.nombre}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+              {usuarioActual.tipo} • {usuarioActual.numero_empleado}
+            </Typography>
+          </Box>
+          <Avatar 
+            sx={{ 
+              bgcolor: '#667eea', 
+              cursor: 'pointer',
+              width: 40,
+              height: 40
+            }}
+            onClick={handleMenuOpen}
+          >
+            {usuarioActual.nombre?.charAt(0) || 'U'}
+          </Avatar>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+          >
+            <MenuItem disabled>
+              <ListItemIcon><Person fontSize="small" /></ListItemIcon>
+              {usuarioActual.nombre}
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
+              Cerrar Sesión
+            </MenuItem>
+          </Menu>
+        </Box>
+
         {renderContent()}
       </Box>
     </Box>
