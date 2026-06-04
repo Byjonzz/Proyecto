@@ -1,77 +1,51 @@
 import axios from 'axios';
 
-// Cambiar por la URL de tu backend
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-const axiosInstance = axios.create({
-  baseURL: API_URL,
+// Usar variable de entorno 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+// Crear instancia de Axios con configuración por defecto
+const api = axios.create({
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 segundos de timeout
 });
 
-// Interceptor para agregar token si es necesario
-axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Interceptor para agregar token de autenticación (si lo necesitas después)
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Token ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-// Leads
-export const leadService = {
-  getAll: () => axiosInstance.get('/leads'),
-  getById: (id) => axiosInstance.get(`/leads/${id}`),
-  create: (data) => axiosInstance.post('/leads', data),
-  update: (id, data) => axiosInstance.put(`/leads/${id}`, data),
-  delete: (id) => axiosInstance.delete(`/leads/${id}`),
-};
+// Interceptor para manejar errores globalmente
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // El servidor respondió con código de error
+      console.error('Error de API:', error.response.status, error.response.data);
+      
+      if (error.response.status === 401) {
+        // No autorizado - redirigir a login
+        console.warn('No autorizado');
+      }
+    } else if (error.request) {
+      // La petición fue hecha pero no hay respuesta
+      console.error('No hay respuesta del servidor:', error.request);
+    } else {
+      // Error al configurar la petición
+      console.error('Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
-// Prospects (Prospectos)
-export const prospectService = {
-  getAll: () => axiosInstance.get('/prospects'),
-  getById: (id) => axiosInstance.get(`/prospects/${id}`),
-  create: (data) => axiosInstance.post('/prospects', data),
-  update: (id, data) => axiosInstance.put(`/prospects/${id}`, data),
-  delete: (id) => axiosInstance.delete(`/prospects/${id}`),
-};
-
-// Quotes (Cotizaciones)
-export const quoteService = {
-  getAll: () => axiosInstance.get('/quotes'),
-  getById: (id) => axiosInstance.get(`/quotes/${id}`),
-  create: (data) => axiosInstance.post('/quotes', data),
-  update: (id, data) => axiosInstance.put(`/quotes/${id}`, data),
-};
-
-// Installations (Instalaciones)
-export const installationService = {
-  getAll: () => axiosInstance.get('/installations'),
-  getSchedule: (startDate, endDate) => 
-    axiosInstance.get('/installations/schedule', { params: { startDate, endDate } }),
-  create: (data) => axiosInstance.post('/installations', data),
-  update: (id, data) => axiosInstance.put(`/installations/${id}`, data),
-};
-
-// Reports (Reportes)
-export const reportService = {
-  getMetrics: (dateRange) => axiosInstance.get('/reports/metrics', { params: dateRange }),
-  getSalesByPlan: (dateRange) => axiosInstance.get('/reports/sales-by-plan', { params: dateRange }),
-  getLeadStatus: () => axiosInstance.get('/reports/lead-status'),
-};
-
-// Coverage Map (Mapa de cobertura)
-export const coverageService = {
-  getZones: () => axiosInstance.get('/coverage/zones'),
-  getClients: (zoneId) => axiosInstance.get(`/coverage/zones/${zoneId}/clients`),
-};
-
-// Auth (Autenticación)
-export const authService = {
-  login: (email, password) => axiosInstance.post('/auth/login', { email, password }),
-  logout: () => axiosInstance.post('/auth/logout'),
-  getProfile: () => axiosInstance.get('/auth/profile'),
-};
-
-export default axiosInstance;
+export default api;
