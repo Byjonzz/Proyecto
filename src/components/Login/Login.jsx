@@ -17,9 +17,8 @@ import {
   Visibility,
   VisibilityOff
 } from '@mui/icons-material';
-import api from '../../services/api';
 
-const Login = ({ onLoginSuccess }) => {
+const Login = ({ onLoginSuccess, loginFunction }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -36,52 +35,26 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      // ✅ USAR EL ENDPOINT DE LOGIN DEL BACKEND
-      const response = await api.post('/login/', {
-        email: email,
-        password: password
-      });
+      console.log('🚀 Iniciando proceso de login...');
+      const result = await loginFunction(email, password);
 
-      const data = response.data;
+      console.log('📥 Resultado recibido:', result);
 
-      if (data.success) {
-        // Construir objeto de usuario
-        const datosUsuario = {
-          id: data.usuario_id,
-          tipo: data.rol,
-          nombre: data.nombre,
-          email: data.email,
-          rol: data.rol,
-          numero_empleado: data.numero_empleado,
-          perfil_id: data.perfil_id
-        };
-
-        // Guardar en localStorage
-        localStorage.setItem('usuario_actual', JSON.stringify(datosUsuario));
-        
-        // Notificar al componente padre
-        onLoginSuccess(datosUsuario);
+      if (result.success) {
+        console.log('✅ Login exitoso, llamando onLoginSuccess');
+        onLoginSuccess(result.usuario);
       } else {
-        setError(data.error || 'Error en el login');
+        setError(result.error || 'Error en el login');
       }
     } catch (err) {
-      console.error('Error en login:', err);
-      
-      // Manejar diferentes tipos de error
-      if (err.response) {
-        if (err.response.status === 401) {
-          setError('Credenciales inválidas. Verifica tu correo o contraseña.');
-        } else if (err.response.status === 403) {
-          setError('Error de permisos. Contacta al administrador.');
-        } else if (err.response.data?.error) {
-          setError(err.response.data.error);
-        } else {
-          setError('Error al iniciar sesión. Intenta de nuevo.');
-        }
-      } else if (err.request) {
-        setError('No se pudo conectar con el servidor. Verifica tu conexión.');
+      console.error('❌ Error en login:', err);
+
+      if (err.message === 'Credenciales inválidas') {
+        setError('Correo o contraseña incorrectos');
+      } else if (err.message.includes('Failed to fetch')) {
+        setError('No se pudo conectar con el servidor');
       } else {
-        setError('Error inesperado. Intenta de nuevo.');
+        setError(err.message || 'Error al iniciar sesión');
       }
     } finally {
       setLoading(false);
@@ -114,7 +87,7 @@ const Login = ({ onLoginSuccess }) => {
           zIndex: 0
         }}
       />
-      
+
       <Paper
         elevation={0}
         sx={{
@@ -146,10 +119,10 @@ const Login = ({ onLoginSuccess }) => {
           >
             <LoginIcon sx={{ fontSize: 50, color: '#171718' }} />
           </Box>
-          <Typography 
-            variant="h3" 
-            sx={{ 
-              fontWeight: 900, 
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 900,
               color: '#9fa3a9',
               mb: 1,
               letterSpacing: '-0.5px'
@@ -176,25 +149,17 @@ const Login = ({ onLoginSuccess }) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-          sx={{ 
+          sx={{
             mb: 2.5,
             '& .MuiOutlinedInput-root': {
               color: '#9fa3a9',
-              '& fieldset': {
-                borderColor: '#393d42',
-              },
-              '&:hover fieldset': {
-                borderColor: '#6a6e73',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#9fa3a9',
-              },
+              '& fieldset': { borderColor: '#393d42' },
+              '&:hover fieldset': { borderColor: '#6a6e73' },
+              '&.Mui-focused fieldset': { borderColor: '#9fa3a9' },
             },
             '& .MuiInputLabel-root': {
               color: '#6a6e73',
-              '&.Mui-focused': {
-                color: '#9fa3a9',
-              },
+              '&.Mui-focused': { color: '#9fa3a9' },
             },
           }}
           placeholder="ejemplo@correo.com"
@@ -215,25 +180,17 @@ const Login = ({ onLoginSuccess }) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-          sx={{ 
+          sx={{
             mb: 3,
             '& .MuiOutlinedInput-root': {
               color: '#9fa3a9',
-              '& fieldset': {
-                borderColor: '#393d42',
-              },
-              '&:hover fieldset': {
-                borderColor: '#6a6e73',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#9fa3a9',
-              },
+              '& fieldset': { borderColor: '#393d42' },
+              '&:hover fieldset': { borderColor: '#6a6e73' },
+              '&.Mui-focused fieldset': { borderColor: '#9fa3a9' },
             },
             '& .MuiInputLabel-root': {
               color: '#6a6e73',
-              '&.Mui-focused': {
-                color: '#9fa3a9',
-              },
+              '&.Mui-focused': { color: '#9fa3a9' },
             },
           }}
           placeholder="••••••••"
@@ -256,7 +213,6 @@ const Login = ({ onLoginSuccess }) => {
             ),
           }}
         />
-
         <Button
           variant="contained"
           fullWidth
@@ -271,7 +227,7 @@ const Login = ({ onLoginSuccess }) => {
             borderRadius: 2,
             boxShadow: '0 8px 20px rgba(159, 163, 169, 0.3)',
             color: '#171718',
-            '&:hover': { 
+            '&:hover': {
               background: 'linear-gradient(135deg, #6a6e73 0%, #9fa3a9 100%)',
               boxShadow: '0 12px 28px rgba(159, 163, 169, 0.4)',
               transform: 'translateY(-2px)',
@@ -292,9 +248,9 @@ const Login = ({ onLoginSuccess }) => {
 
         <Typography
           variant="caption"
-          sx={{ 
-            display: 'block', 
-            textAlign: 'center', 
+          sx={{
+            display: 'block',
+            textAlign: 'center',
             mt: 3,
             color: '#393d42',
             fontWeight: 500

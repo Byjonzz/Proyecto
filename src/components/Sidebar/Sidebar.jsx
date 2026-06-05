@@ -1,193 +1,238 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
-  Collapse, Typography, Box, Divider, Avatar
+  Drawer,
+  Toolbar,
+  List,
+  Typography,
+  Divider,
+  IconButton,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Box,
+  Chip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
-  MapOutlined, MonetizationOnOutlined, LocalShippingOutlined,
-  EngineeringOutlined, ExpandLess, ExpandMore, Layers, Map,
-  PersonAdd, DirectionsRun, Assignment, Assessment, Build,
-  ManageAccountsOutlined, AttachMoney, AssignmentInd 
+  Menu as MenuIcon,
+  ChevronLeft as ChevronLeftIcon,
+  Dashboard,
+  PersonAdd,
+  Route,
+  Description,
+  TrendingUp,
+  CalendarToday,
+  Build,
+  AttachMoney,
+  Map,
+  Settings,
+  People
 } from '@mui/icons-material';
+import { puedeAccederARuta, obtenerNombreRol, obtenerColorRol } from '../../config/roles';
 
 const drawerWidth = 260;
 
-const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }) => {
-  const [openMenus, setOpenMenus] = useState({
-    canvaceo: true,
-    ventas: false,
-    logistica: false,
-    tecnico: false,
-    adminVentas: false
-  });
+// Definición de todas las opciones del menú
+const MENU_ITEMS = [
+  // Sección Canvaceo
+  {
+    section: 'CANVACEO',
+    items: [
+      { text: 'Dashboard', icon: <Dashboard />, key: 'canvaceo-dashboard' },
+      { text: 'Nuevo Prospecto', icon: <PersonAdd />, key: 'canvaceo-registro' },
+      { text: 'Rutas', icon: <Route />, key: 'canvaceo-ruta' }
+    ]
+  },
+  // Sección Ventas
+  {
+    section: 'VENTAS',
+    items: [
+      { text: 'Contrato Directo', icon: <Description />, key: 'ventas-contrato-directo' },
+      { text: 'Seguimiento Leads', icon: <TrendingUp />, key: 'ventas-seguimiento' }
+    ]
+  },
+  // Sección Logística
+  {
+    section: 'LOGÍSTICA',
+    items: [
+      { text: 'Agenda Instalaciones', icon: <CalendarToday />, key: 'logistica-agenda' }
+    ]
+  },
+  // Sección Técnico
+  {
+    section: 'TÉCNICO',
+    items: [
+      { text: 'Ejecución', icon: <Build />, key: 'tecnico-ejecucion' }
+    ]
+  },
+  // Sección Administración
+  {
+    section: 'ADMINISTRACIÓN',
+    items: [
+      { text: 'Comisiones', icon: <AttachMoney />, key: 'admin-comisiones' },
+      { text: 'Asignación Rutas', icon: <Map />, key: 'admin-asignacion-rutas' },
+      { text: 'Planes', icon: <Settings />, key: 'admin-planes' },
+      { text: 'Usuarios', icon: <People />, key: 'admin-usuarios' }
+    ]
+  }
+];
 
-  const handleToggle = (menu) => {
-    setOpenMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
-  };
+const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, usuario }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const isActive = (viewName) => currentView === viewName;
+  // Filtrar opciones del menú según el rol del usuario
+  const menuItemsFiltrados = MENU_ITEMS.map(seccion => ({
+    ...seccion,
+    items: seccion.items.filter(item => puedeAccederARuta(usuario?.rol, item.key))
+  })).filter(seccion => seccion.items.length > 0); // Eliminar secciones vacías
 
-  const handleNavigate = (view) => {
-    setCurrentView(view);
-    if (mobileOpen) {
-      handleDrawerToggle();
-    }
-  };
-
-  const drawerContent = (
-    <>
-      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2, backgroundColor: '#0f172a' }}>
-        <Avatar sx={{ bgcolor: '#3b82f6', width: 40, height: 40 }}><Layers /></Avatar>
-        <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>Solit System</Typography>
-          <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500 }}>Panel Corporativo</Typography>
+  const drawer = (
+    <Box sx={{ height: '100%', background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)' }}>
+      {/* Header del Sidebar */}
+      <Toolbar sx={{
+        justifyContent: 'space-between',
+        px: 2,
+        background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+        minHeight: '64px !important'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Typography sx={{ color: 'white', fontWeight: 900, fontSize: '1.2rem' }}>
+              S
+            </Typography>
+          </Box>
+          <Typography variant="h6" noWrap sx={{ fontWeight: 800, color: 'white' }}>
+            Solit System
+          </Typography>
         </Box>
-      </Box>
+        {isMobile && (
+          <IconButton onClick={handleDrawerToggle} sx={{ color: 'white' }}>
+            <ChevronLeftIcon />
+          </IconButton>
+        )}
+      </Toolbar>
 
-      <Divider sx={{ borderColor: '#334155' }} />
+      {/* Info del usuario */}
+      {usuario && (
+        <Box sx={{
+          p: 2,
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(0,0,0,0.2)'
+        }}>
+          <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
+            {usuario.nombre}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+            <Chip
+              label={obtenerNombreRol(usuario.rol)}
+              size="small"
+              sx={{
+                background: obtenerColorRol(usuario.rol),
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '0.7rem',
+                height: 22
+              }}
+            />
+            {usuario.numero_empleado && (
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                {usuario.numero_empleado}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )}
 
-      <List sx={{ px: 1.5, py: 2, flexGrow: 1 }} component="nav">
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
-        {/* CANVACEO */}
-        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('canvaceo')} sx={{ borderRadius: '8px', color: openMenus.canvaceo ? '#60a5fa' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.canvaceo ? '#60a5fa' : '#94a3b8', minWidth: 40 }}><MapOutlined /></ListItemIcon>
-            <ListItemText primary="Canvaceo" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.canvaceo ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openMenus.canvaceo} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-              <ListItemButton onClick={() => handleNavigate('canvaceo-dashboard')} selected={isActive('canvaceo-dashboard')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('canvaceo-dashboard') ? '#60a5fa' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(59, 130, 246, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Map sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Mapa de Cobertura" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => handleNavigate('canvaceo-registro')} selected={isActive('canvaceo-registro')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('canvaceo-registro') ? '#60a5fa' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(59, 130, 246, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><PersonAdd sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Nuevo Prospecto" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => handleNavigate('canvaceo-ruta')} selected={isActive('canvaceo-ruta')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('canvaceo-ruta') ? '#60a5fa' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(59, 130, 246, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><DirectionsRun sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Mi Ruta Diaria" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </ListItem>
-
-        {/* VENTAS */}
-        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('ventas')} sx={{ borderRadius: '8px', color: openMenus.ventas ? '#34d399' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.ventas ? '#34d399' : '#94a3b8', minWidth: 40 }}><MonetizationOnOutlined /></ListItemIcon>
-            <ListItemText primary="Ventas" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.ventas ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openMenus.ventas} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-              <ListItemButton onClick={() => handleNavigate('ventas-contrato-directo')} selected={isActive('ventas-contrato-directo')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('ventas-contrato-directo') ? '#34d399' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(16, 185, 129, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assignment sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Contrato Directo" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => handleNavigate('ventas-seguimiento')} selected={isActive('ventas-seguimiento')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('ventas-seguimiento') ? '#34d399' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(16, 185, 129, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assessment sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Seguimiento Leads" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </ListItem>
-
-        {/* LOGÍSTICA */}
-        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('logistica')} sx={{ borderRadius: '8px', color: openMenus.logistica ? '#fbbf24' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.logistica ? '#fbbf24' : '#94a3b8', minWidth: 40 }}><LocalShippingOutlined /></ListItemIcon>
-            <ListItemText primary="Logística" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.logistica ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openMenus.logistica} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-              <ListItemButton onClick={() => handleNavigate('logistica-agenda')} selected={isActive('logistica-agenda')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('logistica-agenda') ? '#fbbf24' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(245, 158, 11, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Assignment sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Asignación de Citas" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </ListItem>
-
-        {/* TÉCNICO */}
-        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('tecnico')} sx={{ borderRadius: '8px', color: openMenus.tecnico ? '#a78bfa' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.tecnico ? '#a78bfa' : '#94a3b8', minWidth: 40 }}><EngineeringOutlined /></ListItemIcon>
-            <ListItemText primary="Módulo Técnico" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.tecnico ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openMenus.tecnico} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-              <ListItemButton onClick={() => handleNavigate('tecnico-ejecucion')} selected={isActive('tecnico-ejecucion')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('tecnico-ejecucion') ? '#a78bfa' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(167, 139, 250, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><Build sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Ejecución en Campo" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </ListItem>
-
-        {/* ==============================================
-            NUEVO: ADMINISTRACIÓN VENTAS (INDIVIDUAL)
-            ============================================== */}
-        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('adminVentas')} sx={{ borderRadius: '8px', color: openMenus.adminVentas ? '#f43f5e' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.adminVentas ? '#f43f5e' : '#94a3b8', minWidth: 40 }}><ManageAccountsOutlined /></ListItemIcon>
-            <ListItemText primary="Administración Ventas" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.adminVentas ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openMenus.adminVentas} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-
-              {/* NUEVO BOTÓN: Asignación de Rutas */}
-              <ListItemButton onClick={() => handleNavigate('admin-rutas')} selected={isActive('admin-rutas')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-rutas') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><MapOutlined sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Asignación de Rutas" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-
-              {/* Botón existente de Comisiones */}
-              <ListItemButton onClick={() => handleNavigate('admin-comisiones')} selected={isActive('admin-comisiones')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-comisiones') ? '#f43f5e' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(244, 63, 94, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><AttachMoney sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Comisiones" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </ListItem>
-
-        {/*Administración General*/ }
-        <ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
-          <ListItemButton onClick={() => handleToggle('adminGeneral')} sx={{ borderRadius: '8px', color: openMenus.adminGeneral ? '#c722d3' : '#cbd5e1' }}>
-            <ListItemIcon sx={{ color: openMenus.adminGeneral ? '#c722d3' : '#94a3b8', minWidth: 40 }}><ManageAccountsOutlined /></ListItemIcon>
-            <ListItemText primary="Administración General" slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.95rem' } } }} />
-            {openMenus.adminGeneral ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={openMenus.adminGeneral} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding sx={{ pl: 3, mt: 0.5, position: 'relative' }}>
-              <Box sx={{ position: 'absolute', left: 12, top: 0, bottom: 0, width: '1px', backgroundColor: '#334155' }} />
-
-              {/* NUEVO BOTÓN: Planes */}
-              <ListItemButton onClick={() => handleNavigate('admin-planes')} selected={isActive('admin-planes')} sx={{ borderRadius: '6px', mb: 0.5, color: isActive('admin-planes') ? '#c722d3' : '#94a3b8', '&.Mui-selected': { backgroundColor: 'rgba(199, 34, 211, 0.15)' } }}>
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}><MapOutlined sx={{ fontSize: 18 }} /></ListItemIcon>
-                <ListItemText primary="Planes" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
-              </ListItemButton>
-            </List>
-          </Collapse>
-        </ListItem>
-        
-
+      {/* Menú de navegación */}
+      <List sx={{ px: 1, py: 2 }}>
+        {menuItemsFiltrados.map((seccion, idx) => (
+          <Box key={idx} sx={{ mb: 2 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255,255,255,0.5)',
+                fontWeight: 700,
+                px: 2,
+                py: 0.5,
+                display: 'block',
+                letterSpacing: '0.1em',
+                fontSize: '0.7rem'
+              }}
+            >
+              {seccion.section}
+            </Typography>
+            {seccion.items.map((item) => {
+              const isActive = currentView === item.key;
+              return (
+                <ListItem key={item.key} disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton
+                    onClick={() => {
+                      setCurrentView(item.key);
+                      if (isMobile) handleDrawerToggle();
+                    }}
+                    sx={{
+                      borderRadius: 2,
+                      py: 1,
+                      px: 2,
+                      background: isActive
+                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                        : 'transparent',
+                      color: isActive ? 'white' : 'rgba(255,255,255,0.7)',
+                      '&:hover': {
+                        background: isActive
+                          ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                          : 'rgba(255,255,255,0.08)',
+                        color: 'white'
+                      },
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <ListItemIcon sx={{
+                      color: 'inherit',
+                      minWidth: 36
+                    }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      slotProps={{
+                        primary: {
+                          fontSize: '0.9rem',
+                          fontWeight: isActive ? 700 : 500
+                        }
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </Box>
+        ))}
       </List>
-
-    </>
+    </Box>
   );
 
   return (
-    <Box component="nav" sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}>
+    <Box
+      component="nav"
+      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+    >
+      {/* Drawer móvil */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -195,21 +240,30 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle }
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          [`& .MuiDrawer-paper`]: { boxSizing: 'border-box', width: drawerWidth, backgroundColor: '#1e293b', color: '#f8fafc' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            background: '#0f172a'
+          }
         }}
       >
-        {drawerContent}
+        {drawer}
       </Drawer>
 
+      {/* Drawer escritorio */}
       <Drawer
         variant="permanent"
         sx={{
           display: { xs: 'none', md: 'block' },
-          [`& .MuiDrawer-paper`]: { boxSizing: 'border-box', width: drawerWidth, backgroundColor: '#1e293b', color: '#f8fafc', borderRight: '1px solid #334155' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            borderRight: '1px solid rgba(255,255,255,0.1)'
+          }
         }}
         open
       >
-        {drawerContent}
+        {drawer}
       </Drawer>
     </Box>
   );
