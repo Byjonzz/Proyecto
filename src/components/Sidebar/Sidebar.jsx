@@ -35,6 +35,7 @@ import { puedeAccederARuta, obtenerNombreRol, obtenerColorRol } from '../../conf
 const drawerWidth = 260;
 
 // Definición de todas las opciones del menú
+// Definición de todas las opciones del menú
 const MENU_ITEMS = [
   // Sección Canvaceo
   {
@@ -67,12 +68,18 @@ const MENU_ITEMS = [
       { text: 'Ejecución', icon: <Build />, key: 'tecnico-ejecucion' }
     ]
   },
-  // Sección Administración
+  // Sección ADMINISTRACIÓN VENTAS (solo admin_ventas y admin)
   {
-    section: 'ADMINISTRACIÓN',
+    section: 'ADMINISTRACIÓN VENTAS',
     items: [
       { text: 'Comisiones', icon: <AttachMoney />, key: 'admin-comisiones' },
-      { text: 'Asignación Rutas', icon: <Map />, key: 'admin-asignacion-rutas' },
+      { text: 'Asignación Rutas', icon: <Map />, key: 'admin-asignacion-rutas' }
+    ]
+  },
+  // Sección ADMINISTRACIÓN GENERAL (solo admin)
+  {
+    section: 'ADMINISTRACIÓN GENERAL',
+    items: [
       { text: 'Planes', icon: <Settings />, key: 'admin-planes' },
       { text: 'Usuarios', icon: <People />, key: 'admin-usuarios' }
     ]
@@ -217,6 +224,7 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
                         }
                       }}
                     />
+
                   </ListItemButton>
                 </ListItem>
               );
@@ -243,7 +251,8 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            background: '#0f172a'
+            background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+            borderRight: '1px solid rgba(255,255,255,0.08)'
           }
         }}
       >
@@ -258,6 +267,7 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
+            background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
             borderRight: '1px solid rgba(255,255,255,0.1)'
           }
         }}

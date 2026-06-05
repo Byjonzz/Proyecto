@@ -4,8 +4,8 @@ export const ROLES = {
   CANVACEADOR: 'canvaceador',
   TECNICO: 'tecnico',
   LOGISTICA: 'logistica',
-  ADMIN_VENTAS: 'admín_ventas',
-  ADMIN: 'admín'
+  ADMIN_VENTAS: 'admin_ventas',
+  ADMIN: 'admin'
 };
 
 // Definición de qué vistas puede acceder cada rol
@@ -30,7 +30,7 @@ export const RUTAS_POR_ROL = {
     'ventas-seguimiento'
   ],
   
-  // ADMIN_VENTAS - Todo lo de ventas y canvaceo
+  // ADMIN_VENTAS - Todo lo de ventas y canvaceo + comisiones y asignación de rutas
   [ROLES.ADMIN_VENTAS]: [
     'canvaceo-dashboard',
     'canvaceo-registro',
@@ -41,7 +41,7 @@ export const RUTAS_POR_ROL = {
     'admin-asignacion-rutas'
   ],
   
-  // ADMIN - Acceso total a todo
+  // ADMIN - Acceso total a todo incluyendo planes y usuarios
   [ROLES.ADMIN]: [
     'canvaceo-dashboard',
     'canvaceo-registro',

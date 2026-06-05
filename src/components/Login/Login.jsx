@@ -37,9 +37,9 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
     try {
       console.log('🚀 Iniciando proceso de login...');
       const result = await loginFunction(email, password);
-
+      
       console.log('📥 Resultado recibido:', result);
-
+      
       if (result.success) {
         console.log('✅ Login exitoso, llamando onLoginSuccess');
         onLoginSuccess(result.usuario);
@@ -48,7 +48,7 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
       }
     } catch (err) {
       console.error('❌ Error en login:', err);
-
+      
       if (err.message === 'Credenciales inválidas') {
         setError('Correo o contraseña incorrectos');
       } else if (err.message.includes('Failed to fetch')) {
@@ -87,7 +87,7 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
           zIndex: 0
         }}
       />
-
+      
       <Paper
         elevation={0}
         sx={{
@@ -119,10 +119,10 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
           >
             <LoginIcon sx={{ fontSize: 50, color: '#171718' }} />
           </Box>
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 900,
+          <Typography 
+            variant="h3" 
+            sx={{ 
+              fontWeight: 900, 
               color: '#9fa3a9',
               mb: 1,
               letterSpacing: '-0.5px'
@@ -149,7 +149,7 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-          sx={{
+          sx={{ 
             mb: 2.5,
             '& .MuiOutlinedInput-root': {
               color: '#9fa3a9',
@@ -163,12 +163,14 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
             },
           }}
           placeholder="ejemplo@correo.com"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Email sx={{ color: '#6a6e73' }} />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Email sx={{ color: '#6a6e73' }} />
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
@@ -180,7 +182,7 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-          sx={{
+          sx={{ 
             mb: 3,
             '& .MuiOutlinedInput-root': {
               color: '#9fa3a9',
@@ -194,25 +196,28 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
             },
           }}
           placeholder="••••••••"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock sx={{ color: '#6a6e73' }} />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                  sx={{ color: '#6a6e73' }}
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Lock sx={{ color: '#6a6e73' }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    sx={{ color: '#6a6e73' }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
+
         <Button
           variant="contained"
           fullWidth
@@ -227,7 +232,7 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
             borderRadius: 2,
             boxShadow: '0 8px 20px rgba(159, 163, 169, 0.3)',
             color: '#171718',
-            '&:hover': {
+            '&:hover': { 
               background: 'linear-gradient(135deg, #6a6e73 0%, #9fa3a9 100%)',
               boxShadow: '0 12px 28px rgba(159, 163, 169, 0.4)',
               transform: 'translateY(-2px)',
@@ -248,9 +253,9 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
 
         <Typography
           variant="caption"
-          sx={{
-            display: 'block',
-            textAlign: 'center',
+          sx={{ 
+            display: 'block', 
+            textAlign: 'center', 
             mt: 3,
             color: '#393d42',
             fontWeight: 500
