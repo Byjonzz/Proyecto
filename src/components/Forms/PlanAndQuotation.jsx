@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import SeleccionPlanes from './SeleccionPlanes';
+import { useContratos } from '../../hooks/useContratos';
 
 import {
   Box, Paper, Typography, TextField, Button, MenuItem, 
@@ -18,11 +19,14 @@ const pasosContrato = [
   { label: 'Evidencias y Cierre', description: 'Fotos del INE, Desglose de cobro y Firma.' }
 ];
 
-const PlanAndQuotation = () => {
+const PlanAndQuotation = ({ usuarioActual }) => {
+  const { createContrato, loading: loadingContrato } = useContratos();
+  
   const [activeStep, setActiveStep] = useState(0);
   const [guardado, setGuardado] = useState(false);
   const [errorDireccion, setErrorDireccion] = useState(false);
   const [errorPlan, setErrorPlan] = useState(false);
+  const [errorApi, setErrorApi] = useState(null);
 
   const [formData, setFormData] = useState({
     ine: '',
@@ -54,6 +58,7 @@ const PlanAndQuotation = () => {
     const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
     ctx.beginPath(); ctx.moveTo(x, y); setIsDrawing(true);
   };
+  
   const draw = (e) => {
     if (!isDrawing) return; e.preventDefault();
     const canvas = canvasRef.current; if (!canvas) return;
@@ -63,7 +68,9 @@ const PlanAndQuotation = () => {
     const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
     ctx.lineTo(x, y); ctx.stroke();
   };
+  
   const stopDrawing = () => setIsDrawing(false);
+  
   const limpiarFirma = () => {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -112,7 +119,108 @@ const PlanAndQuotation = () => {
   };
   
   const handleBack = () => setActiveStep((prev) => prev - 1);
-  const handleSubmit = (e) => { e.preventDefault(); setGuardado(true); };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorApi(null);
+    
+    // Validaciones adicionales
+    if (formData.telefono1.length !== 10) {
+      setErrorApi('El teléfono 1 debe tener exactamente 10 dígitos');
+      return;
+    }
+    
+    if (formData.telefono2 && formData.telefono2.length !== 10) {
+      setErrorApi('El teléfono 2 debe tener exactamente 10 dígitos');
+      return;
+    }
+    
+    if (metodoUbicacion === 'manual' && !formData.calleNumero.trim()) {
+      setErrorApi('La dirección es requerida');
+      setErrorDireccion(true);
+      setActiveStep(1);
+      return;
+    }
+    
+    setGuardado(true);
+
+    try {
+      // Obtener firma del canvas
+      const canvas = canvasRef.current;
+      const firmaDigital = canvas ? canvas.toDataURL() : '';
+
+      // Preparar datos del contrato
+      const datosContrato = {
+        // Datos del cliente
+        ine_cliente: formData.ine,
+        nombre_completo: formData.nombre,
+        telefono1: formData.telefono1,
+        telefono2: formData.telefono2 || null,
+        correo: formData.correo,
+        
+        // Ubicación
+        metodo_ubicacion: metodoUbicacion,
+        calle_numero: formData.calleNumero,
+        referencias: formData.referencias || null,
+        detalles_fachada: formData.detallesCasa || null,
+        
+        // Coordenadas GPS (convertir a formato WKT si existen)
+        coordenadas_gps: coordenadas ? `POINT(${coordenadas.split(',')[1].trim()} ${coordenadas.split(',')[0].trim()})` : null,
+        
+        // Plan y montos
+        plan_contratado: formData.plan?.nombre || '',
+        monto_instalacion: 0,
+        monto_primer_mes: formData.plan?.precio || 0,
+        monto_total: calcularTotales().total,
+        
+        // Estatus inicial
+        estatus: 'Pendiente Asignar',
+        
+        // IDs de relación
+        canvaceador_id: usuarioActual?.perfil_id || null,
+        tecnico_id: null,
+        
+        // Firmas y fotos
+        firma_digital: firmaDigital,
+        foto_ine_frente: null,
+        foto_ine_reverso: null,
+        foto_fachada: null,
+        foto_poste: null
+      };
+
+      console.log('📄 Guardando contrato:', datosContrato);
+      
+      // Guardar en el backend
+      const nuevoContrato = await createContrato(datosContrato);
+      
+      console.log('✅ Contrato guardado exitosamente:', nuevoContrato);
+      
+      // Mostrar mensaje de éxito
+      setTimeout(() => {
+        setGuardado(false);
+        setActiveStep(0);
+        setFormData({
+          ine: '',
+          nombre: '',
+          telefono1: '',
+          telefono2: '',
+          correo: '',
+          plan: null,
+          calleNumero: '',
+          referencias: '',
+          detallesCasa: ''
+        });
+        setCoordenadas('');
+        setMetodoUbicacion('manual');
+        limpiarFirma();
+      }, 3000);
+      
+    } catch (err) {
+      console.error('❌ Error al guardar contrato:', err);
+      setErrorApi(`Error al guardar el contrato: ${err.message}`);
+      setGuardado(false);
+    }
+  };
 
   const calcularTotales = () => {
     if (!formData.plan) return { instalacion: 0, primerMes: 0, total: 0 };
@@ -127,10 +235,51 @@ const PlanAndQuotation = () => {
       case 0: 
         return (
           <Stack spacing={3} sx={{ mt: 2 }}>
-            <TextField label="ID del INE (16 dígitos)" required fullWidth size="small" inputProps={{ maxLength: 16 }} value={formData.ine} onChange={(e) => setFormData({...formData, ine: e.target.value.replace(/\D/g, '')})} />
+            <TextField 
+              label="ID del INE (16 dígitos)" 
+              required 
+              fullWidth 
+              size="small" 
+              slotProps={{
+                input: { 
+                  maxLength: 16 
+                }
+              }}
+              value={formData.ine} 
+              onChange={(e) => setFormData({...formData, ine: e.target.value.replace(/\D/g, '').slice(0, 16)})} 
+            />
             <TextField label="Nombre Completo" required fullWidth size="small" value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})} />
-            <TextField label="Teléfono 1" required fullWidth size="small" inputProps={{ maxLength: 10 }} value={formData.telefono1} onChange={(e) => setFormData({...formData, telefono1: e.target.value.replace(/\D/g, '')})} />
-            <TextField label="Teléfono 2" fullWidth size="small" inputProps={{ maxLength: 10 }} value={formData.telefono2} onChange={(e) => setFormData({...formData, telefono2: e.target.value.replace(/\D/g, '')})} />
+            <TextField 
+              label="Teléfono 1" 
+              required 
+              fullWidth 
+              size="small" 
+              slotProps={{
+                input: { 
+                  maxLength: 10 
+                }
+              }}
+              value={formData.telefono1} 
+              onChange={(e) => setFormData({
+                ...formData, 
+                telefono1: e.target.value.replace(/\D/g, '').slice(0, 10)
+              })} 
+            />
+            <TextField 
+              label="Teléfono 2" 
+              fullWidth 
+              size="small" 
+              slotProps={{
+                input: { 
+                  maxLength: 10 
+                }
+              }}
+              value={formData.telefono2} 
+              onChange={(e) => setFormData({
+                ...formData, 
+                telefono2: e.target.value.replace(/\D/g, '').slice(0, 10)
+              })} 
+            />
             <TextField label="Correo Electrónico" type="email" required fullWidth size="small" value={formData.correo} onChange={(e) => setFormData({...formData, correo: e.target.value})} />
           </Stack>
         );
@@ -157,7 +306,7 @@ const PlanAndQuotation = () => {
             <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
               {metodoUbicacion === 'manual' && (<TextField label="Dirección (Calle y Número)" required error={errorDireccion} helperText={errorDireccion ? "Requerido" : ""} fullWidth size="small" value={formData.calleNumero} onChange={(e) => setFormData({...formData, calleNumero: e.target.value})} sx={{ mb: 2 }} />)}
               {metodoUbicacion === 'gps' && (<Box sx={{ textAlign: 'center', py: 2, mb: 2 }}><Button variant="contained" color="primary" startIcon={loadingGps ? <CircularProgress size={20} color="inherit" /> : <MyLocation />} onClick={obtenerUbicacionGPS} disabled={loadingGps} sx={{ mb: 2 }}>{loadingGps ? 'Calculando...' : 'Obtener Ubicación'}</Button>{coordenadas && <Alert severity="success" icon={<CheckCircle />}>Coordenadas: <strong>{coordenadas}</strong></Alert>}</Box>)}
-              {metodoUbicacion === 'link' && (<Box sx={{ textAlign: 'center', py: 2, mb: 2 }}><Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>Envía este link al cliente.</Typography><TextField fullWidth size="small" value="https://solitsystem.app/loc/req-98x7" InputProps={{ readOnly: true, endAdornment: (<InputAdornment position="end"><Tooltip title={linkCopiado ? "¡Copiado!" : "Copiar"}><IconButton onClick={copiarLinkCliente} color={linkCopiado ? "success" : "default"}>{linkCopiado ? <CheckCircle /> : <ContentCopy />}</IconButton></Tooltip></InputAdornment>) }} /><Button variant="outlined" color="success" startIcon={<WhatsApp />} sx={{ mt: 2 }}>Enviar por WhatsApp</Button></Box>)}
+              {metodoUbicacion === 'link' && (<Box sx={{ textAlign: 'center', py: 2, mb: 2 }}><Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>Envía este link al cliente.</Typography><TextField fullWidth size="small" value="https://solitsystem.app/loc/req-98x7" slotProps={{ input: { readOnly: true, endAdornment: (<InputAdornment position="end"><Tooltip title={linkCopiado ? "¡Copiado!" : "Copiar"}><IconButton onClick={copiarLinkCliente} color={linkCopiado ? "success" : "default"}>{linkCopiado ? <CheckCircle /> : <ContentCopy />}</IconButton></Tooltip></InputAdornment>) } }} /><Button variant="outlined" color="success" startIcon={<WhatsApp />} sx={{ mt: 2 }}>Enviar por WhatsApp</Button></Box>)}
               {metodoUbicacion === 'mapa' && (<Box sx={{ textAlign: 'center', py: 1, mb: 2 }}><Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>Haz clic en el mapa.</Typography><Box onClick={handleMapClick} sx={{ width: '100%', height: 250, backgroundColor: '#e2e8f0', borderRadius: 2, position: 'relative', overflow: 'hidden', cursor: 'crosshair' }}>{!mapPin && (<Typography variant="caption" sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#64748b' }}>Clic para fijar Pin</Typography>)}{mapPin && (<PinDrop color="error" sx={{ position: 'absolute', top: mapPin.y - 24, left: mapPin.x - 12, fontSize: 30 }} />)}</Box>{coordenadas && <Alert severity="success" sx={{ mt: 2 }}>Pin: <strong>{coordenadas}</strong></Alert>}</Box>)}
               <Divider sx={{ my: 3 }} />
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#334155' }}>Detalles Adicionales</Typography>
@@ -206,11 +355,34 @@ const PlanAndQuotation = () => {
           {pasosContrato.map((paso, index) => (
             <Step key={paso.label}>
               <StepLabel><Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{paso.label}</Typography></StepLabel>
-              <StepContent>{renderStepContent(index)}<Box sx={{ mt: 3 }}><Button variant="contained" onClick={index === 2 ? handleSubmit : handleNext}>{index === 2 ? 'Finalizar' : 'Siguiente'}</Button><Button disabled={index === 0} onClick={handleBack} sx={{ ml: 1 }}>Atrás</Button></Box></StepContent>
+              <StepContent>
+                {renderStepContent(index)}
+                <Box sx={{ mt: 3 }}>
+                  <Button 
+                    variant="contained" 
+                    onClick={index === 2 ? handleSubmit : handleNext}
+                    disabled={loadingContrato}
+                  >
+                    {loadingContrato ? <CircularProgress size={20} color="inherit" /> : (index === 2 ? 'Finalizar' : 'Siguiente')}
+                  </Button>
+                  <Button disabled={index === 0} onClick={handleBack} sx={{ ml: 1 }}>Atrás</Button>
+                </Box>
+              </StepContent>
             </Step>
           ))}
         </Stepper>
-        {guardado && (<Alert severity="success" sx={{ mt: 2 }}>Contrato guardado exitosamente.</Alert>)}
+        
+        {errorApi && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {errorApi}
+          </Alert>
+        )}
+        
+        {guardado && !errorApi && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            ✅ Contrato guardado exitosamente. Aparecerá en Agenda de Instalaciones.
+          </Alert>
+        )}
       </Paper>
     </Box>
   );

@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Button, Chip, TextField, MenuItem, Stack, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Grid, 
-  Card, Divider
+  Card, Divider, CircularProgress
 } from '@mui/material';
 import { 
   CalendarMonth, Close, EventAvailableOutlined, AssignmentOutlined,
   PieChartOutlined, BarChartOutlined
 } from '@mui/icons-material';
+import { useContratos } from '../../hooks/useContratos';
 
 const InstallationSchedule = () => {
-  // Lista de contratos listos desde Ventas
-  const [ordenes, setOrdenes] = useState([
-    { id: 'C-98765', cliente: 'Juan Pérez García', plan: 'Familiar 50MB', direccion: 'Av. Reforma 402, Centro', estatus: 'Pendiente Asignar' },
-    { id: 'C-98766', cliente: 'María Elena Solís', plan: 'Ultra Gamer 100MB', direccion: 'Calle 5 Poniente 12, Las Palmas', estatus: 'Pendiente Asignar' },
-    { id: 'C-98767', cliente: 'Roberto Gómez', plan: 'Básico 20MB', direccion: 'Privada Juárez 14, San José', estatus: 'Pendiente Asignar' }
-  ]);
-
+  const { contratos, loading, error, asignarCita, refetchPendientes } = useContratos();
+  
   const [tecnicos, setTecnicos] = useState([
     { id: 't1', nombre: 'Téc. Ana Ramírez', m900: 'Disponible', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Disponible' },
     { id: 't2', nombre: 'Téc. Carlos Soto', m900: 'Ocupado', m1130: 'Ocupado', m1400: 'Disponible', m1635: 'Ocupado' },
@@ -54,6 +50,22 @@ const InstallationSchedule = () => {
   const [tecnico, setTecnico] = useState('');
   const [horaSeleccionada, setHoraSeleccionada] = useState('');
   const [mensajeExito, setMensajeExito] = useState(false);
+  const [errorAsignacion, setErrorAsignacion] = useState(null);
+
+  useEffect(() => {
+    refetchPendientes();
+  }, []);
+
+  const ordenes = contratos.map(contrato => ({
+    id: contrato.id || `C-${contrato.id}`,
+    cliente: contrato.nombre_completo,
+    plan: contrato.plan_contratado,
+    direccion: contrato.calle_numero,
+    estatus: contrato.estatus,
+    contrato_id: contrato.id,
+    telefono: contrato.telefono1,
+    correo: contrato.correo
+  }));
 
   const handleAbrirModal = (orden) => {
     setOrdenSeleccionada(orden);
@@ -61,29 +73,44 @@ const InstallationSchedule = () => {
     setTecnico('');
     setHoraSeleccionada('');
     setMensajeExito(false);
+    setErrorAsignacion(null);
   };
 
   const handleCerrarModal = () => setOrdenSeleccionada(null);
 
-  const handleGuardarAsignacion = (e) => {
+  const handleGuardarAsignacion = async (e) => {
     e.preventDefault();
+    setErrorAsignacion(null);
     
-    setOrdenes(ordenes.map(o => o.id === ordenSeleccionada.id ? { ...o, estatus: 'Asignado' } : o));
-    
-    setTecnicos(tecnicos.map(t => {
-      if (t.id === tecnico) {
-        const clonTecnico = { ...t };
-        if (horaSeleccionada === '09:00 AM') clonTecnico.m900 = 'Ocupado';
-        if (horaSeleccionada === '11:30 AM') clonTecnico.m1130 = 'Ocupado';
-        if (horaSeleccionada === '02:00 PM') clonTecnico.m1400 = 'Ocupado';
-        if (horaSeleccionada === '04:30 PM') clonTecnico.m1635 = 'Ocupado';
-        return clonTecnico;
-      }
-      return t;
-    }));
+    try {
+      await asignarCita(ordenSeleccionada.contrato_id, {
+        fecha_asignada: fecha,
+        hora_asignada: horaSeleccionada,
+        tecnico_asignado: tecnicos.find(t => t.id === tecnico)?.nombre || tecnico
+      });
+      
+      setTecnicos(tecnicos.map(t => {
+        if (t.id === tecnico) {
+          const clonTecnico = { ...t };
+          if (horaSeleccionada === '09:00 AM') clonTecnico.m900 = 'Ocupado';
+          if (horaSeleccionada === '11:30 AM') clonTecnico.m1130 = 'Ocupado';
+          if (horaSeleccionada === '02:00 PM') clonTecnico.m1400 = 'Ocupado';
+          if (horaSeleccionada === '04:30 PM') clonTecnico.m1635 = 'Ocupado';
+          return clonTecnico;
+        }
+        return t;
+      }));
 
-    setMensajeExito(true);
-    handleCerrarModal();
+      setMensajeExito(true);
+      handleCerrarModal();
+      refetchPendientes();
+      
+      setTimeout(() => setMensajeExito(false), 3000);
+      
+    } catch (err) {
+      console.error('Error al asignar cita:', err);
+      setErrorAsignacion(`Error al asignar la cita: ${err.message}`);
+    }
   };
 
   const getChipStyle = (status) => {
@@ -92,10 +119,26 @@ const InstallationSchedule = () => {
       : { bgcolor: '#f1f5f9', color: '#94a3b8', fontWeight: 500 };
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Cargando contratos pendientes...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ m: 3 }}>
+        Error al cargar contratos: {error}
+      </Alert>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
       
-      {/* CABECERA */}
       <Box>
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
           <AssignmentOutlined color="primary" /> Mesa de Control y Asignación de Logística
@@ -107,11 +150,16 @@ const InstallationSchedule = () => {
 
       {mensajeExito && (
         <Alert severity="success" onClose={() => setMensajeExito(false)} sx={{ borderRadius: 2 }}>
-          Instalación agendada con éxito. El tablero se ha actualizado y se notificó al técnico.
+          ✅ Instalación agendada con éxito. El tablero se ha actualizado y se notificó al técnico.
         </Alert>
       )}
 
-      {/* TABLA DE CONTRATOS ENTRANTES */}
+      {errorAsignacion && (
+        <Alert severity="error" onClose={() => setErrorAsignacion(null)} sx={{ borderRadius: 2 }}>
+          {errorAsignacion}
+        </Alert>
+      )}
+
       <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
@@ -125,40 +173,49 @@ const InstallationSchedule = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {ordenes.map((orden) => (
-              <TableRow key={orden.id} hover>
-                <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{orden.id}</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{orden.cliente}</TableCell>
-                <TableCell>{orden.plan}</TableCell>
-                <TableCell>{orden.direccion}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={orden.estatus}
-                    color={orden.estatus === 'Asignado' ? 'success' : 'warning'}
-                    size="small"
-                    sx={{ fontWeight: 600 }}
-                  />
-                </TableCell>
-                <TableCell align="center">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    disabled={orden.estatus === 'Asignado'}
-                    onClick={() => handleAbrirModal(orden)}
-                    sx={{ textTransform: 'none', borderRadius: 1.5 }}
-                  >
-                    Asignar Cita
-                  </Button>
+            {ordenes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No hay contratos pendientes de asignar
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              ordenes.map((orden) => (
+                <TableRow key={orden.id} hover>
+                  <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{orden.id}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{orden.cliente}</TableCell>
+                  <TableCell>{orden.plan}</TableCell>
+                  <TableCell>{orden.direccion}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={orden.estatus}
+                      color={orden.estatus === 'Asignado' ? 'success' : 'warning'}
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      disabled={orden.estatus === 'Asignado'}
+                      onClick={() => handleAbrirModal(orden)}
+                      sx={{ textTransform: 'none', borderRadius: 1.5 }}
+                    >
+                      Asignar Cita
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* TABLERO DE DISPONIBILIDAD TÉCNICA */}
       <Box sx={{ mt: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
           <EventAvailableOutlined color="primary" />
           <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b' }}>
             Tablero de Disponibilidad Técnica Diaria
@@ -193,10 +250,9 @@ const InstallationSchedule = () => {
 
       <Divider sx={{ my: 1 }} />
 
-      {/* REPORTE GRÁFICO INFERIOR */}
       <Box sx={{ width: '100%' }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <Card variant="outlined" sx={{ borderRadius: 3, p: 3, height: '100%' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PieChartOutlined color="primary" fontSize="small" /> Estatus Global
@@ -213,14 +269,17 @@ const InstallationSchedule = () => {
                 </Box>
                 <Stack spacing={1}>
                   {datosPastel.map((item, i) => (
-                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Box sx={{ width: 12, height: 12, borderRadius: '2px', backgroundColor: item.color }} /><Typography variant="caption" sx={{ fontWeight: 600 }}>{item.label} ({item.value}%)</Typography></Box>
+                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '2px', backgroundColor: item.color }} />
+                      <Typography variant="caption" sx={{ fontWeight: 600 }}>{item.label} ({item.value}%)</Typography>
+                    </Box>
                   ))}
                 </Stack>
               </Box>
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={7}>
+          <Grid size={{ xs: 12, md: 7 }}>
             <Card variant="outlined" sx={{ borderRadius: 3, p: 3, height: '100%' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <BarChartOutlined color="secondary" fontSize="small" /> Volumen por Día
@@ -239,18 +298,23 @@ const InstallationSchedule = () => {
         </Grid>
       </Box>
 
-      {/* MODAL DE AGENDAMIENTO */}
       <Dialog 
         open={Boolean(ordenSeleccionada)} 
         onClose={handleCerrarModal}
         maxWidth="sm"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        slotProps={{
+          paper: { sx: { borderRadius: 3 } }
+        }}
       >
+        {/* ✅ CORREGIDO: Quitar Typography anidado */}
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1d4ed8' }}>
-            Agendar Folio: {ordenSeleccionada?.id}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CalendarMonth color="primary" />
+            <Typography variant="h6" component="span" sx={{ fontWeight: 700, color: '#1d4ed8' }}>
+              Agendar Folio: {ordenSeleccionada?.id}
+            </Typography>
+          </Box>
           <IconButton onClick={handleCerrarModal} size="small"><Close /></IconButton>
         </DialogTitle>
         
@@ -261,11 +325,14 @@ const InstallationSchedule = () => {
               Dirección: {ordenSeleccionada?.direccion}
             </Typography>
 
+            {/* ✅ CORREGIDO: Cambiar InputLabelProps por slotProps */}
             <TextField
               type="date"
               fullWidth
               required
-              InputLabelProps={{ shrink: true }}
+              slotProps={{
+                inputLabel: { shrink: true }
+              }}
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
             />
@@ -281,6 +348,7 @@ const InstallationSchedule = () => {
                 setHoraSeleccionada(''); 
               }}
             >
+              {/* ✅ Asegurar que siempre haya children */}
               <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
               <MenuItem value="t2">Téc. Carlos Soto - Zona Sur</MenuItem>
               <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
@@ -296,11 +364,18 @@ const InstallationSchedule = () => {
               onChange={(e) => setHoraSeleccionada(e.target.value)}
               helperText={!tecnico ? "Por favor, selecciona primero un técnico para ver sus bloques libres" : ""}
             >
-              {tecnico && obtenerHorasDisponibles(tecnico).map((hora, index) => (
-                <MenuItem key={index} value={hora}>
-                  {hora} - Bloque Libre Asignable
+              {/* ✅ CORREGIDO: Asegurar que siempre haya children */}
+              {tecnico && obtenerHorasDisponibles(tecnico).length > 0 ? (
+                obtenerHorasDisponibles(tecnico).map((hora, index) => (
+                  <MenuItem key={index} value={hora}>
+                    {hora} - Bloque Libre Asignable
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem value="" disabled>
+                  {tecnico ? 'No hay horarios disponibles' : 'Selecciona un técnico primero'}
                 </MenuItem>
-              ))}
+              )}
             </TextField>
           </DialogContent>
           
