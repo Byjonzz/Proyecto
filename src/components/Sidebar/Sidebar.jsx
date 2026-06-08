@@ -81,7 +81,6 @@ const MENU_ITEMS = [
     section: 'ADMINISTRACIÓN GENERAL',
     items: [
       { text: 'Planes', icon: <Settings />, key: 'admin-planes' },
-      { text: 'Usuarios', icon: <People />, key: 'admin-usuarios' }
     ]
   }
 ];

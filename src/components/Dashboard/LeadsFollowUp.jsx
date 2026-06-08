@@ -20,23 +20,15 @@ import {
   Button,
   TextField
 } from '@mui/material';
-import { Edit, Delete, Visibility } from '@mui/icons-material';
+// ✅ ELIMINADO: Edit y Delete ya no se necesitan
+import { Visibility } from '@mui/icons-material';
 
 const LeadsFollowUp = () => {
-  const { prospectos, loading, error, deleteProspecto } = useProspectos();
+  const { prospectos, loading, error } = useProspectos(); // ✅ ELIMINADO: deleteProspecto
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prospectoSeleccionado, setProspectoSeleccionado] = useState(null);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este prospecto?')) {
-      try {
-        await deleteProspecto(id);
-        alert('Prospecto eliminado correctamente');
-      } catch (err) {
-        alert('Error al eliminar el prospecto');
-      }
-    }
-  };
+  // ✅ ELIMINADO: La función handleDelete ya no se necesita
 
   const handleView = (prospecto) => {
     setProspectoSeleccionado(prospecto);
@@ -134,6 +126,7 @@ const LeadsFollowUp = () => {
                   </TableCell>
                   <TableCell>{formatDate(prospecto.fecha_captura)}</TableCell>
                   <TableCell align="center">
+                    {/* ✅ SOLO el botón de Ver - Editar y Eliminar fueron removidos */}
                     <Tooltip title="Ver detalles">
                       <IconButton 
                         size="small" 
@@ -141,20 +134,6 @@ const LeadsFollowUp = () => {
                         onClick={() => handleView(prospecto)}
                       >
                         <Visibility />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Editar">
-                      <IconButton size="small" color="info">
-                        <Edit />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Eliminar">
-                      <IconButton 
-                        size="small" 
-                        color="error"
-                        onClick={() => handleDelete(prospecto.id)}
-                      >
-                        <Delete />
                       </IconButton>
                     </Tooltip>
                   </TableCell>

@@ -7,7 +7,8 @@ import {
 } from '@mui/material';
 import { 
   CalendarMonth, Close, EventAvailableOutlined, AssignmentOutlined,
-  PieChartOutlined, BarChartOutlined
+  PieChartOutlined, BarChartOutlined, Pending, AssignmentTurnedIn,
+  CheckCircle
 } from '@mui/icons-material';
 import { useContratos } from '../../hooks/useContratos';
 
@@ -20,25 +21,10 @@ const InstallationSchedule = () => {
     { id: 't3', nombre: 'Téc. Luis Pérez', m900: 'Disponible', m1130: 'Disponible', m1400: 'Ocupado', m1635: 'Disponible' }
   ]);
 
-  // ✅ MAPEO DE IDs LOCALES A IDs REALES DEL BACKEND
-  // IMPORTANTE: Cambia estos números según los IDs reales de tus técnicos en la BD
-  // Verifica en: http://10.144.86.55:1423/api/tecnicos/
   const tecnicoIdMap = {
-    't1': 1, // Ana Ramírez - ID real en BD
-    't2': 2, // Carlos Soto - ID real en BD
-    't3': 3  // Luis Pérez - ID real en BD
-  };
-
-  const obtenerHorasDisponibles = (idTecnico) => {
-    const tech = tecnicos.find(t => t.id === idTecnico);
-    if (!tech) return [];
-    
-    const horasLibres = [];
-    if (tech.m900 === 'Disponible') horasLibres.push('09:00 AM');
-    if (tech.m1130 === 'Disponible') horasLibres.push('11:30 AM');
-    if (tech.m1400 === 'Disponible') horasLibres.push('02:00 PM');
-    if (tech.m1635 === 'Disponible') horasLibres.push('04:30 PM');
-    return horasLibres;
+    't1': 1,
+    't2': 2,
+    't3': 3
   };
 
   const datosPastel = [
@@ -57,9 +43,11 @@ const InstallationSchedule = () => {
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [fecha, setFecha] = useState('');
   const [tecnico, setTecnico] = useState('');
-  const [horaSeleccionada, setHoraSeleccionada] = useState('');
   const [mensajeExito, setMensajeExito] = useState(false);
   const [errorAsignacion, setErrorAsignacion] = useState(null);
+
+  // ✅ NUEVO: Estado para el filtro de estatus
+  const [filtroEstatus, setFiltroEstatus] = useState('pendientes');
 
   useEffect(() => {
     refetchPendientes();
@@ -76,24 +64,40 @@ const InstallationSchedule = () => {
     correo: contrato.correo
   }));
 
+  // ✅ NUEVO: Función para filtrar órdenes según el estatus seleccionado
+  const ordenesFiltradas = ordenes.filter(orden => {
+    switch (filtroEstatus) {
+      case 'pendientes':
+        return orden.estatus === 'Pendiente Asignar' || orden.estatus === 'Pendiente';
+      case 'asignadas':
+        return orden.estatus === 'Asignado' || orden.estatus === 'Programada' || orden.estatus === 'En Proceso';
+      case 'completadas':
+        return orden.estatus === 'Completado' || orden.estatus === 'Completada';
+      default:
+        return true;
+    }
+  });
+
+  // ✅ NUEVO: Contadores para cada filtro
+  const totalPendientes = ordenes.filter(o => o.estatus === 'Pendiente Asignar' || o.estatus === 'Pendiente').length;
+  const totalAsignadas = ordenes.filter(o => o.estatus === 'Asignado' || o.estatus === 'Programada' || o.estatus === 'En Proceso').length;
+  const totalCompletadas = ordenes.filter(o => o.estatus === 'Completado' || o.estatus === 'Completada').length;
+
   const handleAbrirModal = (orden) => {
     setOrdenSeleccionada(orden);
     setFecha('');
     setTecnico('');
-    setHoraSeleccionada('');
     setMensajeExito(false);
     setErrorAsignacion(null);
   };
 
   const handleCerrarModal = () => setOrdenSeleccionada(null);
 
-  // ✅ FUNCIÓN MODIFICADA COMPLETA
   const handleGuardarAsignacion = async (e) => {
     e.preventDefault();
     setErrorAsignacion(null);
     
     try {
-      // Buscar información del técnico seleccionado
       const tecnicoSeleccionado = tecnicos.find(t => t.id === tecnico);
       const tecnicoIdReal = tecnicoIdMap[tecnico] || null;
       
@@ -101,32 +105,16 @@ const InstallationSchedule = () => {
         contrato_id: ordenSeleccionada.contrato_id,
         tecnico_id: tecnicoIdReal,
         tecnico_nombre: tecnicoSeleccionado?.nombre,
-        fecha: fecha,
-        hora: horaSeleccionada
+        fecha: fecha
       });
       
-      // ✅ Enviar datos al backend con el ID real del técnico
       await asignarCita(ordenSeleccionada.contrato_id, {
         tecnico_id: tecnicoIdReal,
         fecha_asignada: fecha,
-        hora_asignada: horaSeleccionada,
         estatus: 'Asignado'
       });
       
       console.log('✅ Cita asignada exitosamente');
-      
-      // Actualizar estado local de técnicos (marcar hora como ocupada)
-      setTecnicos(tecnicos.map(t => {
-        if (t.id === tecnico) {
-          const clonTecnico = { ...t };
-          if (horaSeleccionada === '09:00 AM') clonTecnico.m900 = 'Ocupado';
-          if (horaSeleccionada === '11:30 AM') clonTecnico.m1130 = 'Ocupado';
-          if (horaSeleccionada === '02:00 PM') clonTecnico.m1400 = 'Ocupado';
-          if (horaSeleccionada === '04:30 PM') clonTecnico.m1635 = 'Ocupado';
-          return clonTecnico;
-        }
-        return t;
-      }));
 
       setMensajeExito(true);
       handleCerrarModal();
@@ -187,6 +175,78 @@ const InstallationSchedule = () => {
         </Alert>
       )}
 
+      {/* ✅ NUEVO: BOTONES DE FILTRO POR ESTATUS */}
+      <Paper sx={{ p: 2, borderRadius: 2, border: '1px solid #e2e8f0' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#475569' }}>
+          Filtrar por Estatus:
+        </Typography>
+        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          {/* Botón Pendientes */}
+          <Button
+            variant={filtroEstatus === 'pendientes' ? 'contained' : 'outlined'}
+            startIcon={<Pending />}
+            onClick={() => setFiltroEstatus('pendientes')}
+            sx={{ 
+              minWidth: 160,
+              bgcolor: filtroEstatus === 'pendientes' ? '#f59e0b' : 'transparent',
+              color: filtroEstatus === 'pendientes' ? 'white' : '#f59e0b',
+              borderColor: '#f59e0b',
+              borderWidth: 2,
+              fontWeight: 700,
+              '&:hover': {
+                bgcolor: filtroEstatus === 'pendientes' ? '#d97706' : 'rgba(245, 158, 11, 0.08)',
+                borderColor: '#d97706',
+              }
+            }}
+          >
+            Pendientes ({totalPendientes})
+          </Button>
+          
+          {/* Botón Asignadas */}
+          <Button
+            variant={filtroEstatus === 'asignadas' ? 'contained' : 'outlined'}
+            startIcon={<AssignmentTurnedIn />}
+            onClick={() => setFiltroEstatus('asignadas')}
+            sx={{ 
+              minWidth: 160,
+              bgcolor: filtroEstatus === 'asignadas' ? '#3b82f6' : 'transparent',
+              color: filtroEstatus === 'asignadas' ? 'white' : '#3b82f6',
+              borderColor: '#3b82f6',
+              borderWidth: 2,
+              fontWeight: 700,
+              '&:hover': {
+                bgcolor: filtroEstatus === 'asignadas' ? '#2563eb' : 'rgba(59, 130, 246, 0.08)',
+                borderColor: '#2563eb',
+              }
+            }}
+          >
+            Asignadas ({totalAsignadas})
+          </Button>
+          
+          {/* Botón Completadas */}
+          <Button
+            variant={filtroEstatus === 'completadas' ? 'contained' : 'outlined'}
+            startIcon={<CheckCircle />}
+            onClick={() => setFiltroEstatus('completadas')}
+            sx={{ 
+              minWidth: 160,
+              bgcolor: filtroEstatus === 'completadas' ? '#10b981' : 'transparent',
+              color: filtroEstatus === 'completadas' ? 'white' : '#10b981',
+              borderColor: '#10b981',
+              borderWidth: 2,
+              fontWeight: 700,
+              '&:hover': {
+                bgcolor: filtroEstatus === 'completadas' ? '#059669' : 'rgba(16, 185, 129, 0.08)',
+                borderColor: '#059669',
+              }
+            }}
+          >
+            Completadas ({totalCompletadas})
+          </Button>
+        </Stack>
+      </Paper>
+
+      {/* ✅ MODIFICADO: Ahora usa ordenesFiltradas en lugar de ordenes */}
       <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
@@ -200,16 +260,16 @@ const InstallationSchedule = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {ordenes.length === 0 ? (
+            {ordenesFiltradas.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography variant="body2" color="text.secondary">
-                    No hay contratos pendientes de asignar
+                    No hay contratos {filtroEstatus} para mostrar
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              ordenes.map((orden) => (
+              ordenesFiltradas.map((orden) => (
                 <TableRow key={orden.id} hover>
                   <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{orden.id}</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>{orden.cliente}</TableCell>
@@ -218,7 +278,9 @@ const InstallationSchedule = () => {
                   <TableCell>
                     <Chip
                       label={orden.estatus}
-                      color={orden.estatus === 'Asignado' ? 'success' : 'warning'}
+                      color={orden.estatus === 'Asignado' ? 'success' : 
+                             orden.estatus === 'Completado' || orden.estatus === 'Completada' ? 'success' : 
+                             'warning'}
                       size="small"
                       sx={{ fontWeight: 600 }}
                     />
@@ -227,11 +289,11 @@ const InstallationSchedule = () => {
                     <Button
                       variant="contained"
                       size="small"
-                      disabled={orden.estatus === 'Asignado'}
+                      disabled={orden.estatus === 'Asignado' || orden.estatus === 'Completado' || orden.estatus === 'Completada'}
                       onClick={() => handleAbrirModal(orden)}
                       sx={{ textTransform: 'none', borderRadius: 1.5 }}
                     >
-                      Asignar Cita
+                      {orden.estatus === 'Completado' || orden.estatus === 'Completada' ? 'Finalizado' : 'Asignar Cita'}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -336,7 +398,6 @@ const InstallationSchedule = () => {
               value={tecnico}
               onChange={(e) => {
                 setTecnico(e.target.value);
-                setHoraSeleccionada(''); 
               }}
             >
               <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
@@ -344,28 +405,6 @@ const InstallationSchedule = () => {
               <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
             </TextField>
 
-            <TextField
-              select
-              label="Horas Disponibles del Técnico"
-              fullWidth
-              required
-              disabled={!tecnico}
-              value={horaSeleccionada}
-              onChange={(e) => setHoraSeleccionada(e.target.value)}
-              helperText={!tecnico ? "Por favor, selecciona primero un técnico para ver sus bloques libres" : ""}
-            >
-              {tecnico && obtenerHorasDisponibles(tecnico).length > 0 ? (
-                obtenerHorasDisponibles(tecnico).map((hora, index) => (
-                  <MenuItem key={index} value={hora}>
-                    {hora} - Bloque Libre Asignable
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem value="" disabled>
-                  {tecnico ? 'No hay horarios disponibles' : 'Selecciona un técnico primero'}
-                </MenuItem>
-              )}
-            </TextField>
           </DialogContent>
           
           <DialogActions sx={{ p: 2, px: 3 }}>

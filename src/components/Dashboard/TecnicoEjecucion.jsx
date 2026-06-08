@@ -35,7 +35,8 @@ import {
   Schedule,
   Assignment,
   Email,
-  Visibility
+  Visibility,
+  AssignmentTurnedIn  // ✅ NUEVO: Icono agregado
 } from '@mui/icons-material';
 import api from '../../services/api';
 
@@ -60,6 +61,9 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
   const [success, setSuccess] = useState('');
   const [vistaAdmin, setVistaAdmin] = useState(false);
   const [tecnicos, setTecnicos] = useState([]);
+  
+  // ✅ NUEVO: Estado para el filtro de estatus
+  const [filtroEstatus, setFiltroEstatus] = useState('asignadas');
 
   useEffect(() => {
     if (usuarioActual) {
@@ -90,11 +94,18 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       
       let contratosFiltrados = [];
       
+      // ✅ MODIFICADO: Ahora incluye TODOS los estatus (pendientes, asignadas, completadas)
+      const todosLosEstatus = [
+        'Pendiente Asignar', 'Pendiente',
+        'Asignado', 'Programada', 'Asignada', 'En Proceso',
+        'Completado', 'Completada'
+      ];
+      
       if (esAdmin) {
-        // ✅ ADMIN: Ver TODAS las instalaciones asignadas a cualquier técnico
+        // ✅ ADMIN: Ver TODAS las instalaciones con cualquier estatus válido
         contratosFiltrados = todosLosContratos.filter(contrato => {
           const tieneTecnico = contrato.tecnico_id && contrato.tecnico_id !== null;
-          const estatusValido = ['Asignado', 'Programada', 'Asignada', 'En Proceso'].includes(contrato.estatus);
+          const estatusValido = todosLosEstatus.includes(contrato.estatus);
           return tieneTecnico && estatusValido;
         });
         
@@ -109,10 +120,10 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         }
         
       } else {
-        // ✅ TÉCNICO: Ver solo SUS instalaciones
+        // ✅ TÉCNICO: Ver solo SUS instalaciones (todos los estatus)
         contratosFiltrados = todosLosContratos.filter(contrato => {
           const esMio = contrato.tecnico_id == usuarioActual?.perfil_id || contrato.tecnico_id == usuarioActual?.id;
-          const estatusValido = ['Asignado', 'Programada', 'Asignada', 'En Proceso'].includes(contrato.estatus);
+          const estatusValido = todosLosEstatus.includes(contrato.estatus);
           return esMio && estatusValido;
         });
         
@@ -155,8 +166,46 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
     }
   };
 
+  // ✅ NUEVO: Función para filtrar instalaciones según el estatus seleccionado
+  const getInstalacionesFiltradas = () => {
+    switch (filtroEstatus) {
+      case 'asignadas':
+        return instalaciones.filter(inst => 
+          inst.estado === 'Asignado' || inst.estado === 'Programada' || 
+          inst.estado === 'Asignada' || inst.estado === 'En Proceso' ||
+          inst.estado === 'Pendiente Asignar' || inst.estado === 'Pendiente'
+        );
+      case 'completadas':
+        return instalaciones.filter(inst => 
+          inst.estado === 'Completado' || inst.estado === 'Completada'
+        );
+      default:
+        return instalaciones;
+    }
+  };
+
+  // ✅ NUEVO: Contadores para cada filtro
+  const totalAsignadas = instalaciones.filter(i => 
+    i.estado === 'Asignado' || i.estado === 'Programada' || 
+    i.estado === 'Asignada' || i.estado === 'En Proceso' ||
+    i.estado === 'Pendiente Asignar' || i.estado === 'Pendiente'
+  ).length;
+  
+  const totalCompletadas = instalaciones.filter(i => 
+    i.estado === 'Completado' || i.estado === 'Completada'
+  ).length;
+
+  // ✅ NUEVO: Instalaciones filtradas según el botón activo
+  const instalacionesFiltradas = getInstalacionesFiltradas();
+
   const handleEjecutar = (instalacion) => {
     // Solo permitir ejecutar si es el técnico asignado o admin
+    // Y solo si no está completada
+    if (instalacion.estado === 'Completado' || instalacion.estado === 'Completada') {
+      setError('Esta instalación ya está completada');
+      return;
+    }
+    
     if (!vistaAdmin && instalacion.tecnico_id != usuarioActual?.perfil_id && instalacion.tecnico_id != usuarioActual?.id) {
       setError('No tienes permisos para ejecutar esta instalación');
       return;
@@ -213,7 +262,9 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       'Asignada': 'info',
       'En Proceso': 'warning',
       'Completada': 'success',
-      'Completado': 'success'
+      'Completado': 'success',
+      'Pendiente Asignar': 'warning',
+      'Pendiente': 'warning'
     };
     return colores[estado] || 'default';
   };
@@ -248,6 +299,58 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
+      {/* ✅ NUEVO: BOTONES DE FILTRO POR ESTATUS (Solo para técnicos, no admin) */}
+      {!vistaAdmin && (
+        <Paper sx={{ mb: 3, p: 2, borderRadius: 2, border: '1px solid #e2e8f0' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#475569' }}>
+            Filtrar por Estado:
+          </Typography>
+          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+            {/* Botón Asignadas */}
+            <Button
+              variant={filtroEstatus === 'asignadas' ? 'contained' : 'outlined'}
+              startIcon={<AssignmentTurnedIn />}
+              onClick={() => setFiltroEstatus('asignadas')}
+              sx={{ 
+                minWidth: 160,
+                bgcolor: filtroEstatus === 'asignadas' ? '#3b82f6' : 'transparent',
+                color: filtroEstatus === 'asignadas' ? 'white' : '#3b82f6',
+                borderColor: '#3b82f6',
+                borderWidth: 2,
+                fontWeight: 700,
+                '&:hover': {
+                  bgcolor: filtroEstatus === 'asignadas' ? '#2563eb' : 'rgba(59, 130, 246, 0.08)',
+                  borderColor: '#2563eb',
+                }
+              }}
+            >
+              Asignadas ({totalAsignadas})
+            </Button>
+            
+            {/* Botón Completadas */}
+            <Button
+              variant={filtroEstatus === 'completadas' ? 'contained' : 'outlined'}
+              startIcon={<CheckCircle />}
+              onClick={() => setFiltroEstatus('completadas')}
+              sx={{ 
+                minWidth: 160,
+                bgcolor: filtroEstatus === 'completadas' ? '#10b981' : 'transparent',
+                color: filtroEstatus === 'completadas' ? 'white' : '#10b981',
+                borderColor: '#10b981',
+                borderWidth: 2,
+                fontWeight: 700,
+                '&:hover': {
+                  bgcolor: filtroEstatus === 'completadas' ? '#059669' : 'rgba(16, 185, 129, 0.08)',
+                  borderColor: '#059669',
+                }
+              }}
+            >
+              Completadas ({totalCompletadas})
+            </Button>
+          </Stack>
+        </Paper>
+      )}
+
       <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
         <Button 
           variant="outlined" 
@@ -259,7 +362,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         </Button>
       </Stack>
 
-      {/* ✅ VISTA DE ADMIN: Tabla con todas las instalaciones */}
+      {/* ✅ VISTA DE ADMIN: Tabla con todas las instalaciones (todos los estados) */}
       {vistaAdmin ? (
         <TableContainer component={Paper}>
           <Table>
@@ -333,9 +436,10 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                         size="small"
                         startIcon={<Visibility />}
                         onClick={() => handleEjecutar(inst)}
+                        disabled={inst.estado === 'Completado' || inst.estado === 'Completada'}
                         sx={{ textTransform: 'none', mr: 1 }}
                       >
-                        Ver
+                        {inst.estado === 'Completado' || inst.estado === 'Completada' ? 'Finalizado' : 'Ver'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -345,20 +449,21 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
           </Table>
         </TableContainer>
       ) : (
-        /* ✅ VISTA DE TÉCNICO: Tarjetas con SUS instalaciones */
+        /* ✅ VISTA DE TÉCNICO: Tarjetas con SUS instalaciones filtradas */
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-          {instalaciones.length === 0 ? (
+          {instalacionesFiltradas.length === 0 ? (
             <Paper sx={{ p: 5, textAlign: 'center', width: '100%' }}>
               <Build sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
               <Typography variant="h6" color="text.secondary">
-                No tienes instalaciones asignadas
+                No tienes instalaciones {filtroEstatus}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Las instalaciones que te asignen desde Logística aparecerán aquí
+                {filtroEstatus === 'asignadas' && 'Las instalaciones asignadas aparecerán aquí'}
+                {filtroEstatus === 'completadas' && 'Las instalaciones completadas aparecerán aquí'}
               </Typography>
             </Paper>
           ) : (
-            instalaciones.map((inst) => (
+            instalacionesFiltradas.map((inst) => (
               <Card key={inst.id} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' }, display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -427,8 +532,9 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                     startIcon={<CheckCircle />}
                     onClick={() => handleEjecutar(inst)}
                     sx={{ py: 1.5 }}
+                    disabled={inst.estado === 'Completado' || inst.estado === 'Completada'}
                   >
-                    Ejecutar Instalación
+                    {inst.estado === 'Completado' || inst.estado === 'Completada' ? 'Finalizado' : 'Ejecutar Instalación'}
                   </Button>
                 </Box>
               </Card>
@@ -451,6 +557,8 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
               <Alert severity="info" sx={{ mb: 2 }}>
                 <strong>Cliente:</strong> {instalacionSeleccionada.contrato?.nombre_completo}<br/>
                 <strong>Técnico:</strong> {vistaAdmin ? instalacionSeleccionada.tecnico_nombre : usuarioActual?.nombre}
+                <br/>
+                <strong>Estado:</strong> {instalacionSeleccionada.estado}
               </Alert>
 
               <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
@@ -495,8 +603,8 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                   />
                 </Box>
 
-                {/* Solo mostrar campos de ejecución si es el técnico asignado (no admin) */}
-                {!vistaAdmin && (
+                {/* Solo mostrar campos de ejecución si es el técnico asignado (no admin) y no está completada */}
+                {!vistaAdmin && instalacionSeleccionada.estado !== 'Completado' && instalacionSeleccionada.estado !== 'Completada' && (
                   <>
                     <Divider sx={{ my: 1 }} />
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -566,13 +674,20 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                     />
                   </>
                 )}
+                
+                {/* Mostrar mensaje si ya está completada */}
+                {(instalacionSeleccionada.estado === 'Completado' || instalacionSeleccionada.estado === 'Completada') && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    ✅ Esta instalación ya fue completada
+                  </Alert>
+                )}
               </Stack>
             </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={() => setDialogOpen(false)}>Cerrar</Button>
-          {!vistaAdmin && (
+          {!vistaAdmin && instalacionSeleccionada?.estado !== 'Completado' && instalacionSeleccionada?.estado !== 'Completada' && (
             <Button onClick={handleCompletar} variant="contained" color="success" startIcon={<CheckCircle />}>
               Completar Instalación
             </Button>
