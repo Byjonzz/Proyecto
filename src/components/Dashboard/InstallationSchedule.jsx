@@ -20,6 +20,15 @@ const InstallationSchedule = () => {
     { id: 't3', nombre: 'Téc. Luis Pérez', m900: 'Disponible', m1130: 'Disponible', m1400: 'Ocupado', m1635: 'Disponible' }
   ]);
 
+  // ✅ MAPEO DE IDs LOCALES A IDs REALES DEL BACKEND
+  // IMPORTANTE: Cambia estos números según los IDs reales de tus técnicos en la BD
+  // Verifica en: http://10.144.86.55:1423/api/tecnicos/
+  const tecnicoIdMap = {
+    't1': 1, // Ana Ramírez - ID real en BD
+    't2': 2, // Carlos Soto - ID real en BD
+    't3': 3  // Luis Pérez - ID real en BD
+  };
+
   const obtenerHorasDisponibles = (idTecnico) => {
     const tech = tecnicos.find(t => t.id === idTecnico);
     if (!tech) return [];
@@ -78,17 +87,35 @@ const InstallationSchedule = () => {
 
   const handleCerrarModal = () => setOrdenSeleccionada(null);
 
+  // ✅ FUNCIÓN MODIFICADA COMPLETA
   const handleGuardarAsignacion = async (e) => {
     e.preventDefault();
     setErrorAsignacion(null);
     
     try {
-      await asignarCita(ordenSeleccionada.contrato_id, {
-        fecha_asignada: fecha,
-        hora_asignada: horaSeleccionada,
-        tecnico_asignado: tecnicos.find(t => t.id === tecnico)?.nombre || tecnico
+      // Buscar información del técnico seleccionado
+      const tecnicoSeleccionado = tecnicos.find(t => t.id === tecnico);
+      const tecnicoIdReal = tecnicoIdMap[tecnico] || null;
+      
+      console.log('📅 Asignando cita:', {
+        contrato_id: ordenSeleccionada.contrato_id,
+        tecnico_id: tecnicoIdReal,
+        tecnico_nombre: tecnicoSeleccionado?.nombre,
+        fecha: fecha,
+        hora: horaSeleccionada
       });
       
+      // ✅ Enviar datos al backend con el ID real del técnico
+      await asignarCita(ordenSeleccionada.contrato_id, {
+        tecnico_id: tecnicoIdReal,
+        fecha_asignada: fecha,
+        hora_asignada: horaSeleccionada,
+        estatus: 'Asignado'
+      });
+      
+      console.log('✅ Cita asignada exitosamente');
+      
+      // Actualizar estado local de técnicos (marcar hora como ocupada)
       setTecnicos(tecnicos.map(t => {
         if (t.id === tecnico) {
           const clonTecnico = { ...t };
@@ -108,7 +135,7 @@ const InstallationSchedule = () => {
       setTimeout(() => setMensajeExito(false), 3000);
       
     } catch (err) {
-      console.error('Error al asignar cita:', err);
+      console.error('❌ Error al asignar cita:', err);
       setErrorAsignacion(`Error al asignar la cita: ${err.message}`);
     }
   };
@@ -307,7 +334,6 @@ const InstallationSchedule = () => {
           paper: { sx: { borderRadius: 3 } }
         }}
       >
-        {/* ✅ CORREGIDO: Quitar Typography anidado */}
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CalendarMonth color="primary" />
@@ -325,7 +351,6 @@ const InstallationSchedule = () => {
               Dirección: {ordenSeleccionada?.direccion}
             </Typography>
 
-            {/* ✅ CORREGIDO: Cambiar InputLabelProps por slotProps */}
             <TextField
               type="date"
               fullWidth
@@ -348,7 +373,6 @@ const InstallationSchedule = () => {
                 setHoraSeleccionada(''); 
               }}
             >
-              {/* ✅ Asegurar que siempre haya children */}
               <MenuItem value="t1">Téc. Ana Ramírez - Zona Centro</MenuItem>
               <MenuItem value="t2">Téc. Carlos Soto - Zona Sur</MenuItem>
               <MenuItem value="t3">Téc. Luis Pérez - Zona Norte</MenuItem>
@@ -364,7 +388,6 @@ const InstallationSchedule = () => {
               onChange={(e) => setHoraSeleccionada(e.target.value)}
               helperText={!tecnico ? "Por favor, selecciona primero un técnico para ver sus bloques libres" : ""}
             >
-              {/* ✅ CORREGIDO: Asegurar que siempre haya children */}
               {tecnico && obtenerHorasDisponibles(tecnico).length > 0 ? (
                 obtenerHorasDisponibles(tecnico).map((hora, index) => (
                   <MenuItem key={index} value={hora}>

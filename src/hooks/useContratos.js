@@ -34,6 +34,21 @@ export const useContratos = () => {
     }
   };
 
+  // ✅ NUEVA FUNCIÓN: Obtener contratos asignados a un técnico
+  const fetchByTecnico = async (tecnicoId) => {
+    try {
+      setLoading(true);
+      const data = await contratosService.getByTecnico(tecnicoId);
+      setContratos(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error al cargar contratos del técnico:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const createContrato = async (data) => {
     try {
       const nuevoContrato = await contratosService.create(data);
@@ -56,10 +71,24 @@ export const useContratos = () => {
     }
   };
 
-  // ✅ NUEVA FUNCIÓN: Asignar cita
   const asignarCita = async (id, data) => {
     try {
       const contratoActualizado = await contratosService.asignarCita(id, data);
+      setContratos(contratos.map(c => c.id === id ? contratoActualizado : c));
+      return contratoActualizado;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  // ✅ NUEVA FUNCIÓN: Completar instalación
+  const completarInstalacion = async (id, data) => {
+    try {
+      const contratoActualizado = await contratosService.patch(id, {
+        estatus: 'Completado',
+        ...data
+      });
       setContratos(contratos.map(c => c.id === id ? contratoActualizado : c));
       return contratoActualizado;
     } catch (err) {
@@ -88,9 +117,11 @@ export const useContratos = () => {
     error,
     createContrato,
     updateContrato,
-    asignarCita,  // ✅ EXPORTAR
+    asignarCita,
+    completarInstalacion,
     deleteContrato,
     refetch: fetchContratos,
-    refetchPendientes: fetchPendientes
+    refetchPendientes: fetchPendientes,
+    refetchByTecnico: fetchByTecnico
   };
 };
