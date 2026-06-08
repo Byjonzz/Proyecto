@@ -241,40 +241,6 @@ const InstallationSchedule = () => {
         </Table>
       </TableContainer>
 
-      <Box sx={{ mt: 1 }}>
-        <Stack direction="row" spacing={1} sx={{ mb: 2, alignItems: 'center' }}>
-          <EventAvailableOutlined color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b' }}>
-            Tablero de Disponibilidad Técnica Diaria
-          </Typography>
-        </Stack>
-
-        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
-          <Table size="small">
-            <TableHead sx={{ backgroundColor: '#f1f5f9' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600, py: 1.5 }}>Personal Técnico</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>09:00 AM</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>11:30 AM</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>02:00 PM</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600 }}>04:30 PM</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tecnicos.map((tech) => (
-                <TableRow key={tech.id} hover>
-                  <TableCell sx={{ fontWeight: 600, py: 1.5, color: '#334155' }}>{tech.nombre}</TableCell>
-                  <TableCell align="center"><Chip label={tech.m900} size="small" sx={getChipStyle(tech.m900)} /></TableCell>
-                  <TableCell align="center"><Chip label={tech.m1130} size="small" sx={getChipStyle(tech.m1130)} /></TableCell>
-                  <TableCell align="center"><Chip label={tech.m1400} size="small" sx={getChipStyle(tech.m1400)} /></TableCell>
-                  <TableCell align="center"><Chip label={tech.m1635} size="small" sx={getChipStyle(tech.m1635)} /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-
       <Divider sx={{ my: 1 }} />
 
       <Box sx={{ width: '100%' }}>

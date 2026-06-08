@@ -22,9 +22,7 @@ const drawerWidth = 260;
 const API_BASE_URL = 'http://10.144.86.55:1423/api';
 
 
-// ============================================================
-// FUNCIÓN DE LOGIN
-// ============================================================
+
 const loginUsuario = async (email, password) => {
   try {
     console.log('🔍 Intentando login con GET a /api/usuarios/');
@@ -103,9 +101,7 @@ const loginUsuario = async (email, password) => {
   }
 };
 
-// ============================================================
-// COMPONENTE PRINCIPAL
-// ============================================================
+
 function App() {
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [currentView, setCurrentView] = useState('canvaceo-dashboard');
@@ -212,7 +208,6 @@ function App() {
           minHeight: '100vh'
         }}
       >
-        {/* ✅ HEADER CON INFO DEL USUARIO - VERSIÓN CORREGIDA */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'flex-end', 
@@ -238,7 +233,6 @@ function App() {
             />
           </Box>
           
-          {/* ✅ Avatar con id único */}
           <Avatar 
             id="user-menu-avatar"
             sx={{ 
@@ -254,7 +248,6 @@ function App() {
             {usuarioActual.nombre?.charAt(0) || 'U'}
           </Avatar>
           
-          {/* ✅ Menu SOLO se renderiza cuando anchorEl existe */}
           {anchorEl && (
             <Menu
               anchorEl={anchorEl}

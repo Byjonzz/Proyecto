@@ -1,259 +1,586 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    Box, Card, CardContent, Typography, Switch, FormControlLabel,
-    Stack, Button, Alert, Chip, Divider, TextField, Grid,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Chip,
+  Alert,
+  Card,
+  CardContent,
+  Divider,
+  CircularProgress,
+  MenuItem,
+  FormControlLabel,
+  Checkbox,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import {
-    PhotoCamera, CheckCircle, BorderColor, AssignmentOutlined,
-    ConstructionOutlined, ArrowBackOutlined, BuildOutlined, CalendarMonthOutlined
+  CheckCircle,
+  Build,
+  LocationOn,
+  Phone,
+  Person,
+  Schedule,
+  Assignment,
+  Email,
+  Visibility
 } from '@mui/icons-material';
+import api from '../../services/api';
 
-const TecnicoEjecucion = () => {
-    // ('tabla' o 'formulario')
-    const [vistaActual, setVistaActual] = useState('tabla');
+const TecnicoEjecucion = ({ usuarioActual }) => {
+  const [instalaciones, setInstalaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [instalacionSeleccionada, setInstalacionSeleccionada] = useState(null);
+  const [formData, setFormData] = useState({
+    verificar_equipos: false,
+    tendido_cable: false,
+    config_ont: false,
+    serial_ont: '',
+    serial_router: '',
+    metraje_fibra: '',
+    potencia_dbm: '',
+    tipo_instalacion: 'Residencial',
+    conectores_utilizados: 2,
+    notas_instalacion: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [vistaAdmin, setVistaAdmin] = useState(false);
+  const [tecnicos, setTecnicos] = useState([]);
 
-    const [instalacionesSemana, setInstalacionesSemana] = useState([
-        { tipoDeServicio: 'Instalacion de Fibra Optica', cliente: 'Juan Pérez García', direccion: 'Av. Reforma 402, Centro', colonia: 'Reforma', fecha: '20-03-2023', estatus: 'Pendiente', entre: '21 norte y 23 norte', telefono: '5512345678' },
-        { tipoDeServicio: 'Cambio de Modem', cliente: 'María Elena Solís', direccion: 'Calle 5 Poniente 12, Las Palmas', colonia: 'Las Palmas', fecha: '21-03-2023', estatus: 'Pendiente', entre: '5 oriente y 7 oriente', telefono: '5598765432' },
-        { tipoDeServicio: 'Reparacion de Cableado', cliente: 'Roberto Gómez Díaz', direccion: 'Privada Juárez 14, San José', colonia: 'San José', fecha: '29-03-2023', estatus: 'Pendiente', entre: 'entre 2 norte y 4 norte', telefono: '5544332211' }
-    ]);
+  useEffect(() => {
+    if (usuarioActual) {
+      fetchInstalaciones();
+    }
+  }, [usuarioActual]);
 
-    const [ordenActiva, setOrdenActiva] = useState(null);
+  const fetchInstalaciones = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      console.log('🔍 Usuario actual:', usuarioActual);
+      console.log('🎭 Rol:', usuarioActual?.rol);
+      
+      // ✅ VERIFICAR SI ES ADMIN O SUPERVISOR
+      const rol = usuarioActual?.rol?.toLowerCase().trim();
+      const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'supervisor';
+      
+      setVistaAdmin(esAdmin);
+      console.log('👁️ ¿Es admin?', esAdmin);
+      
+      // Obtener TODOS los contratos
+      const contratosResponse = await api.get('/contratos/');
+      const todosLosContratos = contratosResponse.data;
+      
+      console.log('📋 Total contratos:', todosLosContratos.length);
+      
+      let contratosFiltrados = [];
+      
+      if (esAdmin) {
+        // ✅ ADMIN: Ver TODAS las instalaciones asignadas a cualquier técnico
+        contratosFiltrados = todosLosContratos.filter(contrato => {
+          const tieneTecnico = contrato.tecnico_id && contrato.tecnico_id !== null;
+          const estatusValido = ['Asignado', 'Programada', 'Asignada', 'En Proceso'].includes(contrato.estatus);
+          return tieneTecnico && estatusValido;
+        });
+        
+        console.log('✅ Admin ve TODAS las instalaciones:', contratosFiltrados.length);
+        
+        // Obtener lista de técnicos para mostrar en la tabla
+        try {
+          const tecnicosResponse = await api.get('/tecnicos/');
+          setTecnicos(tecnicosResponse.data);
+        } catch (err) {
+          console.warn('No se pudieron cargar los técnicos:', err);
+        }
+        
+      } else {
+        // ✅ TÉCNICO: Ver solo SUS instalaciones
+        contratosFiltrados = todosLosContratos.filter(contrato => {
+          const esMio = contrato.tecnico_id == usuarioActual?.perfil_id || contrato.tecnico_id == usuarioActual?.id;
+          const estatusValido = ['Asignado', 'Programada', 'Asignada', 'En Proceso'].includes(contrato.estatus);
+          return esMio && estatusValido;
+        });
+        
+        console.log('✅ Técnico ve SUS instalaciones:', contratosFiltrados.length);
+      }
+      
+      console.log('📦 Contratos filtrados:', contratosFiltrados);
+      
+      // Convertir al formato de la UI
+      const instalacionesFormateadas = contratosFiltrados.map(contrato => {
+        // Buscar nombre del técnico si es admin
+        let tecnicoNombre = 'Sin asignar';
+        if (esAdmin && tecnicos.length > 0) {
+          const tecnico = tecnicos.find(t => t.id === contrato.tecnico_id);
+          if (tecnico) {
+            tecnicoNombre = tecnico.numero_empleado || `Técnico #${tecnico.id}`;
+          }
+        }
+        
+        return {
+          id: contrato.id,
+          contrato_id: contrato.id,
+          contrato: contrato,
+          tecnico_id: contrato.tecnico_id,
+          tecnico_nombre: tecnicoNombre,
+          estado: contrato.estatus,
+          fecha_programada: contrato.fecha_asignada || contrato.fecha_cita || null,
+          hora_asignada: contrato.hora_asignada || null,
+          observaciones: contrato.observaciones || ''
+        };
+      });
+      
+      setInstalaciones(instalacionesFormateadas);
+      
+    } catch (error) {
+      console.error('❌ Error fetching installations:', error);
+      setError('Error al cargar las instalaciones: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const [datosTecnicos, setDatosTecnicos] = useState({
-        serialOnt: '',
-        serialRouter: '',
-        metrajeFibra: '',
-        potenciaDbm: '',
-        tipoInstalacion: 'aerea',
-        conectoresUtilizados: '2'
+  const handleEjecutar = (instalacion) => {
+    // Solo permitir ejecutar si es el técnico asignado o admin
+    if (!vistaAdmin && instalacion.tecnico_id != usuarioActual?.perfil_id && instalacion.tecnico_id != usuarioActual?.id) {
+      setError('No tienes permisos para ejecutar esta instalación');
+      return;
+    }
+    
+    setInstalacionSeleccionada(instalacion);
+    setFormData({
+      verificar_equipos: false,
+      tendido_cable: false,
+      config_ont: false,
+      serial_ont: '',
+      serial_router: '',
+      metraje_fibra: '',
+      potencia_dbm: '',
+      tipo_instalacion: 'Residencial',
+      conectores_utilizados: 2,
+      notas_instalacion: ''
     });
+    setDialogOpen(true);
+  };
 
-    const [checklist, setChecklist] = useState({
-        verificarEquipos: false,
-        tendidoCable: false,
-        configONT: false,
-    });
+  const handleCompletar = async () => {
+    try {
+      setError('');
+      setSuccess('');
 
-    const [completado, setCompletado] = useState(false);
-    const [fotoEvidencia, setFotoEvidencia] = useState(false);
-    const [tieneFirma, setTieneFirma] = useState(false);
+      if (!formData.serial_ont || !formData.potencia_dbm || !formData.metraje_fibra) {
+        setError('Los campos obligatorios deben estar completos');
+        return;
+      }
 
-    const canvasRef = useRef(null);
-    const [isDrawing, setIsDrawing] = useState(false);
+      // Actualizar el contrato a "Completado"
+      await api.put(`/contratos/${instalacionSeleccionada.contrato_id}/`, {
+        ...instalacionSeleccionada.contrato,
+        estatus: 'Completado',
+        fecha_completada: new Date().toISOString()
+      });
 
-    const startDrawing = (e) => {
-        const canvas = canvasRef.current; if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-        ctx.beginPath(); ctx.moveTo(x, y); setIsDrawing(true); setTieneFirma(true);
+      setSuccess('✅ Instalación completada correctamente');
+      setTimeout(() => {
+        setDialogOpen(false);
+        fetchInstalaciones();
+      }, 1500);
+    } catch (error) {
+      console.error('Error completing installation:', error);
+      setError('Error al completar: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const getEstadoColor = (estado) => {
+    const colores = {
+      'Programada': 'info',
+      'Asignado': 'info',
+      'Asignada': 'info',
+      'En Proceso': 'warning',
+      'Completada': 'success',
+      'Completado': 'success'
     };
+    return colores[estado] || 'default';
+  };
 
-    const draw = (e) => {
-        if (!isDrawing) return; e.preventDefault();
-        const canvas = canvasRef.current; if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
-        ctx.lineTo(x, y); ctx.stroke();
-    };
+  const getNombreTecnico = (tecnicoId) => {
+    const tecnico = tecnicos.find(t => t.id === tecnicoId);
+    return tecnico ? (tecnico.numero_empleado || `Técnico #${tecnico.id}`) : 'Sin asignar';
+  };
 
-    const stopDrawing = () => setIsDrawing(false);
-    const limpiarFirma = () => {
-        const canvas = canvasRef.current; if (!canvas) return;
-        const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
-        setTieneFirma(false);
-    };
-
-    const handleToggle = (e) => setChecklist({ ...checklist, [e.target.name]: e.target.checked });
-
-    const handleIniciarTrabajo = (orden) => {
-        setOrdenActiva(orden);
-        setCompletado(false);
-        setFotoEvidencia(false);
-        setTieneFirma(false);
-        setChecklist({ verificarEquipos: false, tendidoCable: false, configONT: false });
-        setDatosTecnicos({ serialOnt: '', serialRouter: '', metrajeFibra: '', potenciaDbm: '', tipoInstalacion: 'aerea', conectoresUtilizados: '2' });
-        setVistaActual('formulario');
-    };
-
-    const handleFinalizarOrdenOrden = () => {
-        setInstalacionesSemana(instalacionesSemana.map(inst =>
-            inst.tipoDeServicio === ordenActiva.tipoDeServicio ? { ...inst, estatus: 'Completado' } : inst
-        ));
-        setCompletado(true);
-        setTimeout(() => {
-            setVistaActual('tabla');
-        }, 2000);
-    };
-
-    const isComplete =
-        checklist.verificarEquipos &&
-        checklist.tendidoCable &&
-        checklist.configONT &&
-        fotoEvidencia &&
-        tieneFirma &&
-        datosTecnicos.serialOnt.trim() !== '' &&
-        datosTecnicos.metrajeFibra.trim() !== '' &&
-        datosTecnicos.potenciaDbm.trim() !== '';
-
+  if (loading) {
     return (
-        <Box sx={{ width: '100%', p: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Cargando instalaciones...</Typography>
+      </Box>
+    );
+  }
 
-            {/* =========================================================
-          VISTA 1: TABLA DE INSTALACIONES PENDIENTES DE LA SEMANA
-          ========================================================= */}
-            {vistaActual === 'tabla' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Box>
-                        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CalendarMonthOutlined color="primary" /> Mis Instalaciones de la Semana
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+        {vistaAdmin ? 'Todas las Instalaciones Asignadas' : 'Mis Instalaciones Asignadas'} ({instalaciones.length})
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {vistaAdmin ? (
+          <span>Vista de <strong>Administrador</strong> - Todas las instalaciones de técnicos</span>
+        ) : (
+          <span>Técnico: <strong>{usuarioActual?.nombre}</strong> | perfil_id: <strong>{usuarioActual?.perfil_id}</strong></span>
+        )}
+      </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          onClick={fetchInstalaciones}
+          startIcon={<CheckCircle />}
+        >
+          Recargar
+        </Button>
+      </Stack>
+
+      {/* ✅ VISTA DE ADMIN: Tabla con todas las instalaciones */}
+      {vistaAdmin ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>Folio</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Cliente</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Técnico Asignado</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Dirección</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Fecha/Hora</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Estado</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 700 }}>Acción</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {instalaciones.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <Typography sx={{ py: 3, color: 'text.secondary' }}>
+                      No hay instalaciones asignadas a ningún técnico
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                instalaciones.map((inst) => (
+                  <TableRow key={inst.id} hover>
+                    <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>#{inst.id}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {inst.contrato?.nombre_completo}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {inst.contrato?.telefono1}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={inst.tecnico_nombre} 
+                        size="small" 
+                        color="primary" 
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{inst.contrato?.calle_numero}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {inst.contrato?.plan_contratado}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      {inst.fecha_programada ? (
+                        <Typography variant="body2">
+                          {inst.fecha_programada}
+                          {inst.hora_asignada && <br/>}
+                          {inst.hora_asignada && <span style={{color: '#64748b'}}>{inst.hora_asignada}</span>}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Agenda semanal asignada. Selecciona una orden de servicio para acudir al domicilio y realizar la instalación.
-                        </Typography>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">Sin programar</Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={inst.estado} 
+                        color={getEstadoColor(inst.estado)} 
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<Visibility />}
+                        onClick={() => handleEjecutar(inst)}
+                        sx={{ textTransform: 'none', mr: 1 }}
+                      >
+                        Ver
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        /* ✅ VISTA DE TÉCNICO: Tarjetas con SUS instalaciones */
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+          {instalaciones.length === 0 ? (
+            <Paper sx={{ p: 5, textAlign: 'center', width: '100%' }}>
+              <Build sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">
+                No tienes instalaciones asignadas
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Las instalaciones que te asignen desde Logística aparecerán aquí
+              </Typography>
+            </Paper>
+          ) : (
+            instalaciones.map((inst) => (
+              <Card key={inst.id} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' }, display: 'flex', flexDirection: 'column' }}>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Folio #{inst.id}
+                    </Typography>
+                    <Chip 
+                      label={inst.estado} 
+                      color={getEstadoColor(inst.estado)} 
+                      size="small"
+                    />
+                  </Box>
+
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                    {inst.contrato?.nombre_completo}
+                  </Typography>
+
+                  <Divider sx={{ mb: 2 }} />
+
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Person fontSize="small" color="action" />
+                      <Typography variant="body2">{inst.contrato?.nombre_completo}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Phone fontSize="small" color="action" />
+                      <Typography variant="body2">{inst.contrato?.telefono1}</Typography>
+                    </Box>
+                    {inst.contrato?.correo && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Email fontSize="small" color="action" />
+                        <Typography variant="body2">{inst.contrato.correo}</Typography>
+                      </Box>
+                    )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LocationOn fontSize="small" color="action" />
+                      <Typography variant="body2">{inst.contrato?.calle_numero}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Schedule fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        📅 {inst.fecha_programada || 'Fecha por definir'}
+                        {inst.hora_asignada && ` ⏰ ${inst.hora_asignada}`}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Assignment fontSize="small" color="action" />
+                      <Typography variant="body2">
+                        <strong>Plan:</strong> {inst.contrato?.plan_contratado}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  {inst.observaciones && (
+                    <Alert severity="info" sx={{ mt: 2, fontSize: '0.85rem' }}>
+                      <strong>Notas:</strong> {inst.observaciones}
+                    </Alert>
+                  )}
+                </CardContent>
+
+                <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    color="success"
+                    startIcon={<CheckCircle />}
+                    onClick={() => handleEjecutar(inst)}
+                    sx={{ py: 1.5 }}
+                  >
+                    Ejecutar Instalación
+                  </Button>
+                </Box>
+              </Card>
+            ))
+          )}
+        </Box>
+      )}
+
+      {/* Dialog para ver/ejecutar instalación */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Build color="primary" />
+            {vistaAdmin ? 'Ver Instalación' : 'Ejecutar Instalación'} - Folio #{instalacionSeleccionada?.id}
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {instalacionSeleccionada && (
+            <Box sx={{ pt: 2 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <strong>Cliente:</strong> {instalacionSeleccionada.contrato?.nombre_completo}<br/>
+                <strong>Técnico:</strong> {vistaAdmin ? instalacionSeleccionada.tecnico_nombre : usuarioActual?.nombre}
+              </Alert>
+
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
+                Detalles de la Instalación
+              </Typography>
+
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Cliente"
+                    value={instalacionSeleccionada.contrato?.nombre_completo}
+                    InputProps={{ readOnly: true }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Teléfono"
+                    value={instalacionSeleccionada.contrato?.telefono1}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Box>
+
+                <TextField
+                  fullWidth
+                  label="Dirección"
+                  value={instalacionSeleccionada.contrato?.calle_numero}
+                  InputProps={{ readOnly: true }}
+                />
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Plan"
+                    value={instalacionSeleccionada.contrato?.plan_contratado}
+                    InputProps={{ readOnly: true }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Fecha/Hora"
+                    value={`${instalacionSeleccionada.fecha_programada || 'N/A'} ${instalacionSeleccionada.hora_asignada || ''}`}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Box>
+
+                {/* Solo mostrar campos de ejecución si es el técnico asignado (no admin) */}
+                {!vistaAdmin && (
+                  <>
+                    <Divider sx={{ my: 1 }} />
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Checklist de Instalación
+                    </Typography>
+                    
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.verificar_equipos}
+                          onChange={(e) => setFormData({ ...formData, verificar_equipos: e.target.checked })}
+                        />
+                      }
+                      label="Verificar equipos"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.tendido_cable}
+                          onChange={(e) => setFormData({ ...formData, tendido_cable: e.target.checked })}
+                        />
+                      }
+                      label="Tendido de cable correcto"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.config_ont}
+                          onChange={(e) => setFormData({ ...formData, config_ont: e.target.checked })}
+                        />
+                      }
+                      label="Configuración de ONT completada"
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                      <TextField
+                        sx={{ flex: '1 1 250px' }}
+                        label="Serial ONT *"
+                        value={formData.serial_ont}
+                        onChange={(e) => setFormData({ ...formData, serial_ont: e.target.value })}
+                        required
+                      />
+                      <TextField
+                        sx={{ flex: '1 1 250px' }}
+                        label="Metraje de Fibra (metros) *"
+                        type="number"
+                        value={formData.metraje_fibra}
+                        onChange={(e) => setFormData({ ...formData, metraje_fibra: e.target.value })}
+                        required
+                      />
+                      <TextField
+                        sx={{ flex: '1 1 250px' }}
+                        label="Potencia (dBm) *"
+                        value={formData.potencia_dbm}
+                        onChange={(e) => setFormData({ ...formData, potencia_dbm: e.target.value })}
+                        required
+                      />
                     </Box>
 
-                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, overflowX: 'auto' }}>
-                        <Table>
-                            <TableHead sx={{ backgroundColor: '#f8fafc' }}>
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 600 }}>Tipo de Servicio</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Cliente</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Dirección de Servicio</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Colonia</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Agenda programada</TableCell>
-                                    <TableCell sx={{ fontWeight: 600 }}>Estatus</TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 600 }}>Acción</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {instalacionesSemana.map((row) => (
-                                    <TableRow key={row.tipoDeServicio} hover>
-                                        <TableCell sx={{ fontWeight: 700, color: '#1d4ed8' }}>{row.tipoDeServicio}</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>{row.cliente}</TableCell>
-                                        <TableCell>{row.direccion}</TableCell>
-                                        <TableCell><Chip label={row.colonia} size="small" variant="outlined" color="primary" /></TableCell>
-                                        <TableCell sx={{ color: '#475569', fontWeight: 500 }}>{row.fecha}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={row.estatus}
-                                                color={row.estatus === 'Completado' ? 'success' : 'warning'}
-                                                size="small"
-                                                sx={{ fontWeight: 600 }}
-                                            />
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            <Button
-                                                variant="contained"
-                                                size="small"
-                                                startIcon={<BuildOutlined />}
-                                                disabled={row.estatus === 'Completado'}
-                                                onClick={() => handleIniciarTrabajo(row)}
-                                                sx={{ textTransform: 'none', borderRadius: 1.5 }}
-                                            >
-                                                Iniciar Trabajo
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                </Box>
-            )}
-
-            {/* =========================================================
-            VISTA 2: FORMULARIO DIGITAL DE LA ORDEN DE SERVICIO
-            ========================================================= */}
-            {vistaActual === 'formulario' && ordenActiva && (
-                <Box sx={{ maxWidth: 700, margin: 'auto' }}>
-                    <Button
-                        startIcon={<ArrowBackOutlined />}
-                        onClick={() => setVistaActual('tabla')}
-                        sx={{ mb: 2, textTransform: 'none' }}
-                    >
-                        Volver a la Agenda Semanal
-                    </Button>
-
-                    {completado ? (
-                        <Alert severity="success" sx={{ borderRadius: 2, p: 2 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>¡Instalación Finalizada con Éxito!</Typography>
-                            Los datos e inventario se han sincronizado correctamente en la mesa de control central.
-                        </Alert>
-                    ) : (
-                        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-                            <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
-
-                                {/* PARTE SUPERIOR FORMULARIO FÍSICO */}
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <AssignmentOutlined color="primary" />
-                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                                        Orden de Servicio Digitalizada
-                                    </Typography>
-                                </Box>
-
-                                <Stack spacing={2.5} sx={{ backgroundColor: '#f8fafc', p: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', mb: 4 }}>
-                                    <TextField label="Tipo de Servicio" variant="outlined" fullWidth size="small" value={ordenActiva.tipoDeServicio} InputProps={{ readOnly: true }} />
-                                    <TextField label="Fecha" variant="outlined" fullWidth size="small" value={ordenActiva.fecha} InputProps={{ readOnly: true }} />
-                                    <TextField label="Nombre Completo del Cliente" variant="outlined" fullWidth size="small" value={ordenActiva.cliente} InputProps={{ readOnly: true }} />
-                                    <TextField label="Teléfono de Contacto" variant="outlined" fullWidth size="small" value={ordenActiva.telefono} InputProps={{ readOnly: true }} />
-                                    <TextField label="Dirección" variant="outlined" fullWidth size="small" multiline rows={2} value={ordenActiva.direccion} InputProps={{ readOnly: true }} />
-                                    <TextField label="Colonia" variant="outlined" fullWidth size="small" value={ordenActiva.colonia} InputProps={{ readOnly: true }} />
-                                    <TextField label="Entre Calles" variant="outlined" fullWidth size="small" value={ordenActiva.entre} InputProps={{ readOnly: true }} />
-                                </Stack>
-
-                                {/* CHECKLIST */}
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2 }}>Protocolo Técnico Obligatorio</Typography>
-                                <Stack spacing={1.5} sx={{ mb: 3 }}>
-                                    <FormControlLabel control={<Switch checked={checklist.verificarEquipos} onChange={handleToggle} name="verificarEquipos" color="secondary" />} label="1. Validación y desempaque de equipos ONT/Router" />
-                                    <FormControlLabel control={<Switch checked={checklist.tendidoCable} onChange={handleToggle} name="tendidoCable" color="secondary" />} label="2. Tendido e instalación de Cable de Fibra Óptica" />
-                                    <FormControlLabel control={<Switch checked={checklist.configONT} onChange={handleToggle} name="configONT" color="secondary" />} label="3. Configuración, fusión y pruebas de potencia de internet" />
-                                </Stack>
-
-                                {/* FOTO */}
-                                <Box sx={{ mb: 3.5 }}>
-                                    <Button variant={fotoEvidencia ? "contained" : "outlined"} color={fotoEvidencia ? "success" : "primary"} component="label" startIcon={fotoEvidencia ? <CheckCircle /> : <PhotoCamera />} fullWidth sx={{ py: 1.5, textTransform: 'none' }}>
-                                        {fotoEvidencia ? "Evidencia Fotográfica Guardada" : "Capturar Evidencia de Instalación (ONT / Fachada)"}
-                                        <input type="file" hidden accept="image/*" capture="environment" onChange={() => setFotoEvidencia(true)} />
-                                    </Button>
-                                </Box>
-
-                                <Divider sx={{ my: 2.5 }} />
-
-                                {/* FIRMA */}
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <BorderColor sx={{ fontSize: 18 }} /> 4. Firma Digital de Conformidad del Cliente
-                                </Typography>
-                                <Box sx={{ backgroundColor: '#f8fafc', border: '2px dashed #cbd5e1', borderRadius: 2, height: 160, touchAction: 'none', mb: 1 }}>
-                                    <canvas ref={canvasRef} width={800} height={160} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ width: '100%', height: '100%', cursor: 'crosshair' }} />
-                                </Box>
-                                <Button size="small" onClick={limpiarFirma} color="error" sx={{ mb: 4 }}>Borrar Firma</Button>
-
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    color="success"
-                                    disabled={!isComplete}
-                                    onClick={handleFinalizarOrdenOrden}
-                                    startIcon={<CheckCircle />}
-                                    sx={{ textTransform: 'none', py: 1.5, fontWeight: 700, fontSize: '1.05rem' }}
-                                >
-                                    Cerrar Orden de Servicio Digital
-                                </Button>
-
-                            </CardContent>
-                        </Card>
-                    )}
-                </Box>
-            )}
-        </Box>
-    );
+                    <TextField
+                      multiline
+                      rows={3}
+                      fullWidth
+                      label="Notas de la Instalación"
+                      value={formData.notas_instalacion}
+                      onChange={(e) => setFormData({ ...formData, notas_instalacion: e.target.value })}
+                    />
+                  </>
+                )}
+              </Stack>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDialogOpen(false)}>Cerrar</Button>
+          {!vistaAdmin && (
+            <Button onClick={handleCompletar} variant="contained" color="success" startIcon={<CheckCircle />}>
+              Completar Instalación
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
 };
 
 export default TecnicoEjecucion;
