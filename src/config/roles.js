@@ -14,13 +14,17 @@ export const RUTAS_POR_ROL = {
   [ROLES.CANVACEADOR]: [
     'canvaceo-dashboard',
     'canvaceo-registro',
-    'canvaceo-ruta'
+    'canvaceo-ruta',
+    'ventas-contrato-directo',
+    'ventas-seguimiento'
   ],
   
   // TÉCNICO - Solo puede ver sus módulos
   [ROLES.TECNICO]: [
     'tecnico-ejecucion',
-    'tecnico-mis-instalaciones'
+    'tecnico-mis-instalaciones',
+    'ventas-contrato-directo',
+    'ventas-seguimiento'
   ],
   
   // LOGÍSTICA - Agenda y seguimiento

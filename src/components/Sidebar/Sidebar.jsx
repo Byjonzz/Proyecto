@@ -51,7 +51,7 @@ const MENU_ITEMS = [
     section: 'VENTAS',
     items: [
       { text: 'Contrato Directo', icon: <Description />, key: 'ventas-contrato-directo' },
-      { text: 'Seguimiento Leads', icon: <TrendingUp />, key: 'ventas-seguimiento' }
+      { text: 'Seguimiento Prospectos', icon: <TrendingUp />, key: 'ventas-seguimiento' }
     ]
   },
   // Sección Logística

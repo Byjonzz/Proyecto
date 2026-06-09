@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Card, CardContent, Typography, Grid, TextField, MenuItem,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -10,6 +10,7 @@ import {
   WarningAmberOutlined, PersonSearchOutlined, AccountBalanceWalletOutlined,
   InfoOutlined, Close, ZoomOutMap
 } from '@mui/icons-material';
+import api from '../../services/api';
 
 const PRECIOS = {
   basico: 499,
@@ -41,6 +42,8 @@ const inputReglaStyle = {
 };
 
 const Comisiones = () => {
+  const [loading, setLoading] = useState(true);
+  
   const [configuracion, setConfiguracion] = useState({
     modalidad: 'solo_metas',
     salarioBase: 1000,
@@ -53,30 +56,139 @@ const Comisiones = () => {
     { min: 6, porcentaje: 100 }
   ]);
 
-  // Datos del Equipo (contratosDiarios ordenados ahora de Sábado a Viernes)
-  const [equipo, setEquipo] = useState([
-    { 
-      id: 1, nombre: 'Carlos Ruiz', zonaAsignada: 'Polígono Norte', 
-      paquetes: { basico: 2, familiar: 4, gamer: 1 },
-      horasApp: 42, 
-      contratosDiarios: [1, 1, 2, 0, 2, 1], // [Sáb, Lun, Mar, Mié, Jue, Vie]
-      estatus: 'Excelente' 
-    },
-    { 
-      id: 2, nombre: 'Ana Gómez', zonaAsignada: 'Polígono Sur', 
-      paquetes: { basico: 2, familiar: 0, gamer: 0 },
-      horasApp: 30, 
-      contratosDiarios: [0, 1, 0, 1, 0, 0], 
-      estatus: 'Bajo Rendimiento' 
-    },
-    { 
-      id: 3, nombre: 'Luis Pérez', zonaAsignada: 'Polígono Centro', 
-      paquetes: { basico: 2, familiar: 3, gamer: 0 },
-      horasApp: 38, 
-      contratosDiarios: [0, 1, 1, 1, 0, 2], 
-      estatus: 'Regular' 
+  // ✅ NUEVO: Estado del equipo que se cargará desde la BD
+  const [equipo, setEquipo] = useState([]);
+
+  // ✅ NUEVO: Cargar datos reales desde la base de datos
+  useEffect(() => {
+    cargarDatosDesdeBD();
+  }, []);
+
+  const cargarDatosDesdeBD = async () => {
+    try {
+      setLoading(true);
+      
+      // ✅ 1. Obtener USUARIOS (no canvaceadores directamente)
+      const usuariosResponse = await api.get('/usuarios/');
+      const todosUsuarios = usuariosResponse.data;
+      
+      // ✅ 2. Filtrar solo los usuarios con rol de canvaceador
+      const usuariosCanvaceadores = todosUsuarios.filter(usuario => {
+        const rol = (usuario.rol || '').toLowerCase().trim();
+        return rol === 'canvaceador' || rol === 'canvaceadora';
+      });
+      
+      // ✅ 3. Obtener todos los contratos
+      const contratosResponse = await api.get('/contratos/');
+      const todosContratos = contratosResponse.data;
+      
+      // ✅ 4. Filtrar contratos de la semana actual
+      const semanaActual = obtenerSemanaActual();
+      const contratosSemana = todosContratos.filter(contrato => {
+        const fechaContrato = new Date(contrato.fecha_creacion || contrato.fecha_captura);
+        return fechaContrato >= semanaActual.inicio && fechaContrato <= semanaActual.fin;
+      });
+      
+      // ✅ 5. Transformar datos al formato que espera el componente
+      const equipoTransformado = await Promise.all(usuariosCanvaceadores.map(async (usuario) => {
+        // Obtener nombre completo del usuario
+        const nombreCompleto = usuario.nombre_completo || 
+                              `${usuario.nombre} ${usuario.apellido}`.trim() || 
+                              usuario.email || 
+                              `Usuario #${usuario.id}`;
+        
+        // ✅ 6. Obtener el perfil del canvaceador si existe
+        let canvaceadorData = null;
+        try {
+          const canvResponse = await api.get(`/canvaceadores/?usuario_id=${usuario.id}`);
+          if (canvResponse.data && canvResponse.data.length > 0) {
+            canvaceadorData = canvResponse.data[0];
+          }
+        } catch (error) {
+          console.warn(`No se encontró perfil de canvaceador para usuario ${usuario.id}`);
+        }
+        
+        // Filtrar contratos de este canvaceador (usando usuario_id)
+        const contratosCanvaceador = contratosSemana.filter(
+          c => c.canvaceador_id === usuario.id || c.usuario_id === usuario.id
+        );
+        
+        // Contar paquetes por tipo
+        const paquetes = { basico: 0, familiar: 0, gamer: 0 };
+        contratosCanvaceador.forEach(contrato => {
+          const plan = (contrato.plan_contratado || '').toUpperCase();
+          if (plan.includes('BÁSICO') || plan.includes('BASICO') || plan === 'INTERMEDIO') {
+            paquetes.basico++;
+          } else if (plan.includes('FAMILIAR') || plan === 'AVANZADO') {
+            paquetes.familiar++;
+          } else if (plan.includes('GAMER') || plan === 'PLUS') {
+            paquetes.gamer++;
+          } else {
+            // Plan no reconocido, contar como básico por defecto
+            paquetes.basico++;
+          }
+        });
+        
+        // Calcular contratos por día de la semana [Sáb, Lun, Mar, Mié, Jue, Vie]
+        const contratosDiarios = [0, 0, 0, 0, 0, 0];
+        const diasSemana = [6, 1, 2, 3, 4, 5]; // Sáb=6, Lun=1, Mar=2, Mié=3, Jue=4, Vie=5
+        
+        contratosCanvaceador.forEach(contrato => {
+          const fecha = new Date(contrato.fecha_creacion || contrato.fecha_captura);
+          const dia = fecha.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+          const indice = diasSemana.indexOf(dia);
+          if (indice !== -1) {
+            contratosDiarios[indice]++;
+          }
+        });
+        
+        // Calcular total de ventas
+        const totalVentas = paquetes.basico + paquetes.familiar + paquetes.gamer;
+        
+        // Determinar estatus
+        let estatus = 'Bajo Rendimiento';
+        if (totalVentas >= 6) estatus = 'Excelente';
+        else if (totalVentas >= 4) estatus = 'Regular';
+        
+        // Calcular horas en la app (aproximado: 8h por día trabajado)
+        const diasTrabajados = contratosDiarios.filter(d => d > 0).length;
+        const horasApp = diasTrabajados * 8;
+        
+        return {
+          id: usuario.id,
+          nombre: nombreCompleto,
+          zonaAsignada: canvaceadorData?.zona_asignada || `Zona ${usuario.id}`,
+          numeroEmpleado: canvaceadorData?.numero_empleado || `EMP-${usuario.id}`,
+          paquetes,
+          horasApp,
+          contratosDiarios,
+          estatus
+        };
+      }));
+      
+      setEquipo(equipoTransformado);
+      
+    } catch (error) {
+      console.error('❌ Error al cargar datos:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  // ✅ NUEVO: Función para obtener la semana actual
+  const obtenerSemanaActual = () => {
+    const ahora = new Date();
+    const inicioSemana = new Date(ahora);
+    // Lunes de esta semana
+    inicioSemana.setDate(ahora.getDate() - ahora.getDay() + 1);
+    inicioSemana.setHours(0, 0, 0, 0);
+    
+    const finSemana = new Date(inicioSemana);
+    finSemana.setDate(inicioSemana.getDate() + 6); // Domingo
+    finSemana.setHours(23, 59, 59, 999);
+    
+    return { inicio: inicioSemana, fin: finSemana };
+  };
 
   const [modalInfoPago, setModalInfoPago] = useState(false);
   const [agenteGrafica, setAgenteGrafica] = useState(null);
@@ -247,7 +359,21 @@ const Comisiones = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {equipo.map((agente) => {
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                          <Typography>Cargando datos de canvaceadores...</Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : equipo.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                          <Typography color="text.secondary">
+                            No hay canvaceadores registrados esta semana
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : equipo.map((agente) => {
                       const stats = calcularRendimientoAgente(agente.paquetes);
                       return (
                         <TableRow key={agente.id} hover>

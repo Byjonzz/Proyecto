@@ -21,7 +21,8 @@ import {
   Divider,
   Tooltip,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   Add,
@@ -29,11 +30,10 @@ import {
   Delete,
   Save,
   Close,
-  TrendingUp,
   Speed,
-  AttachMoney,
   CheckCircle
 } from '@mui/icons-material';
+import api from '../../services/api';
 
 // Categorías de planes disponibles
 const CATEGORIAS = {
@@ -44,37 +44,6 @@ const CATEGORIAS = {
   ANTENA_WIRELESS: 'Antena/Wireless'
 };
 
-// Planes iniciales por defecto
-const PLANES_INICIALES = [
-  // Fibra Simétrica
-  { id: 1, nombre: 'INTERMEDIO', categoria: CATEGORIAS.FIBRA_SIMETRICA, precio: 309, descarga: 30, subida: 30, simetrica: true, ift: '1065567', destacado: false, activo: true },
-  { id: 2, nombre: 'AVANZADO', categoria: CATEGORIAS.FIBRA_SIMETRICA, precio: 409, descarga: 60, subida: 60, simetrica: true, ift: '1065572', destacado: false, activo: true },
-  { id: 3, nombre: 'PLUS', categoria: CATEGORIAS.FIBRA_SIMETRICA, precio: 509, descarga: 100, subida: 100, simetrica: true, ift: '1065577', destacado: true, activo: true },
-  
-  // Fibra Asimétrica
-  { id: 4, nombre: 'BÁSICO', categoria: CATEGORIAS.FIBRA_ASIMETRICA, precio: 310, descarga: 10, subida: 5, simetrica: false, ift: '1065496', destacado: false, activo: true },
-  { id: 5, nombre: 'INTERMEDIO', categoria: CATEGORIAS.FIBRA_ASIMETRICA, precio: 410, descarga: 15, subida: 5, simetrica: false, ift: '1065502', destacado: false, activo: true },
-  { id: 6, nombre: 'AVANZADO', categoria: CATEGORIAS.FIBRA_ASIMETRICA, precio: 510, descarga: 20, subida: 5, simetrica: false, ift: '1065535', destacado: false, activo: true },
-  
-  // Solit + TV
-  { id: 7, nombre: 'Solit+TV One', categoria: CATEGORIAS.SOLIT_TV, precio: 535, descarga: 30, subida: 30, simetrica: true, canales: '47 (41 HD / 6 SD)', ift: '1462784', destacado: false, activo: true },
-  { id: 8, nombre: 'Solit+TV Prime', categoria: CATEGORIAS.SOLIT_TV, precio: 650, descarga: 60, subida: 60, simetrica: true, canales: '47 (41 HD / 6 SD)', ift: '1468403', destacado: true, activo: true },
-  { id: 9, nombre: 'Solit+TV Plus', categoria: CATEGORIAS.SOLIT_TV, precio: 760, descarga: 100, subida: 100, simetrica: true, canales: '47 (41 HD / 6 SD)', ift: '1468404', destacado: false, activo: true },
-  
-  // Híbrido
-  { id: 10, nombre: 'Híbrido 5 Mbps', categoria: CATEGORIAS.HIBRIDO, precio: 200, velocidad: 5, ift: 'N/A', destacado: false, activo: true },
-  { id: 11, nombre: 'Híbrido 10 Mbps', categoria: CATEGORIAS.HIBRIDO, precio: 250, velocidad: 10, ift: 'N/A', destacado: false, activo: true },
-  { id: 12, nombre: 'Híbrido 20 Mbps', categoria: CATEGORIAS.HIBRIDO, precio: 300, velocidad: 20, ift: 'N/A', destacado: false, activo: true },
-  { id: 13, nombre: 'Híbrido 40 Mbps', categoria: CATEGORIAS.HIBRIDO, precio: 400, velocidad: 40, ift: 'N/A', destacado: false, activo: true },
-  { id: 14, nombre: 'Híbrido 60 Mbps', categoria: CATEGORIAS.HIBRIDO, precio: 500, velocidad: 60, ift: 'N/A', destacado: false, activo: true },
-  
-  // Antena/Wireless
-  { id: 15, nombre: 'WIFI MIX 10 Mbps', categoria: CATEGORIAS.ANTENA_WIRELESS, precio: 250, velocidad: 10, ift: 'N/A', destacado: false, activo: true },
-  { id: 16, nombre: 'WIFI MIX 20 Mbps', categoria: CATEGORIAS.ANTENA_WIRELESS, precio: 300, velocidad: 20, ift: 'N/A', destacado: false, activo: true },
-  { id: 17, nombre: 'WIFI MIX 40 Mbps', categoria: CATEGORIAS.ANTENA_WIRELESS, precio: 400, velocidad: 40, ift: 'N/A', destacado: false, activo: true },
-  { id: 18, nombre: 'WIFI MIX 50 Mbps', categoria: CATEGORIAS.ANTENA_WIRELESS, precio: 500, velocidad: 50, ift: 'N/A', destacado: false, activo: true }
-];
-
 const PlansManagement = () => {
   const [planes, setPlanes] = useState([]);
   const [categoriaActiva, setCategoriaActiva] = useState(0);
@@ -82,6 +51,7 @@ const PlansManagement = () => {
   const [planEditando, setPlanEditando] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [loading, setLoading] = useState(false);
   
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -91,43 +61,60 @@ const PlansManagement = () => {
     descarga: '',
     subida: '',
     velocidad: '',
-    simetrica: false,
+    simetrica: true,
     canales: '',
     ift: '',
     destacado: false,
     activo: true
   });
 
-  // Cargar planes al iniciar
+  // ✅ Cargar planes desde la API al iniciar
   useEffect(() => {
     cargarPlanes();
   }, []);
 
-  const cargarPlanes = () => {
-    const planesGuardados = localStorage.getItem('conectanet_planes');
-    if (planesGuardados) {
-      setPlanes(JSON.parse(planesGuardados));
-    } else {
-      setPlanes(PLANES_INICIALES);
-      localStorage.setItem('conectanet_planes', JSON.stringify(PLANES_INICIALES));
+  const cargarPlanes = async () => {
+    try {
+      setLoading(true);
+      console.log('📡 Cargando planes desde API...');
+      
+      const response = await api.get('/planes/');
+      console.log('✅ Planes cargados:', response.data);
+      
+      setPlanes(response.data);
+      
+      if (response.data.length === 0) {
+        mostrarMensaje('No hay planes registrados. Agrega el primer plan.', 'info');
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar planes:', error);
+      mostrarMensaje('Error al cargar los planes desde el servidor.', 'error');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const guardarPlanes = (nuevosPlanes) => {
-    setPlanes(nuevosPlanes);
-    localStorage.setItem('conectanet_planes', JSON.stringify(nuevosPlanes));
-    mostrarMensaje('Planes guardados correctamente', 'success');
   };
 
   const mostrarMensaje = (texto, tipo) => {
     setMensaje({ texto, tipo });
-    setTimeout(() => setMensaje(null), 3000);
+    setTimeout(() => setMensaje(null), 4000);
   };
 
   const handleOpenDialog = (plan = null) => {
     if (plan) {
       setPlanEditando(plan);
-      setFormData({ ...plan });
+      setFormData({ 
+        nombre: plan.nombre || '',
+        categoria: plan.categoria || CATEGORIAS.FIBRA_SIMETRICA,
+        precio: plan.precio || '',
+        descarga: plan.descarga || '',
+        subida: plan.subida || '',
+        velocidad: plan.velocidad || '',
+        simetrica: plan.simetrica !== undefined ? plan.simetrica : true,
+        canales: plan.canales || '',
+        ift: plan.ift || '',
+        destacado: plan.destacado !== undefined ? plan.destacado : false,
+        activo: plan.activo !== undefined ? plan.activo : true
+      });
       setModoEdicion(true);
     } else {
       setPlanEditando(null);
@@ -138,7 +125,7 @@ const PlansManagement = () => {
         descarga: '',
         subida: '',
         velocidad: '',
-        simetrica: false,
+        simetrica: true,
         canales: '',
         ift: '',
         destacado: false,
@@ -155,46 +142,135 @@ const PlansManagement = () => {
     setModoEdicion(false);
   };
 
-  const handleSavePlan = () => {
-    if (!formData.nombre || !formData.precio) {
-      mostrarMensaje('Nombre y precio son obligatorios', 'error');
+  // ✅ GUARDAR PLAN - POST o PUT a la API
+  const handleSavePlan = async () => {
+    // Validaciones básicas
+    if (!formData.nombre || !formData.precio || !formData.ift) {
+      mostrarMensaje('Nombre, precio e IFT son obligatorios', 'error');
       return;
     }
 
-    if (modoEdicion && planEditando) {
-      // Actualizar plan existente
-      const planesActualizados = planes.map(p => 
-        p.id === planEditando.id ? { ...formData, id: p.id } : p
-      );
-      guardarPlanes(planesActualizados);
-    } else {
-      // Crear nuevo plan
-      const nuevoPlan = {
-        ...formData,
-        id: Date.now(), // ID único basado en timestamp
-        precio: Number(formData.precio),
-        descarga: formData.descarga ? Number(formData.descarga) : null,
-        subida: formData.subida ? Number(formData.subida) : null,
-        velocidad: formData.velocidad ? Number(formData.velocidad) : null
+    try {
+      setLoading(true);
+      
+      // ✅ Preparar datos para la API - TODOS los campos con valores válidos
+      const planData = {
+        nombre: formData.nombre.trim(),
+        categoria: formData.categoria,
+        precio: parseFloat(formData.precio).toFixed(2),
+        // ✅ Los CharField NO pueden ser null ni vacíos, usar "0" o "N/A" como default
+        descarga: formData.descarga?.toString().trim() || '0',
+        subida: formData.subida?.toString().trim() || '0',
+        velocidad: formData.velocidad?.toString().trim() || '0',
+        simetrica: formData.simetrica,
+        // ✅ Solo canales puede ser null según el modelo
+        canales: formData.canales?.trim() || null,
+        ift: formData.ift.trim(),
+        destacado: formData.destacado,
+        activo: formData.activo
       };
-      guardarPlanes([...planes, nuevoPlan]);
+
+      console.log('📤 Enviando plan a la API:', planData);
+
+      let response;
+      
+      if (modoEdicion && planEditando) {
+        // ✅ ACTUALIZAR plan existente - PUT
+        console.log('✏️ Actualizando plan ID:', planEditando.id);
+        response = await api.put(`/planes/${planEditando.id}/`, planData);
+        console.log('✅ Plan actualizado:', response.data);
+        
+        // Actualizar estado local
+        const planesActualizados = planes.map(p => 
+          p.id === planEditando.id ? response.data : p
+        );
+        setPlanes(planesActualizados);
+        mostrarMensaje('Plan actualizado correctamente', 'success');
+      } else {
+        // ✅ CREAR nuevo plan - POST
+        console.log('➕ Creando nuevo plan');
+        response = await api.post('/planes/', planData);
+        console.log('✅ Plan creado:', response.data);
+        
+        // Agregar al estado local
+        setPlanes([...planes, response.data]);
+        mostrarMensaje('Plan creado correctamente', 'success');
+      }
+      
+      handleCloseDialog();
+    } catch (error) {
+      console.error('❌ Error al guardar plan:', error);
+      
+      // ✅ Mostrar error detallado del backend
+      if (error.response && error.response.data) {
+        console.error('🔴 Error detallado del backend:', error.response.data);
+        
+        let mensajeError = 'Error al guardar el plan:\n';
+        
+        if (typeof error.response.data === 'object') {
+          Object.entries(error.response.data).forEach(([campo, mensajes]) => {
+            const mensajeCampo = Array.isArray(mensajes) ? mensajes.join(', ') : mensajes;
+            mensajeError += `\n• ${campo}: ${mensajeCampo}`;
+          });
+        } else {
+          mensajeError += error.response.data;
+        }
+        
+        mostrarMensaje(mensajeError, 'error');
+      } else if (error.request) {
+        mostrarMensaje('No se pudo conectar con el servidor. Verifica tu conexión.', 'error');
+      } else {
+        mostrarMensaje('Error inesperado: ' + error.message, 'error');
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    handleCloseDialog();
   };
 
-  const handleDeletePlan = (planId) => {
-    if (window.confirm('¿Estás seguro de eliminar este plan?')) {
-      const planesActualizados = planes.filter(p => p.id !== planId);
-      guardarPlanes(planesActualizados);
+  // ✅ ELIMINAR PLAN - DELETE a la API
+  const handleDeletePlan = async (planId) => {
+    if (window.confirm('¿Estás seguro de eliminar este plan? Esta acción no se puede deshacer.')) {
+      try {
+        setLoading(true);
+        console.log('🗑️ Eliminando plan ID:', planId);
+        
+        await api.delete(`/planes/${planId}/`);
+        console.log('✅ Plan eliminado');
+        
+        const planesActualizados = planes.filter(p => p.id !== planId);
+        setPlanes(planesActualizados);
+        mostrarMensaje('Plan eliminado correctamente', 'success');
+      } catch (error) {
+        console.error('❌ Error al eliminar plan:', error);
+        mostrarMensaje('Error al eliminar el plan', 'error');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleToggleActivo = (planId) => {
-    const planesActualizados = planes.map(p => 
-      p.id === planId ? { ...p, activo: !p.activo } : p
-    );
-    guardarPlanes(planesActualizados);
+  // ✅ ACTIVAR/DESACTIVAR PLAN - PATCH a la API
+  const handleToggleActivo = async (planId) => {
+    try {
+      const plan = planes.find(p => p.id === planId);
+      if (!plan) return;
+      
+      const nuevoEstado = !plan.activo;
+      
+      console.log(`🔄 Cambiando estado del plan ${planId} a: ${nuevoEstado}`);
+      
+      const response = await api.patch(`/planes/${planId}/`, { activo: nuevoEstado });
+      console.log('✅ Estado actualizado:', response.data);
+      
+      const planesActualizados = planes.map(p => 
+        p.id === planId ? response.data : p
+      );
+      setPlanes(planesActualizados);
+      mostrarMensaje(`Plan ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success');
+    } catch (error) {
+      console.error('❌ Error al cambiar estado:', error);
+      mostrarMensaje('Error al cambiar el estado del plan', 'error');
+    }
   };
 
   const categorias = Object.values(CATEGORIAS);
@@ -211,6 +287,15 @@ const PlansManagement = () => {
     return colors[categoria] || '#1976d2';
   };
 
+  if (loading && planes.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Cargando planes...</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ mb: 3 }}>
@@ -223,7 +308,7 @@ const PlansManagement = () => {
       </Box>
 
       {mensaje && (
-        <Alert severity={mensaje.tipo} sx={{ mb: 3 }}>
+        <Alert severity={mensaje.tipo} sx={{ mb: 3, whiteSpace: 'pre-line' }}>
           {mensaje.texto}
         </Alert>
       )}
@@ -294,7 +379,7 @@ const PlansManagement = () => {
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
                     <Typography variant="h4" sx={{ fontWeight: 900, color: getCardColor(plan.categoria) }}>
-                      ${plan.precio}
+                      ${parseFloat(plan.precio).toFixed(0)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       /mes
@@ -305,7 +390,7 @@ const PlansManagement = () => {
                 <Divider sx={{ my: 1.5 }} />
 
                 <Box sx={{ mb: 1.5 }}>
-                  {plan.descarga && plan.subida ? (
+                  {plan.descarga && plan.descarga !== '0' && plan.subida && plan.subida !== '0' ? (
                     <>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                         <Speed fontSize="small" sx={{ color: '#9c27b0' }} />
@@ -321,7 +406,7 @@ const PlansManagement = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Speed fontSize="small" sx={{ color: '#9c27b0' }} />
                       <Typography variant="body2">
-                        {plan.velocidad} Mbps
+                        {plan.velocidad && plan.velocidad !== '0' ? `${plan.velocidad} Mbps` : 'N/A'}
                       </Typography>
                     </Box>
                   )}
@@ -427,7 +512,7 @@ const PlansManagement = () => {
               onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
               sx={{ mb: 2 }}
               required
-              InputProps={{ inputProps: { min: 0 } }}
+              InputProps={{ inputProps: { min: 0, step: 0.01 } }}
             />
 
             {/* Campos específicos según categoría */}
@@ -438,20 +523,18 @@ const PlansManagement = () => {
                     <TextField
                       fullWidth
                       label="Velocidad Descarga (Mbps)"
-                      type="number"
                       value={formData.descarga}
                       onChange={(e) => setFormData({ ...formData, descarga: e.target.value })}
-                      InputProps={{ inputProps: { min: 0 } }}
+                      helperText="Ej: 30, 60, 100"
                     />
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
                       fullWidth
                       label="Velocidad Subida (Mbps)"
-                      type="number"
                       value={formData.subida}
                       onChange={(e) => setFormData({ ...formData, subida: e.target.value })}
-                      InputProps={{ inputProps: { min: 0 } }}
+                      helperText="Ej: 30, 60, 100"
                     />
                   </Grid>
                 </Grid>
@@ -484,20 +567,21 @@ const PlansManagement = () => {
               <TextField
                 fullWidth
                 label="Velocidad (Mbps)"
-                type="number"
                 value={formData.velocidad}
                 onChange={(e) => setFormData({ ...formData, velocidad: e.target.value })}
                 sx={{ mb: 2 }}
-                InputProps={{ inputProps: { min: 0 } }}
+                helperText="Ej: 5, 10, 20, 40, 60"
               />
             )}
 
             <TextField
               fullWidth
-              label="Número IFT"
+              label="Número IFT *"
               value={formData.ift}
               onChange={(e) => setFormData({ ...formData, ift: e.target.value })}
               sx={{ mb: 2 }}
+              required
+              helperText="Este campo debe ser único"
             />
 
             <FormControlLabel
@@ -510,25 +594,36 @@ const PlansManagement = () => {
               label="Marcar como plan destacado"
               sx={{ display: 'block' }}
             />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.activo}
+                  onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
+                />
+              }
+              label="Plan activo"
+              sx={{ display: 'block', mt: 1 }}
+            />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} startIcon={<Close />}>
+          <Button onClick={handleCloseDialog} startIcon={<Close />} disabled={loading}>
             Cancelar
           </Button>
           <Button 
             onClick={handleSavePlan} 
             variant="contained" 
-            startIcon={<Save />}
+            startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+            disabled={loading}
             sx={{ background: getCardColor(formData.categoria) }}
           >
-            {modoEdicion ? 'Actualizar' : 'Guardar'}
+            {loading ? 'Guardando...' : (modoEdicion ? 'Actualizar' : 'Guardar')}
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
 };
-
 
 export default PlansManagement;
