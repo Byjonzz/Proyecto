@@ -1,7 +1,6 @@
-
 export default {
   content: [
-    "./src*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
     extend: {
@@ -13,7 +12,6 @@ export default {
         
         background: '#e5e7eb', 
         surface: '#d1d5db',    
-        
         
         excelente: '#22c55e',
         bueno: '#eab308',
