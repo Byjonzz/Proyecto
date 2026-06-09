@@ -48,7 +48,7 @@ export const instalacionesService = {
     }
   },
 
-  // Obtener instalaciones por técnico
+  
   getByTecnico: async (tecnicoId) => {
     try {
       const response = await api.get(`${ENDPOINT}?tecnico=${tecnicoId}`);
@@ -58,7 +58,7 @@ export const instalacionesService = {
     }
   },
 
-  // Obtener instalaciones por estado
+  
   getByEstado: async (estado) => {
     try {
       const response = await api.get(`${ENDPOINT}?estado=${estado}`);

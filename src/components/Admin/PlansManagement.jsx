@@ -35,7 +35,6 @@ import {
 } from '@mui/icons-material';
 import api from '../../services/api';
 
-// Categorías de planes disponibles
 const CATEGORIAS = {
   FIBRA_SIMETRICA: 'Fibra Simétrica',
   FIBRA_ASIMETRICA: 'Fibra Asimétrica',
@@ -53,7 +52,6 @@ const PlansManagement = () => {
   const [mensaje, setMensaje] = useState(null);
   const [loading, setLoading] = useState(false);
   
-  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: CATEGORIAS.FIBRA_SIMETRICA,
@@ -68,7 +66,6 @@ const PlansManagement = () => {
     activo: true
   });
 
-  // ✅ Cargar planes desde la API al iniciar
   useEffect(() => {
     cargarPlanes();
   }, []);
@@ -142,9 +139,7 @@ const PlansManagement = () => {
     setModoEdicion(false);
   };
 
-  // ✅ GUARDAR PLAN - POST o PUT a la API
   const handleSavePlan = async () => {
-    // Validaciones básicas
     if (!formData.nombre || !formData.precio || !formData.ift) {
       mostrarMensaje('Nombre, precio e IFT son obligatorios', 'error');
       return;
@@ -153,17 +148,14 @@ const PlansManagement = () => {
     try {
       setLoading(true);
       
-      // ✅ Preparar datos para la API - TODOS los campos con valores válidos
       const planData = {
         nombre: formData.nombre.trim(),
         categoria: formData.categoria,
         precio: parseFloat(formData.precio).toFixed(2),
-        // ✅ Los CharField NO pueden ser null ni vacíos, usar "0" o "N/A" como default
         descarga: formData.descarga?.toString().trim() || '0',
         subida: formData.subida?.toString().trim() || '0',
         velocidad: formData.velocidad?.toString().trim() || '0',
         simetrica: formData.simetrica,
-        // ✅ Solo canales puede ser null según el modelo
         canales: formData.canales?.trim() || null,
         ift: formData.ift.trim(),
         destacado: formData.destacado,
@@ -175,24 +167,20 @@ const PlansManagement = () => {
       let response;
       
       if (modoEdicion && planEditando) {
-        // ✅ ACTUALIZAR plan existente - PUT
         console.log('✏️ Actualizando plan ID:', planEditando.id);
         response = await api.put(`/planes/${planEditando.id}/`, planData);
         console.log('✅ Plan actualizado:', response.data);
         
-        // Actualizar estado local
         const planesActualizados = planes.map(p => 
           p.id === planEditando.id ? response.data : p
         );
         setPlanes(planesActualizados);
         mostrarMensaje('Plan actualizado correctamente', 'success');
       } else {
-        // ✅ CREAR nuevo plan - POST
         console.log('➕ Creando nuevo plan');
         response = await api.post('/planes/', planData);
         console.log('✅ Plan creado:', response.data);
         
-        // Agregar al estado local
         setPlanes([...planes, response.data]);
         mostrarMensaje('Plan creado correctamente', 'success');
       }
@@ -201,7 +189,6 @@ const PlansManagement = () => {
     } catch (error) {
       console.error('❌ Error al guardar plan:', error);
       
-      // ✅ Mostrar error detallado del backend
       if (error.response && error.response.data) {
         console.error('🔴 Error detallado del backend:', error.response.data);
         
@@ -227,7 +214,6 @@ const PlansManagement = () => {
     }
   };
 
-  // ✅ ELIMINAR PLAN - DELETE a la API
   const handleDeletePlan = async (planId) => {
     if (window.confirm('¿Estás seguro de eliminar este plan? Esta acción no se puede deshacer.')) {
       try {
@@ -249,7 +235,6 @@ const PlansManagement = () => {
     }
   };
 
-  // ✅ ACTIVAR/DESACTIVAR PLAN - PATCH a la API
   const handleToggleActivo = async (planId) => {
     try {
       const plan = planes.find(p => p.id === planId);
@@ -313,7 +298,6 @@ const PlansManagement = () => {
         </Alert>
       )}
 
-      {/* Tabs de categorías */}
       <Tabs 
         value={categoriaActiva} 
         onChange={(e, newValue) => setCategoriaActiva(newValue)}
@@ -326,7 +310,6 @@ const PlansManagement = () => {
         ))}
       </Tabs>
 
-      {/* Header con botón agregar */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">
           {categorias[categoriaActiva]} ({planesFiltrados.length} planes)
@@ -344,7 +327,6 @@ const PlansManagement = () => {
         </Button>
       </Box>
 
-      {/* Grid de planes */}
       <Grid container spacing={3}>
         {planesFiltrados.map((plan) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={plan.id}>
@@ -475,7 +457,6 @@ const PlansManagement = () => {
         </Box>
       )}
 
-      {/* Dialog para agregar/editar plan */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           {modoEdicion ? 'Editar Plan' : 'Agregar Nuevo Plan'}
@@ -515,7 +496,6 @@ const PlansManagement = () => {
               InputProps={{ inputProps: { min: 0, step: 0.01 } }}
             />
 
-            {/* Campos específicos según categoría */}
             {formData.categoria !== CATEGORIAS.HIBRIDO && formData.categoria !== CATEGORIAS.ANTENA_WIRELESS && (
               <>
                 <Grid container spacing={2} sx={{ mb: 2 }}>

@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* BrowserRouter habilita la navegación por URLs en toda la app */}
+    {}
     <BrowserRouter>
       <App />
     </BrowserRouter>

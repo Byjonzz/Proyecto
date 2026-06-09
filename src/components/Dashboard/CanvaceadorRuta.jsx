@@ -53,7 +53,7 @@ const CanvaceadorRuta = () => {
                 <CardContent sx={{ p: 3 }}>
                     <Grid container spacing={3} alignItems="center">
 
-                        {/* Saludo y Perfil */}
+                        {}
                         <Grid item xs={12} md={4}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <AccountCircle sx={{ fontSize: 50, color: '#3b82f6' }} />
@@ -64,7 +64,7 @@ const CanvaceadorRuta = () => {
                             </Box>
                         </Grid>
 
-                        {/* Estadísticas de Ventas */}
+                        {}
                         <Grid item xs={12} md={4}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, borderLeft: { md: '1px solid #334155' }, borderRight: { md: '1px solid #334155' }, px: { md: 3 } }}>
                                 <AssignmentTurnedIn sx={{ fontSize: 35, color: '#10b981' }} />
@@ -80,7 +80,7 @@ const CanvaceadorRuta = () => {
                             </Box>
                         </Grid>
 
-                        {/* Pago Estimado y Botón de Información */}
+                        {}
                         <Grid item xs={12} md={4}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pl: { md: 1 } }}>
                                 <TrendingUp sx={{ fontSize: 35, color: '#f59e0b' }} />
@@ -102,9 +102,7 @@ const CanvaceadorRuta = () => {
                 </CardContent>
             </Card>
 
-            {/* 
-            CONTROL DE RUTA Y MAPA
-          */}
+            {}
             <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <CardContent sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2, p: 3, '&:last-child': { pb: 3 } }}>
                     <Box>
@@ -132,7 +130,7 @@ const CanvaceadorRuta = () => {
             </Card>
 
             <Grid container spacing={3}>
-                {/* Mapa de Recorrido */}
+                {}
                 <Grid item xs={12} lg={8}>
                     <Card variant="outlined" sx={{ borderRadius: 3, height: 420, display: 'flex', flexDirection: 'column' }}>
                         <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 3 }}>
@@ -157,7 +155,7 @@ const CanvaceadorRuta = () => {
                     </Card>
                 </Grid>
 
-                {/* Destinos */}
+                {}
                 <Grid item xs={12} lg={4}>
                     <Card variant="outlined" sx={{ borderRadius: 3, height: 420, display: 'flex', flexDirection: 'column' }}>
                         <CardContent sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -181,7 +179,7 @@ const CanvaceadorRuta = () => {
                 </Grid>
             </Grid>
 
-            {/* Historial de Rutas */}
+            {}
             <Card variant="outlined" sx={{ borderRadius: 3 }}>
                 <CardContent sx={{ p: 3 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
@@ -212,7 +210,7 @@ const CanvaceadorRuta = () => {
                 </CardContent>
             </Card>
 
-            {/*NUEVO: MODAL EXPLICATIVO DE CÁLCULO DE COMISIONES*/}
+            {}
             <Dialog open={modalInfoPago} onClose={() => setModalInfoPago(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
                 <DialogTitle sx={{ pb: 1 }}>
                     <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -231,7 +229,7 @@ const CanvaceadorRuta = () => {
                     </Typography>
 
                     <Stack spacing={2}>
-                        {/* Ejemplo 1: Escalonado por Metas */}
+                        {}
                         <Card variant="outlined" sx={{ borderColor: '#3b82f6', bgcolor: '#eff6ff' }}>
                             <CardContent>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1d4ed8', mb: 1 }}>1. Modalidad: Pago por Metas (Escalonado)</Typography>
@@ -248,7 +246,7 @@ const CanvaceadorRuta = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Ejemplo 2: Salario Base + Metas */}
+                        {}
                         <Card variant="outlined" sx={{ borderColor: '#10b981', bgcolor: '#ecfdf5' }}>
                             <CardContent>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#047857', mb: 1 }}>2. Modalidad: Salario Base + Metas</Typography>
@@ -262,7 +260,7 @@ const CanvaceadorRuta = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Ejemplo 3: Comisión Pura */}
+                        {}
                         <Card variant="outlined" sx={{ borderColor: '#f59e0b', bgcolor: '#fffbeb' }}>
                             <CardContent>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#b45309', mb: 1 }}>3. Modalidad: Comisión Pura Fija</Typography>

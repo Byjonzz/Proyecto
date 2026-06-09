@@ -46,7 +46,7 @@ const InstallationSchedule = () => {
   const [mensajeExito, setMensajeExito] = useState(false);
   const [errorAsignacion, setErrorAsignacion] = useState(null);
 
-  // ✅ NUEVO: Estado para el filtro de estatus
+  
   const [filtroEstatus, setFiltroEstatus] = useState('pendientes');
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const InstallationSchedule = () => {
     correo: contrato.correo
   }));
 
-  // ✅ NUEVO: Función para filtrar órdenes según el estatus seleccionado
+  
   const ordenesFiltradas = ordenes.filter(orden => {
     switch (filtroEstatus) {
       case 'pendientes':
@@ -78,7 +78,7 @@ const InstallationSchedule = () => {
     }
   });
 
-  // ✅ NUEVO: Contadores para cada filtro
+  
   const totalPendientes = ordenes.filter(o => o.estatus === 'Pendiente Asignar' || o.estatus === 'Pendiente').length;
   const totalAsignadas = ordenes.filter(o => o.estatus === 'Asignado' || o.estatus === 'Programada' || o.estatus === 'En Proceso').length;
   const totalCompletadas = ordenes.filter(o => o.estatus === 'Completado' || o.estatus === 'Completada').length;
@@ -175,13 +175,13 @@ const InstallationSchedule = () => {
         </Alert>
       )}
 
-      {/* ✅ NUEVO: BOTONES DE FILTRO POR ESTATUS */}
+      {}
       <Paper sx={{ p: 2, borderRadius: 2, border: '1px solid #e2e8f0' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#475569' }}>
           Filtrar por Estatus:
         </Typography>
         <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {/* Botón Pendientes */}
+          {}
           <Button
             variant={filtroEstatus === 'pendientes' ? 'contained' : 'outlined'}
             startIcon={<Pending />}
@@ -202,7 +202,7 @@ const InstallationSchedule = () => {
             Pendientes ({totalPendientes})
           </Button>
           
-          {/* Botón Asignadas */}
+          {}
           <Button
             variant={filtroEstatus === 'asignadas' ? 'contained' : 'outlined'}
             startIcon={<AssignmentTurnedIn />}
@@ -223,7 +223,7 @@ const InstallationSchedule = () => {
             Asignadas ({totalAsignadas})
           </Button>
           
-          {/* Botón Completadas */}
+          {}
           <Button
             variant={filtroEstatus === 'completadas' ? 'contained' : 'outlined'}
             startIcon={<CheckCircle />}
@@ -246,7 +246,7 @@ const InstallationSchedule = () => {
         </Stack>
       </Paper>
 
-      {/* ✅ MODIFICADO: Ahora usa ordenesFiltradas en lugar de ordenes */}
+      {}
       <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
         <Table>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>

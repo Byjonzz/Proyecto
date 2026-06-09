@@ -3,7 +3,7 @@ import api from './api';
 const ENDPOINT = '/contratos/';
 
 export const contratosService = {
-  // Obtener todos los contratos
+  
   getAll: async () => {
     try {
       const response = await api.get(ENDPOINT);
@@ -13,7 +13,7 @@ export const contratosService = {
     }
   },
 
-  // Obtener un contrato por ID
+  
   getById: async (id) => {
     try {
       const response = await api.get(`${ENDPOINT}${id}/`);
@@ -23,7 +23,7 @@ export const contratosService = {
     }
   },
 
-  // Crear nuevo contrato
+  
   create: async (data) => {
     try {
       const response = await api.post(ENDPOINT, data);
@@ -33,7 +33,7 @@ export const contratosService = {
     }
   },
 
-  // Actualizar contrato completo
+  
   update: async (id, data) => {
     try {
       const response = await api.put(`${ENDPOINT}${id}/`, data);
@@ -43,7 +43,7 @@ export const contratosService = {
     }
   },
 
-  // Actualizar parcialmente un contrato (solo algunos campos)
+  
   patch: async (id, data) => {
     try {
       const response = await api.patch(`${ENDPOINT}${id}/`, data);
@@ -53,7 +53,7 @@ export const contratosService = {
     }
   },
 
-  // Eliminar contrato
+  
   delete: async (id) => {
     try {
       const response = await api.delete(`${ENDPOINT}${id}/`);
@@ -63,7 +63,7 @@ export const contratosService = {
     }
   },
 
-  // Obtener contratos por cliente
+  
   getByCliente: async (clienteId) => {
     try {
       const response = await api.get(`${ENDPOINT}?cliente=${clienteId}`);
@@ -73,7 +73,7 @@ export const contratosService = {
     }
   },
 
-  // ✅ NUEVO: Obtener contratos pendientes de asignar
+  
   getPendientes: async () => {
     try {
       const response = await api.get(`${ENDPOINT}?estatus=Pendiente%20Asignar`);
@@ -83,7 +83,7 @@ export const contratosService = {
     }
   },
 
-  // ✅ NUEVO: Obtener contratos por estatus específico
+  
   getByEstatus: async (estatus) => {
     try {
       const response = await api.get(`${ENDPOINT}?estatus=${encodeURIComponent(estatus)}`);
@@ -93,7 +93,7 @@ export const contratosService = {
     }
   },
 
-  // ✅ NUEVO: Obtener contratos asignados a un técnico
+  
   getByTecnico: async (tecnicoId) => {
     try {
       const response = await api.get(`${ENDPOINT}?tecnico=${tecnicoId}`);
@@ -103,7 +103,7 @@ export const contratosService = {
     }
   },
 
-  // ✅ NUEVO: Obtener contratos por canvaceador
+  
   getByCanvaceador: async (canvaceadorId) => {
     try {
       const response = await api.get(`${ENDPOINT}?canvaceador=${canvaceadorId}`);
@@ -113,7 +113,7 @@ export const contratosService = {
     }
   },
 
-  // ✅ NUEVO: Asignar técnico y fecha a un contrato
+  
   asignarCita: async (id, data) => {
     try {
       const response = await api.patch(`${ENDPOINT}${id}/`, {
@@ -126,7 +126,7 @@ export const contratosService = {
     }
   },
 
-  // ✅ NUEVO: Marcar contrato como completado
+  
   completar: async (id) => {
     try {
       const response = await api.patch(`${ENDPOINT}${id}/`, {

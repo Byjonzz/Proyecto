@@ -123,7 +123,7 @@ const SeleccionPlanesCanvaceo = ({ planSeleccionado, onPlanSeleccionado }) => {
   );
 };
 
-// ✅ MODIFICADO: Recibir usuarioActual como prop
+
 const NewProspect = ({ usuarioActual }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set());
@@ -151,10 +151,10 @@ const NewProspect = ({ usuarioActual }) => {
   const isStepOptional = (step) => step === 1;
   const isStepSkipped = (step) => skipped.has(step);
 
-  // ✅ MODIFICADO: Validación considerando si es canvaceador logueado
+  
   const validarPaso = () => {
     if (activeStep === 0) {
-      // Si NO es canvaceador, debe seleccionar uno
+      
       if (usuarioActual?.tipo !== 'canvaceador' && !formData.canvaceador_id) {
         setErrorApi('Debes seleccionar un canvaceador');
         return false;
@@ -185,15 +185,15 @@ const NewProspect = ({ usuarioActual }) => {
     setSkipped(newSkipped);
   };
 
-  // ✅ MODIFICADO: Usar el ID del usuario logueado si es canvaceador
+  
   const guardarProspecto = async () => {
     setGuardando(true);
     setErrorApi(null);
 
     try {
-      // 1. Preparar datos
+      
       const datosParaBackend = {
-        // ✅ USAR EL ID DEL USUARIO LOGUEADO SI ES CANVACEADOR
+        
         canvaceador_id: usuarioActual?.tipo === 'canvaceador' 
           ? usuarioActual.id 
           : parseInt(formData.canvaceador_id),
@@ -208,7 +208,7 @@ const NewProspect = ({ usuarioActual }) => {
         estado: 'Nuevo'
       };
 
-      // 2. Convertir coordenadas a formato WKT (compatible con Django GIS)
+      
       if (coordenadas && coordenadas.includes(',')) {
         const partes = coordenadas.split(',');
         const lat = parseFloat(partes[0].trim());
@@ -221,7 +221,7 @@ const NewProspect = ({ usuarioActual }) => {
 
       console.log('📤 Enviando datos al backend:', datosParaBackend);
 
-      // 3. Enviar al backend
+      
       const nuevoProspecto = await createProspecto(datosParaBackend);
 
       console.log('✅ Prospecto guardado:', nuevoProspecto);
@@ -306,7 +306,7 @@ const NewProspect = ({ usuarioActual }) => {
       case 0:
         return (
           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* ✅ MODIFICADO: Si es canvaceador logueado, mostrar información fija */}
+            {}
             {usuarioActual?.tipo === 'canvaceador' ? (
               <Alert severity="success" icon={<CheckCircle />} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>
@@ -320,7 +320,7 @@ const NewProspect = ({ usuarioActual }) => {
                 </Typography>
               </Alert>
             ) : (
-              // Si NO es canvaceador, mostrar selector
+              
               <TextField
                 select
                 label="Canvaceador Responsable"
@@ -481,7 +481,7 @@ const NewProspect = ({ usuarioActual }) => {
           </Box>
         );
       case 3:
-        // ✅ MODIFICADO: Obtener nombre del canvaceador según si es logueado o seleccionado
+        
         let nombreCanvaceador = 'No seleccionado';
         if (usuarioActual?.tipo === 'canvaceador') {
           nombreCanvaceador = `${usuarioActual.nombre} (ID: ${usuarioActual.id})`;

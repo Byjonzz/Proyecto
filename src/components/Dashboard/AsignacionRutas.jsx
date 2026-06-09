@@ -44,7 +44,7 @@ const AsignacionRutas = () => {
   ]);
 
   
-  // BÚSQUEDA 
+  
   const buscarConNominatim = async (query) => {
     if (!query || query.length < 2) {
       setOpcionesColonias([]);

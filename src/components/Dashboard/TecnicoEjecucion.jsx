@@ -36,7 +36,7 @@ import {
   Assignment,
   Email,
   Visibility,
-  AssignmentTurnedIn  // ✅ NUEVO: Icono agregado
+  AssignmentTurnedIn  
 } from '@mui/icons-material';
 import api from '../../services/api';
 
@@ -62,7 +62,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
   const [vistaAdmin, setVistaAdmin] = useState(false);
   const [tecnicos, setTecnicos] = useState([]);
   
-  // ✅ NUEVO: Estado para el filtro de estatus
+  
   const [filtroEstatus, setFiltroEstatus] = useState('asignadas');
 
   useEffect(() => {
@@ -79,14 +79,14 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       console.log('🔍 Usuario actual:', usuarioActual);
       console.log('🎭 Rol:', usuarioActual?.rol);
       
-      // ✅ VERIFICAR SI ES ADMIN O SUPERVISOR
+      
       const rol = usuarioActual?.rol?.toLowerCase().trim();
       const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'supervisor';
       
       setVistaAdmin(esAdmin);
       console.log('👁️ ¿Es admin?', esAdmin);
       
-      // Obtener TODOS los contratos
+      
       const contratosResponse = await api.get('/contratos/');
       const todosLosContratos = contratosResponse.data;
       
@@ -94,7 +94,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       
       let contratosFiltrados = [];
       
-      // ✅ MODIFICADO: Ahora incluye TODOS los estatus (pendientes, asignadas, completadas)
+      
       const todosLosEstatus = [
         'Pendiente Asignar', 'Pendiente',
         'Asignado', 'Programada', 'Asignada', 'En Proceso',
@@ -102,7 +102,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       ];
       
       if (esAdmin) {
-        // ✅ ADMIN: Ver TODAS las instalaciones con cualquier estatus válido
+        
         contratosFiltrados = todosLosContratos.filter(contrato => {
           const tieneTecnico = contrato.tecnico_id && contrato.tecnico_id !== null;
           const estatusValido = todosLosEstatus.includes(contrato.estatus);
@@ -111,7 +111,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         
         console.log('✅ Admin ve TODAS las instalaciones:', contratosFiltrados.length);
         
-        // Obtener lista de técnicos para mostrar en la tabla
+        
         try {
           const tecnicosResponse = await api.get('/tecnicos/');
           setTecnicos(tecnicosResponse.data);
@@ -120,7 +120,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         }
         
       } else {
-        // ✅ TÉCNICO: Ver solo SUS instalaciones (todos los estatus)
+        
         contratosFiltrados = todosLosContratos.filter(contrato => {
           const esMio = contrato.tecnico_id == usuarioActual?.perfil_id || contrato.tecnico_id == usuarioActual?.id;
           const estatusValido = todosLosEstatus.includes(contrato.estatus);
@@ -132,9 +132,9 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       
       console.log('📦 Contratos filtrados:', contratosFiltrados);
       
-      // Convertir al formato de la UI
+      
       const instalacionesFormateadas = contratosFiltrados.map(contrato => {
-        // Buscar nombre del técnico si es admin
+        
         let tecnicoNombre = 'Sin asignar';
         if (esAdmin && tecnicos.length > 0) {
           const tecnico = tecnicos.find(t => t.id === contrato.tecnico_id);
@@ -166,7 +166,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
     }
   };
 
-  // ✅ NUEVO: Función para filtrar instalaciones según el estatus seleccionado
+  
   const getInstalacionesFiltradas = () => {
     switch (filtroEstatus) {
       case 'asignadas':
@@ -184,7 +184,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
     }
   };
 
-  // ✅ NUEVO: Contadores para cada filtro
+  
   const totalAsignadas = instalaciones.filter(i => 
     i.estado === 'Asignado' || i.estado === 'Programada' || 
     i.estado === 'Asignada' || i.estado === 'En Proceso' ||
@@ -195,12 +195,12 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
     i.estado === 'Completado' || i.estado === 'Completada'
   ).length;
 
-  // ✅ NUEVO: Instalaciones filtradas según el botón activo
+  
   const instalacionesFiltradas = getInstalacionesFiltradas();
 
   const handleEjecutar = (instalacion) => {
-    // Solo permitir ejecutar si es el técnico asignado o admin
-    // Y solo si no está completada
+    
+    
     if (instalacion.estado === 'Completado' || instalacion.estado === 'Completada') {
       setError('Esta instalación ya está completada');
       return;
@@ -237,7 +237,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         return;
       }
 
-      // Actualizar el contrato a "Completado"
+      
       await api.put(`/contratos/${instalacionSeleccionada.contrato_id}/`, {
         ...instalacionSeleccionada.contrato,
         estatus: 'Completado',
@@ -299,14 +299,14 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      {/* ✅ NUEVO: BOTONES DE FILTRO POR ESTATUS (Solo para técnicos, no admin) */}
+      {}
       {!vistaAdmin && (
         <Paper sx={{ mb: 3, p: 2, borderRadius: 2, border: '1px solid #e2e8f0' }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: '#475569' }}>
             Filtrar por Estado:
           </Typography>
           <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
-            {/* Botón Asignadas */}
+            {}
             <Button
               variant={filtroEstatus === 'asignadas' ? 'contained' : 'outlined'}
               startIcon={<AssignmentTurnedIn />}
@@ -327,7 +327,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
               Asignadas ({totalAsignadas})
             </Button>
             
-            {/* Botón Completadas */}
+            {}
             <Button
               variant={filtroEstatus === 'completadas' ? 'contained' : 'outlined'}
               startIcon={<CheckCircle />}
@@ -362,7 +362,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         </Button>
       </Stack>
 
-      {/* ✅ VISTA DE ADMIN: Tabla con todas las instalaciones (todos los estados) */}
+      {}
       {vistaAdmin ? (
         <TableContainer component={Paper}>
           <Table>
@@ -449,7 +449,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
           </Table>
         </TableContainer>
       ) : (
-        /* ✅ VISTA DE TÉCNICO: Tarjetas con SUS instalaciones filtradas */
+        
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
           {instalacionesFiltradas.length === 0 ? (
             <Paper sx={{ p: 5, textAlign: 'center', width: '100%' }}>
@@ -543,7 +543,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         </Box>
       )}
 
-      {/* Dialog para ver/ejecutar instalación */}
+      {}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -603,7 +603,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                   />
                 </Box>
 
-                {/* Solo mostrar campos de ejecución si es el técnico asignado (no admin) y no está completada */}
+                {}
                 {!vistaAdmin && instalacionSeleccionada.estado !== 'Completado' && instalacionSeleccionada.estado !== 'Completada' && (
                   <>
                     <Divider sx={{ my: 1 }} />
@@ -675,7 +675,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                   </>
                 )}
                 
-                {/* Mostrar mensaje si ya está completada */}
+                {}
                 {(instalacionSeleccionada.estado === 'Completado' || instalacionSeleccionada.estado === 'Completada') && (
                   <Alert severity="success" sx={{ mt: 2 }}>
                     ✅ Esta instalación ya fue completada

@@ -6,17 +6,19 @@ import Login from './components/Login/Login';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import { obtenerPrimeraRuta, obtenerNombreRol, obtenerColorRol } from './config/roles';
 
-// Importar módulos
+
 import PlansManagement from './components/Admin/PlansManagement';
 import CoverageMap from './components/Dashboard/CoverageMap';
 import NewProspect from './components/Forms/NewProspect';
 import CanvaceadorRuta from './components/Dashboard/CanvaceadorRuta';
-import PlanAndQuotation from './components/Forms/PlanAndQuotation';
-import LeadsFollowUp from './components/Dashboard/LeadsFollowUp';
+import PlanAndQuotation from './components/Ventas/PlanAndQuotation';
+import LeadsFollowUp from './components/Ventas/LeadsFollowUp';
 import InstallationSchedule from './components/Dashboard/InstallationSchedule';
 import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
 import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
+import SimSales from './components/Ventas/SimSales';
+
 
 const drawerWidth = 260;
 const API_BASE_URL = 'http://10.144.86.55:1423/api';
@@ -156,6 +158,7 @@ function App() {
       case 'canvaceo-ruta': return <CanvaceadorRuta />;
       case 'ventas-contrato-directo': return <PlanAndQuotation />;
       case 'ventas-seguimiento': return <LeadsFollowUp />;
+      case 'ventas-de-chips': return <SimSales />;
       case 'logistica-agenda': return <InstallationSchedule />;
       case 'tecnico-ejecucion': return <TecnicoEjecucion usuarioActual={usuarioActual} />;
       case 'admin-comisiones': return <Comisiones />;

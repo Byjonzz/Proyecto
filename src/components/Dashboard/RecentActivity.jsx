@@ -21,7 +21,7 @@ const RecentActivity = () => {
 
   return (
     <Grid container spacing={3}>
-      {/* Lista de Actividades */}
+      {}
       <Grid item xs={12} md={8}>
         <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <CardHeader 
@@ -61,7 +61,7 @@ const RecentActivity = () => {
         </Card>
       </Grid>
 
-      {/* Detalle del Mapa/Caja de Distribución */}
+      {}
       <Grid item xs={12} md={4}>
         <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ p: 3, borderBottom: '1px solid #e0e0e0' }}>

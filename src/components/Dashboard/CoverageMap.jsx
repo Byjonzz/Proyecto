@@ -43,7 +43,7 @@ const CoverageMap = () => {
             minHeight: 400,
             position: 'relative', 
             borderRadius: 3,
-            overflow: 'hidden' // Evita que elementos internos desborden
+            overflow: 'hidden' 
           }}>
             
             <Box sx={{ 

@@ -20,15 +20,15 @@ import {
   Button,
   TextField
 } from '@mui/material';
-// ✅ ELIMINADO: Edit y Delete ya no se necesitan
+
 import { Visibility } from '@mui/icons-material';
 
 const LeadsFollowUp = () => {
-  const { prospectos, loading, error } = useProspectos(); // ✅ ELIMINADO: deleteProspecto
+  const { prospectos, loading, error } = useProspectos(); 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prospectoSeleccionado, setProspectoSeleccionado] = useState(null);
 
-  // ✅ ELIMINADO: La función handleDelete ya no se necesita
+  
 
   const handleView = (prospecto) => {
     setProspectoSeleccionado(prospecto);
@@ -108,7 +108,7 @@ const LeadsFollowUp = () => {
             ) : (
               prospectos.map((prospecto) => (
                 <TableRow key={prospecto.id} hover>
-                  {/* ✅ Usar los nombres correctos del modelo Django */}
+                  {}
                   <TableCell>{prospecto.nombre_completo || 'Sin nombre'}</TableCell>
                   <TableCell>{prospecto.telefono_whatsapp || 'Sin teléfono'}</TableCell>
                   <TableCell>
@@ -126,7 +126,7 @@ const LeadsFollowUp = () => {
                   </TableCell>
                   <TableCell>{formatDate(prospecto.fecha_captura)}</TableCell>
                   <TableCell align="center">
-                    {/* ✅ SOLO el botón de Ver - Editar y Eliminar fueron removidos */}
+                    {}
                     <Tooltip title="Ver detalles">
                       <IconButton 
                         size="small" 
@@ -144,7 +144,7 @@ const LeadsFollowUp = () => {
         </Table>
       </TableContainer>
 
-      {/* Dialog para ver detalles */}
+      {}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Detalles del Prospecto</DialogTitle>
         <DialogContent>

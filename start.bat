@@ -1,5 +1,4 @@
 @echo off
-REM ConectaNet Dashboard - Inicio Rápido (Windows)
 
 cls
 echo.
@@ -7,8 +6,6 @@ echo ╔════════════════════════
 echo ║          ConectaNet Dashboard - INICIO RAPIDO                 ║
 echo ╚════════════════════════════════════════════════════════════════╝
 echo.
-
-REM Verificar Node.js
 echo Verificando Node.js...
 node -v >nul 2>&1
 if %errorlevel% neq 0 (

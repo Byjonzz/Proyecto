@@ -4,7 +4,7 @@ import { Lock, Home } from '@mui/icons-material';
 import { puedeAccederARuta, obtenerPrimeraRuta, obtenerNombreRol } from '../../config/roles';
 
 const ProtectedRoute = ({ usuario, rutaActual, children, onNavigate }) => {
-  // Verificar si el usuario puede acceder a esta ruta
+  
   const tieneAcceso = puedeAccederARuta(usuario?.rol, rutaActual);
   
   if (!tieneAcceso) {

@@ -8,7 +8,7 @@ const ProspectDetails = () => {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-lg font-bold text-gray-800 mb-4">Detalle del prospecto / lead</h2>
 
-      {/* Tabs */}
+      {}
       <div className="flex gap-4 border-b border-gray-200 mb-6">
         {['information', 'segmentation', 'quotes', 'documents', 'material'].map((tab) => (
           <button
@@ -29,9 +29,9 @@ const ProspectDetails = () => {
         ))}
       </div>
 
-      {/* Tab Content */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Contact Info */}
+        {}
         <div className="lg:col-span-2">
           {activeTab === 'information' && (
             <div className="space-y-4">
@@ -114,7 +114,7 @@ const ProspectDetails = () => {
           )}
         </div>
 
-        {/* Right Column - Summary */}
+        {}
         <div className="space-y-4">
           <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
             <h4 className="font-semibold text-amber-900 mb-2">Datos del prospecto</h4>

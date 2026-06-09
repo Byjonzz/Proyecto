@@ -34,7 +34,7 @@ export const useContratos = () => {
     }
   };
 
-  // ✅ NUEVA FUNCIÓN: Obtener contratos asignados a un técnico
+  
   const fetchByTecnico = async (tecnicoId) => {
     try {
       setLoading(true);
@@ -82,7 +82,7 @@ export const useContratos = () => {
     }
   };
 
-  // ✅ NUEVA FUNCIÓN: Completar instalación
+  
   const completarInstalacion = async (id, data) => {
     try {
       const contratoActualizado = await contratosService.patch(id, {

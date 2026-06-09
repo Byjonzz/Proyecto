@@ -1,18 +1,13 @@
-#!/bin/bash
-# 🚀 INICIO RÁPIDO - ConectaNet Dashboard
+
 
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║          🎉 ConectaNet Dashboard - INICIO RÁPIDO 🎉           ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
-
-# Colores
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
-
-# Verificar Node.js
 echo -e "${BLUE}✓ Verificando Node.js...${NC}"
 if ! command -v node &> /dev/null; then
     echo -e "${YELLOW}⚠ Node.js no está instalado. Instálalo desde https://nodejs.org/${NC}"

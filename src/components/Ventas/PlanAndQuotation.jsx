@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import SeleccionPlanes from './SeleccionPlanes';
+import SeleccionPlanes from '../Forms/SeleccionPlanes';
 import { useContratos } from '../../hooks/useContratos';
 
 import {
@@ -150,7 +150,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
     e.preventDefault();
     setErrorApi(null);
     
-    // ✅ VALIDACIONES
+    
     if (!formData.ine || formData.ine.length !== 16) {
       setErrorApi('El INE debe tener exactamente 16 dígitos');
       return;
@@ -182,7 +182,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
       return;
     }
     
-    // ✅ VALIDAR FIRMA
+    
     const canvas = canvasRef.current;
     if (!canvas) {
       setErrorApi('Error al obtener la firma');
@@ -202,7 +202,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
       const firmaDigital = canvas.toDataURL('image/jpeg', 0.5);
       console.log('📏 Tamaño de la firma:', firmaDigital.length, 'caracteres');
 
-      // ✅ CORREGIDO: Generar calle_numero según el método de ubicación
+      
       let calleNumeroFinal = '';
       if (metodoUbicacion === 'manual') {
         calleNumeroFinal = formData.calleNumero.trim();
@@ -218,7 +218,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
           : 'Ubicación por mapa';
       }
 
-      // ✅ Preparar datos del contrato
+      
       const datosContrato = {
         ine_cliente: formData.ine,
         nombre_completo: formData.nombre.trim(),
@@ -226,7 +226,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         telefono2: formData.telefono2 || '',
         correo: formData.correo.trim(),
         metodo_ubicacion: metodoUbicacion,
-        calle_numero: calleNumeroFinal,  // ✅ AHORA SIEMPRE TIENE VALOR
+        calle_numero: calleNumeroFinal,  
         referencias: formData.referencias || '',
         detalles_fachada: formData.detallesCasa || '',
         plan_contratado: formData.plan.nombre,
@@ -241,7 +241,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         foto_poste: ''
       };
 
-      // ✅ Agregar coordenadas_gps si existen (formato WKT)
+      
       if (coordenadas && coordenadas.includes(',')) {
         const partes = coordenadas.split(',');
         const lat = parseFloat(partes[0].trim());
@@ -251,7 +251,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         }
       }
 
-      // ✅ Agregar canvaceador_id si existe
+      
       if (usuarioActual?.perfil_id) {
         datosContrato.canvaceador_id = Number(usuarioActual.perfil_id);
       }
@@ -262,7 +262,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
       const nuevoContrato = await createContrato(datosContrato);
       console.log('✅ Contrato guardado exitosamente:', nuevoContrato);
       
-      // Resetear formulario
+      
       setTimeout(() => {
         setGuardado(false);
         setActiveStep(0);

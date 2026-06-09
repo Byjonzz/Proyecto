@@ -56,10 +56,10 @@ const Comisiones = () => {
     { min: 6, porcentaje: 100 }
   ]);
 
-  // ✅ NUEVO: Estado del equipo que se cargará desde la BD
+  
   const [equipo, setEquipo] = useState([]);
 
-  // ✅ NUEVO: Cargar datos reales desde la base de datos
+  
   useEffect(() => {
     cargarDatosDesdeBD();
   }, []);
@@ -68,36 +68,36 @@ const Comisiones = () => {
     try {
       setLoading(true);
       
-      // ✅ 1. Obtener USUARIOS (no canvaceadores directamente)
+      
       const usuariosResponse = await api.get('/usuarios/');
       const todosUsuarios = usuariosResponse.data;
       
-      // ✅ 2. Filtrar solo los usuarios con rol de canvaceador
+      
       const usuariosCanvaceadores = todosUsuarios.filter(usuario => {
         const rol = (usuario.rol || '').toLowerCase().trim();
         return rol === 'canvaceador' || rol === 'canvaceadora';
       });
       
-      // ✅ 3. Obtener todos los contratos
+      
       const contratosResponse = await api.get('/contratos/');
       const todosContratos = contratosResponse.data;
       
-      // ✅ 4. Filtrar contratos de la semana actual
+      
       const semanaActual = obtenerSemanaActual();
       const contratosSemana = todosContratos.filter(contrato => {
         const fechaContrato = new Date(contrato.fecha_creacion || contrato.fecha_captura);
         return fechaContrato >= semanaActual.inicio && fechaContrato <= semanaActual.fin;
       });
       
-      // ✅ 5. Transformar datos al formato que espera el componente
+      
       const equipoTransformado = await Promise.all(usuariosCanvaceadores.map(async (usuario) => {
-        // Obtener nombre completo del usuario
+        
         const nombreCompleto = usuario.nombre_completo || 
                               `${usuario.nombre} ${usuario.apellido}`.trim() || 
                               usuario.email || 
                               `Usuario #${usuario.id}`;
         
-        // ✅ 6. Obtener el perfil del canvaceador si existe
+        
         let canvaceadorData = null;
         try {
           const canvResponse = await api.get(`/canvaceadores/?usuario_id=${usuario.id}`);
@@ -108,12 +108,12 @@ const Comisiones = () => {
           console.warn(`No se encontró perfil de canvaceador para usuario ${usuario.id}`);
         }
         
-        // Filtrar contratos de este canvaceador (usando usuario_id)
+        
         const contratosCanvaceador = contratosSemana.filter(
           c => c.canvaceador_id === usuario.id || c.usuario_id === usuario.id
         );
         
-        // Contar paquetes por tipo
+        
         const paquetes = { basico: 0, familiar: 0, gamer: 0 };
         contratosCanvaceador.forEach(contrato => {
           const plan = (contrato.plan_contratado || '').toUpperCase();
@@ -124,33 +124,33 @@ const Comisiones = () => {
           } else if (plan.includes('GAMER') || plan === 'PLUS') {
             paquetes.gamer++;
           } else {
-            // Plan no reconocido, contar como básico por defecto
+            
             paquetes.basico++;
           }
         });
         
-        // Calcular contratos por día de la semana [Sáb, Lun, Mar, Mié, Jue, Vie]
+        
         const contratosDiarios = [0, 0, 0, 0, 0, 0];
-        const diasSemana = [6, 1, 2, 3, 4, 5]; // Sáb=6, Lun=1, Mar=2, Mié=3, Jue=4, Vie=5
+        const diasSemana = [6, 1, 2, 3, 4, 5]; 
         
         contratosCanvaceador.forEach(contrato => {
           const fecha = new Date(contrato.fecha_creacion || contrato.fecha_captura);
-          const dia = fecha.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+          const dia = fecha.getDay(); 
           const indice = diasSemana.indexOf(dia);
           if (indice !== -1) {
             contratosDiarios[indice]++;
           }
         });
         
-        // Calcular total de ventas
+        
         const totalVentas = paquetes.basico + paquetes.familiar + paquetes.gamer;
         
-        // Determinar estatus
+        
         let estatus = 'Bajo Rendimiento';
         if (totalVentas >= 6) estatus = 'Excelente';
         else if (totalVentas >= 4) estatus = 'Regular';
         
-        // Calcular horas en la app (aproximado: 8h por día trabajado)
+        
         const diasTrabajados = contratosDiarios.filter(d => d > 0).length;
         const horasApp = diasTrabajados * 8;
         
@@ -175,16 +175,16 @@ const Comisiones = () => {
     }
   };
 
-  // ✅ NUEVO: Función para obtener la semana actual
+  
   const obtenerSemanaActual = () => {
     const ahora = new Date();
     const inicioSemana = new Date(ahora);
-    // Lunes de esta semana
+    
     inicioSemana.setDate(ahora.getDate() - ahora.getDay() + 1);
     inicioSemana.setHours(0, 0, 0, 0);
     
     const finSemana = new Date(inicioSemana);
-    finSemana.setDate(inicioSemana.getDate() + 6); // Domingo
+    finSemana.setDate(inicioSemana.getDate() + 6); 
     finSemana.setHours(23, 59, 59, 999);
     
     return { inicio: inicioSemana, fin: finSemana };
@@ -259,7 +259,7 @@ const Comisiones = () => {
 
       <Grid container spacing={3}>
         
-        {/* PANEL DE CONFIGURACIÓN */}
+        {}
         <Grid item xs={12} lg={4}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
@@ -329,7 +329,7 @@ const Comisiones = () => {
           </Card>
         </Grid>
 
-        {/* TABLA DE DESEMPEÑO */}
+        {}
         <Grid item xs={12} lg={8}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
@@ -432,7 +432,7 @@ const Comisiones = () => {
           </Card>
         </Grid>
 
-        {/* GRÁFICAS INTERACTIVAS (LOGÍSTICA POR DÍA) */}
+        {}
         <Grid item xs={12}>
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
@@ -481,7 +481,7 @@ const Comisiones = () => {
         </Grid>
       </Grid>
 
-      {/* MODAL PARA LA GRÁFICA AMPLIADA */}
+      {}
       <Dialog open={Boolean(agenteGrafica)} onClose={() => setAgenteGrafica(null)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -499,7 +499,7 @@ const Comisiones = () => {
               </Typography>
 
               <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: 280, borderBottom: '2px solid #cbd5e1', pb: 1, px: { xs: 1, sm: 4 } }}>
-                {/* DÍAS ORDENADOS DE SÁBADO A VIERNES */}
+                {}
                 {['Sábado', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((dia, index) => {
                   const cantidad = agenteGrafica.contratosDiarios[index];
                   const maxVentas = Math.max(...agenteGrafica.contratosDiarios, 1);
@@ -536,7 +536,7 @@ const Comisiones = () => {
         </DialogActions>
       </Dialog>
 
-      {/* MODAL DE INFORMACIÓN DE PAGOS GENERAL */}
+      {}
       <Dialog open={modalInfoPago} onClose={() => setModalInfoPago(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>

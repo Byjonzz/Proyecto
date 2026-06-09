@@ -3,7 +3,7 @@ import api from './api';
 const ENDPOINT = '/prospectos/';
 
 export const prospectosService = {
-  // Obtener todos los prospectos
+  
   getAll: async () => {
     try {
       const response = await api.get(ENDPOINT);
@@ -13,7 +13,7 @@ export const prospectosService = {
     }
   },
 
-  // Obtener un prospecto por ID
+  
   getById: async (id) => {
     try {
       const response = await api.get(`${ENDPOINT}${id}/`);
@@ -23,7 +23,7 @@ export const prospectosService = {
     }
   },
 
-  // Crear nuevo prospecto
+  
   create: async (data) => {
     try {
       const response = await api.post(ENDPOINT, data);
@@ -33,7 +33,7 @@ export const prospectosService = {
     }
   },
 
-  // Actualizar prospecto
+  
   update: async (id, data) => {
     try {
       const response = await api.put(`${ENDPOINT}${id}/`, data);
@@ -43,7 +43,7 @@ export const prospectosService = {
     }
   },
 
-  // Eliminar prospecto
+  
   delete: async (id) => {
     try {
       const response = await api.delete(`${ENDPOINT}${id}/`);
@@ -53,7 +53,7 @@ export const prospectosService = {
     }
   },
 
-  // Filtrar prospectos por estado
+  
   getByEstado: async (estado) => {
     try {
       const response = await api.get(`${ENDPOINT}?estado=${estado}`);

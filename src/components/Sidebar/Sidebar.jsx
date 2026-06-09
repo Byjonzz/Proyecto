@@ -28,16 +28,14 @@ import {
   AttachMoney,
   Map,
   Settings,
-  People
+  People,
+  SimCard
 } from '@mui/icons-material';
 import { puedeAccederARuta, obtenerNombreRol, obtenerColorRol } from '../../config/roles';
 
 const drawerWidth = 260;
 
-// Definición de todas las opciones del menú
-// Definición de todas las opciones del menú
 const MENU_ITEMS = [
-  // Sección Canvaceo
   {
     section: 'CANVACEO',
     items: [
@@ -46,29 +44,26 @@ const MENU_ITEMS = [
       { text: 'Rutas', icon: <Route />, key: 'canvaceo-ruta' }
     ]
   },
-  // Sección Ventas
   {
     section: 'VENTAS',
     items: [
       { text: 'Contrato Directo', icon: <Description />, key: 'ventas-contrato-directo' },
-      { text: 'Seguimiento Prospectos', icon: <TrendingUp />, key: 'ventas-seguimiento' }
+      { text: 'Seguimiento Prospectos', icon: <TrendingUp />, key: 'ventas-seguimiento' },
+      { text: 'Ventas de Chips', label: 'Gestión de Chips SIM', icon: <SimCard />, view: 'ventas-de-chips', key: 'ventas-de-chips' }
     ]
   },
-  // Sección Logística
   {
     section: 'LOGÍSTICA',
     items: [
       { text: 'Agenda Instalaciones', icon: <CalendarToday />, key: 'logistica-agenda' }
     ]
   },
-  // Sección Técnico
   {
     section: 'TÉCNICO',
     items: [
       { text: 'Ejecución', icon: <Build />, key: 'tecnico-ejecucion' }
     ]
   },
-  // Sección ADMINISTRACIÓN VENTAS (solo admin_ventas y admin)
   {
     section: 'ADMINISTRACIÓN VENTAS',
     items: [
@@ -76,7 +71,6 @@ const MENU_ITEMS = [
       { text: 'Asignación Rutas', icon: <Map />, key: 'admin-asignacion-rutas' }
     ]
   },
-  // Sección ADMINISTRACIÓN GENERAL (solo admin)
   {
     section: 'ADMINISTRACIÓN GENERAL',
     items: [
@@ -89,15 +83,13 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Filtrar opciones del menú según el rol del usuario
   const menuItemsFiltrados = MENU_ITEMS.map(seccion => ({
     ...seccion,
     items: seccion.items.filter(item => puedeAccederARuta(usuario?.rol, item.key))
-  })).filter(seccion => seccion.items.length > 0); // Eliminar secciones vacías
+  })).filter(seccion => seccion.items.length > 0);
 
   const drawer = (
     <Box sx={{ height: '100%', background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)' }}>
-      {/* Header del Sidebar */}
       <Toolbar sx={{
         justifyContent: 'space-between',
         px: 2,
@@ -131,7 +123,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
         )}
       </Toolbar>
 
-      {/* Info del usuario */}
       {usuario && (
         <Box sx={{
           p: 2,
@@ -164,7 +155,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
 
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
-      {/* Menú de navegación */}
       <List sx={{ px: 1, py: 2 }}>
         {menuItemsFiltrados.map((seccion, idx) => (
           <Box key={idx} sx={{ mb: 2 }}>
@@ -239,7 +229,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
       component="nav"
       sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
     >
-      {/* Drawer móvil */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -258,7 +247,6 @@ const Sidebar = ({ currentView, setCurrentView, mobileOpen, handleDrawerToggle, 
         {drawer}
       </Drawer>
 
-      {/* Drawer escritorio */}
       <Drawer
         variant="permanent"
         sx={{

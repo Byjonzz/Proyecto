@@ -10,7 +10,7 @@
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: #e5e7eb; /* Gris claro como en tu plantilla */
+  background-color: #e5e7eb; 
   color: #1f2937;
   -webkit-font-smoothing: antialiased;
 }
@@ -23,7 +23,7 @@ body {
   scrollbar-width: none;
 }
 
-/* Scrollbar premium */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
