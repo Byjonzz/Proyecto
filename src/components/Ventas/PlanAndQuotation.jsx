@@ -252,8 +252,15 @@ const PlanAndQuotation = ({ usuarioActual }) => {
       }
 
       
-      if (usuarioActual?.perfil_id) {
-        datosContrato.canvaceador_id = Number(usuarioActual.perfil_id);
+      if (usuarioActual) {
+        const idEmpleado = Number(usuarioActual.perfil_id || usuarioActual.id);
+
+        if (usuarioActual.rol.toLowerCase() === 'canvaceador') {
+          datosContrato.canvaceador_id = idEmpleado;
+        } 
+        else if (usuarioActual.rol.toLowerCase() === 'tecnico') {
+          datosContrato.tecnico_id = idEmpleado;
+        }
       }
 
       console.log('📄 Guardando contrato:', datosContrato);
@@ -316,7 +323,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
               required 
               fullWidth 
               size="small" 
-              inputProps={{ maxLength: 16 }}
+              slotProps={{ input: { maxLength: 16 } }}
               value={formData.ine} 
               onChange={(e) => setFormData({...formData, ine: e.target.value.replace(/\D/g, '').slice(0, 16)})} 
             />

@@ -12,39 +12,13 @@ import {
 
 import { useProspectos } from '../../hooks/useProspectos';
 import { useCanvaceadores } from '../../hooks/useCanvaceadores';
+import { usePlanes } from '../../hooks/usePlanes';
 
 const pasos = [
   { label: 'Información Básica del Prospecto', description: 'Registra los datos de contacto iniciales.' },
   { label: 'Captura de Ubicación', description: 'Selecciona cómo registrarás las coordenadas del domicilio.' },
   { label: 'Interés y Cotización', description: 'Define qué servicio o paquete le interesa.' },
   { label: 'Resumen y Cierre', description: 'Confirma los datos para enviarlos al sistema.' }
-];
-
-const PLANES_FIBRA_SIMETRICA = [
-  { id: 'sim-intermedio', nombre: 'INTERMEDIO', precio: 309, descarga: 30, subida: 30, simetrica: true, ift: '1065567', color: '#d63384', colorGradient: 'linear-gradient(135deg, #d63384 0%, #e83e8c 100%)', destacado: false },
-  { id: 'sim-avanzado', nombre: 'AVANZADO', precio: 409, descarga: 60, subida: 60, simetrica: true, ift: '1065572', color: '#d4a017', colorGradient: 'linear-gradient(135deg, #d4a017 0%, #e6b422 100%)', destacado: false },
-  { id: 'sim-plus', nombre: 'PLUS', precio: 509, descarga: 100, subida: 100, simetrica: true, ift: '1065577', color: '#2196F3', colorGradient: 'linear-gradient(135deg, #2196F3 0%, #42a5f5 100%)', destacado: true }
-];
-
-const PLANES_FIBRA_ASIMETRICA = [
-  { id: 'asim-basico', nombre: 'BÁSICO', precio: 310, descarga: 10, subida: 5, simetrica: false, ift: '1065496', color: '#d63384', colorGradient: 'linear-gradient(135deg, #d63384 0%, #e83e8c 100%)', destacado: false },
-  { id: 'asim-intermedio', nombre: 'INTERMEDIO', precio: 410, descarga: 15, subida: 5, simetrica: false, ift: '1065502', color: '#4CAF50', colorGradient: 'linear-gradient(135deg, #4CAF50 0%, #66bb6a 100%)', destacado: false },
-  { id: 'asim-avanzado', nombre: 'AVANZADO', precio: 510, descarga: 20, subida: 5, simetrica: false, ift: '1065535', color: '#d63384', colorGradient: 'linear-gradient(135deg, #d63384 0%, #e83e8c 100%)', destacado: false }
-];
-
-const PLANES_HIBRIDOS = [
-  { id: 'hib-10', nombre: 'Hibrido 10 Mbps', velocidad: 10, precio: 250 },
-  { id: 'hib-20', nombre: 'Hibrido 20 Mbps', velocidad: 20, precio: 300 },
-  { id: 'hib-40', nombre: 'Hibrido 40 Mbps', velocidad: 40, precio: 400 },
-  { id: 'hib-60', nombre: 'Hibrido 60 Mbps', velocidad: 60, precio: 500 },
-  { id: 'hib-5', nombre: 'Hibrido 5 Mbps', velocidad: 5, precio: 200 }
-];
-
-const PLANES_ANTENA_WIRELESS = [
-  { id: 'wifi-10', nombre: 'WIFI MIX 10 Mbps', velocidad: 10, precio: 250 },
-  { id: 'wifi-20', nombre: 'WIFI MIX 20 Mbps', velocidad: 20, precio: 300 },
-  { id: 'wifi-40', nombre: 'WIFI MIX 40 Mbps', velocidad: 40, precio: 400 },
-  { id: 'wifi-50', nombre: 'WIFI MIX 50 Mbps', velocidad: 50, precio: 500 }
 ];
 
 const TarjetaPlanCanvaceo = ({ plan, seleccionado, onSelect }) => {
@@ -101,28 +75,134 @@ const TablaPlanesCanvaceo = ({ planes, seleccionadoId, onSelect, titulo, colorPr
   );
 };
 
-const SeleccionPlanesCanvaceo = ({ planSeleccionado, onPlanSeleccionado }) => {
+const SeleccionPlanesCanvaceo = ({ planSeleccionado, onPlanSeleccionado, planesFibraSimetrica, planesFibraAsimetrica, planesSolitTV, planesHibridos, planesAntenaWireless }) => {
   const [categoria, setCategoria] = useState('simetrica');
   const handleSeleccionar = (plan) => { onPlanSeleccionado(plan); };
+
+  const categoriasDisponibles = [];
+  
+  if (planesFibraSimetrica.length > 0) {
+    categoriasDisponibles.push({
+      value: 'simetrica',
+      label: 'Fibra Simétrica',
+      planes: planesFibraSimetrica,
+      esTabla: false
+    });
+  }
+  
+  if (planesFibraAsimetrica.length > 0) {
+    categoriasDisponibles.push({
+      value: 'asimetrica',
+      label: 'Fibra Asimétrica',
+      planes: planesFibraAsimetrica,
+      esTabla: false
+    });
+  }
+  
+  if (planesSolitTV.length > 0) {
+    categoriasDisponibles.push({
+      value: 'solittv',
+      label: 'Solit + TV',
+      planes: planesSolitTV,
+      esTabla: false
+    });
+  }
+  
+  if (planesHibridos.length > 0) {
+    categoriasDisponibles.push({
+      value: 'hibrido',
+      label: 'Híbrido',
+      planes: planesHibridos,
+      esTabla: true,
+      color: '#26a69a'
+    });
+  }
+  
+  if (planesAntenaWireless.length > 0) {
+    categoriasDisponibles.push({
+      value: 'wireless',
+      label: 'Wireless',
+      planes: planesAntenaWireless,
+      esTabla: true,
+      color: '#7c4dff'
+    });
+  }
+
+  React.useEffect(() => {
+    if (categoriasDisponibles.length > 0 && !categoriasDisponibles.find(c => c.value === categoria)) {
+      setCategoria(categoriasDisponibles[0].value);
+    }
+  }, [categoriasDisponibles]);
+
+  if (categoriasDisponibles.length === 0) {
+    return (
+      <Alert severity="info" sx={{ my: 2 }}>
+        No hay planes disponibles. Por favor, crea planes en el módulo de Administración.
+      </Alert>
+    );
+  }
+
+  const categoriaActual = categoriasDisponibles.find(c => c.value === categoria);
 
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>Selecciona el Paquete de Interés</Typography>
       <RadioGroup row value={categoria} onChange={(e) => setCategoria(e.target.value)} sx={{ mb: 2, '& .MuiFormControlLabel-label': { fontSize: '0.85rem', fontWeight: 600 } }}>
-        <FormControlLabel value="simetrica" control={<Radio size="small" />} label="Fibra Simétrica" />
-        <FormControlLabel value="asimetrica" control={<Radio size="small" />} label="Fibra Asimétrica" />
-        <FormControlLabel value="hibrido" control={<Radio size="small" />} label="Híbrido" />
-        <FormControlLabel value="wireless" control={<Radio size="small" />} label="Wireless" />
+        {categoriasDisponibles.map((cat) => (
+          <FormControlLabel 
+            key={cat.value}
+            value={cat.value} 
+            control={<Radio size="small" />} 
+            label={cat.label} 
+          />
+        ))}
       </RadioGroup>
-      {categoria === 'simetrica' && (<Box><Grid container spacing={2}>{PLANES_FIBRA_SIMETRICA.map((plan) => (<Grid item xs={12} sm={4} key={plan.id}><TarjetaPlanCanvaceo plan={plan} seleccionado={planSeleccionado?.id === plan.id} onSelect={handleSeleccionar} /></Grid>))}</Grid></Box>)}
-      {categoria === 'asimetrica' && (<Box><Grid container spacing={2}>{PLANES_FIBRA_ASIMETRICA.map((plan) => (<Grid item xs={12} sm={4} key={plan.id}><TarjetaPlanCanvaceo plan={plan} seleccionado={planSeleccionado?.id === plan.id} onSelect={handleSeleccionar} /></Grid>))}</Grid></Box>)}
-      {categoria === 'hibrido' && (<Box sx={{ maxWidth: 500 }}><TablaPlanesCanvaceo planes={PLANES_HIBRIDOS} seleccionadoId={planSeleccionado?.id} onSelect={handleSeleccionar} titulo="HÍBRIDO" colorPrincipal="#26a69a" /></Box>)}
-      {categoria === 'wireless' && (<Box sx={{ maxWidth: 500 }}><TablaPlanesCanvaceo planes={PLANES_ANTENA_WIRELESS} seleccionadoId={planSeleccionado?.id} onSelect={handleSeleccionar} titulo="ANTENA / WIRELESS" colorPrincipal="#7c4dff" /></Box>)}
-      {planSeleccionado && (<Paper sx={{ mt: 2, p: 1.5, backgroundColor: '#e8f5e9', borderRadius: 2, border: '2px solid #4CAF50', display: 'flex', alignItems: 'center', gap: 1.5 }}><CheckCircle sx={{ color: '#4CAF50', fontSize: 28 }} /><Box sx={{ flex: 1 }}><Typography variant="caption" sx={{ fontWeight: 700, color: '#2e7d32', display: 'block' }}>Plan: {planSeleccionado.nombre}</Typography><Typography variant="caption" sx={{ color: '#555' }}>${planSeleccionado.precio}/mes • {planSeleccionado.descarga || planSeleccionado.velocidad}Mbps</Typography></Box><Chip label="✓" color="success" size="small" sx={{ fontWeight: 700 }} /></Paper>)}
+      
+      {categoriaActual && (
+        <Box>
+          {categoriaActual.esTabla ? (
+            <Box sx={{ maxWidth: 500 }}>
+              <TablaPlanesCanvaceo 
+                planes={categoriaActual.planes} 
+                seleccionadoId={planSeleccionado?.id} 
+                onSelect={handleSeleccionar} 
+                titulo={categoriaActual.label.toUpperCase()} 
+                colorPrincipal={categoriaActual.color} 
+              />
+            </Box>
+          ) : (
+            <Grid container spacing={2}>
+              {categoriaActual.planes.map((plan) => (
+                <Grid size={{ xs: 12, sm: 4 }} key={plan.id}>
+                  <TarjetaPlanCanvaceo 
+                    plan={plan} 
+                    seleccionado={planSeleccionado?.id === plan.id} 
+                    onSelect={handleSeleccionar} 
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
+      )}
+      
+      {planSeleccionado && (
+        <Paper sx={{ mt: 2, p: 1.5, backgroundColor: '#e8f5e9', borderRadius: 2, border: '2px solid #4CAF50', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <CheckCircle sx={{ color: '#4CAF50', fontSize: 28 }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: '#2e7d32', display: 'block' }}>
+              Plan: {planSeleccionado.nombre}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#555' }}>
+              ${planSeleccionado.precio}/mes • {planSeleccionado.descarga || planSeleccionado.velocidad}Mbps
+            </Typography>
+          </Box>
+          <Chip label="✓" color="success" size="small" sx={{ fontWeight: 700 }} />
+        </Paper>
+      )}
     </Box>
   );
 };
-
 
 const NewProspect = ({ usuarioActual }) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -137,6 +217,15 @@ const NewProspect = ({ usuarioActual }) => {
 
   const { createProspecto } = useProspectos();
   const { canvaceadores, loading: loadingCanvaceadores, error: errorCanvaceadores } = useCanvaceadores();
+  
+  const {
+    planesFibraSimetrica,
+    planesFibraAsimetrica,
+    planesSolitTV,
+    planesHibridos,
+    planesAntenaWireless,
+    loading: loadingPlanes
+  } = usePlanes();
 
   const [formData, setFormData] = useState({
     canvaceador_id: '',
@@ -151,10 +240,8 @@ const NewProspect = ({ usuarioActual }) => {
   const isStepOptional = (step) => step === 1;
   const isStepSkipped = (step) => skipped.has(step);
 
-  
   const validarPaso = () => {
     if (activeStep === 0) {
-      
       if (usuarioActual?.tipo !== 'canvaceador' && !formData.canvaceador_id) {
         setErrorApi('Debes seleccionar un canvaceador');
         return false;
@@ -185,15 +272,12 @@ const NewProspect = ({ usuarioActual }) => {
     setSkipped(newSkipped);
   };
 
-  
   const guardarProspecto = async () => {
     setGuardando(true);
     setErrorApi(null);
 
     try {
-      
       const datosParaBackend = {
-        
         canvaceador_id: usuarioActual?.tipo === 'canvaceador' 
           ? usuarioActual.id 
           : parseInt(formData.canvaceador_id),
@@ -208,7 +292,6 @@ const NewProspect = ({ usuarioActual }) => {
         estado: 'Nuevo'
       };
 
-      
       if (coordenadas && coordenadas.includes(',')) {
         const partes = coordenadas.split(',');
         const lat = parseFloat(partes[0].trim());
@@ -221,7 +304,6 @@ const NewProspect = ({ usuarioActual }) => {
 
       console.log('📤 Enviando datos al backend:', datosParaBackend);
 
-      
       const nuevoProspecto = await createProspecto(datosParaBackend);
 
       console.log('✅ Prospecto guardado:', nuevoProspecto);
@@ -306,7 +388,6 @@ const NewProspect = ({ usuarioActual }) => {
       case 0:
         return (
           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {}
             {usuarioActual?.tipo === 'canvaceador' ? (
               <Alert severity="success" icon={<CheckCircle />} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>
@@ -320,7 +401,6 @@ const NewProspect = ({ usuarioActual }) => {
                 </Typography>
               </Alert>
             ) : (
-              
               <TextField
                 select
                 label="Canvaceador Responsable"
@@ -466,7 +546,22 @@ const NewProspect = ({ usuarioActual }) => {
       case 2:
         return (
           <Box sx={{ mt: 2 }}>
-            <SeleccionPlanesCanvaceo planSeleccionado={planInteres} onPlanSeleccionado={setPlanInteres} />
+            {loadingPlanes ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+                <Typography variant="body2" sx={{ mt: 2 }}>Cargando planes disponibles...</Typography>
+              </Box>
+            ) : (
+              <SeleccionPlanesCanvaceo 
+                planSeleccionado={planInteres} 
+                onPlanSeleccionado={setPlanInteres}
+                planesFibraSimetrica={planesFibraSimetrica}
+                planesFibraAsimetrica={planesFibraAsimetrica}
+                planesSolitTV={planesSolitTV}
+                planesHibridos={planesHibridos}
+                planesAntenaWireless={planesAntenaWireless}
+              />
+            )}
             <TextField
               label="Notas del Canvaceador"
               fullWidth
@@ -481,7 +576,6 @@ const NewProspect = ({ usuarioActual }) => {
           </Box>
         );
       case 3:
-        
         let nombreCanvaceador = 'No seleccionado';
         if (usuarioActual?.tipo === 'canvaceador') {
           nombreCanvaceador = `${usuarioActual.nombre} (ID: ${usuarioActual.id})`;

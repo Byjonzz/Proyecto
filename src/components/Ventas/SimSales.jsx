@@ -14,7 +14,6 @@ import {
   TableHead,
   TableRow,
   TextField,
-  MenuItem,
   Chip,
   IconButton,
   Dialog,
@@ -24,7 +23,10 @@ import {
   Alert,
   Tooltip,
   Stack,
-  InputAdornment
+  InputAdornment,
+  Stepper,
+  Step,
+  StepLabel
 } from '@mui/material';
 import {
   Add,
@@ -35,99 +37,60 @@ import {
   SimCard,
   PhoneAndroid,
   Inventory,
-  TrendingUp
+  TrendingUp,
+  CheckCircle,
+  ArrowBack,
+  ArrowForward
 } from '@mui/icons-material';
 
 const CHIPS_INICIALES = [
   {
     id: 1,
     numero_telefonico: '5551234567',
-    operador: 'Telcel',
-    plan_asociado: 'Plan Amigo Sin Límite',
-    precio_venta: 250,
-    estado: 'Disponible',
-    cliente_nombre: '',
-    cliente_telefono: '',
-    notas: 'Chip nuevo en inventario'
+    plan_asociado: 'WISP 6GB - 7 días',
+    precio_venta: 80,
+    cliente_nombre: 'Juan Pérez',
+    cliente_telefono: '5551234567',
+    estado: 'Vendido'
   },
   {
     id: 2,
     numero_telefonico: '5552345678',
-    operador: 'AT&T',
-    plan_asociado: 'Plan Más 300',
-    precio_venta: 300,
-    estado: 'Vendido',
-    cliente_nombre: 'Juan Pérez García',
-    cliente_telefono: '5559876543',
-    notas: 'Cliente solicitó portabilidad'
-  },
-  {
-    id: 3,
-    numero_telefonico: '5553456789',
-    operador: 'Movistar',
-    plan_asociado: 'Plan Freedom 20GB',
-    precio_venta: 350,
-    estado: 'Activado',
-    cliente_nombre: 'María López Hernández',
-    cliente_telefono: '5558765432',
-    notas: 'Activación exitosa'
-  },
-  {
-    id: 4,
-    numero_telefonico: '5554567890',
-    operador: 'Telcel',
-    plan_asociado: 'Plan Max 30',
-    precio_venta: 400,
-    estado: 'Vendido',
-    cliente_nombre: 'Carlos Ramírez Torres',
-    cliente_telefono: '5557654321',
-    notas: ''
-  },
-  {
-    id: 5,
-    numero_telefonico: '5555678901',
-    operador: 'Altan Redes',
-    plan_asociado: 'Plan Datos 50GB',
-    precio_venta: 200,
-    estado: 'Disponible',
-    cliente_nombre: '',
-    cliente_telefono: '',
-    notas: 'Chip para venta inmediata'
-  },
-  {
-    id: 6,
-    numero_telefonico: '5556789012',
-    operador: 'AT&T',
-    plan_asociado: 'Plan Unlimited',
-    precio_venta: 450,
-    estado: 'Cancelado',
-    cliente_nombre: 'Ana Martínez Ruiz',
-    cliente_telefono: '5556543210',
-    notas: 'Cliente canceló por cambio de domicilio'
-  },
-  {
-    id: 7,
-    numero_telefonico: '5557890123',
-    operador: 'Telcel',
-    plan_asociado: 'Plan Amigo Sin Límite',
-    precio_venta: 250,
-    estado: 'Activado',
-    cliente_nombre: 'Roberto Sánchez Gómez',
-    cliente_telefono: '5555432109',
-    notas: 'Instalación completada'
-  },
-  {
-    id: 8,
-    numero_telefonico: '5558901234',
-    operador: 'Movistar',
-    plan_asociado: 'Plan Freedom 50GB',
-    precio_venta: 500,
-    estado: 'Disponible',
-    cliente_nombre: '',
-    cliente_telefono: '',
-    notas: 'Plan premium'
+    plan_asociado: 'WISP 10GB - 15 días',
+    precio_venta: 140,
+    cliente_nombre: 'María García',
+    cliente_telefono: '5552345678',
+    estado: 'Vendido'
   }
 ];
+
+const PLANES_DISPONIBLES = {
+  '7 Dias': [
+    { id: '7d-6gb', nombre: 'WISP 6GB', precio: 80, dias: 7, datos: '6 GB', llamadas: 'Ilimitadas', sms: '875 SMS', redes: 'Redes sociales ilimitadas', comparte: true }
+  ],
+  '15 Dias': [
+    { id: '15d-5gb', nombre: 'WISP 5GB', precio: 110, dias: 15, datos: '5 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
+    { id: '15d-10gb', nombre: 'WISP 10GB', precio: 140, dias: 15, datos: '10 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true, popular: true }
+  ],
+  '30 Dias': [
+    { id: '30d-1gb', nombre: 'WISP 1GB', precio: 85, dias: 30, datos: '1 GB', llamadas: '100 Mins', sms: '50 SMS', redes: '614 MB Redes Sociales', comparte: true },
+    { id: '30d-2gb', nombre: 'WISP 2GB', precio: 120, dias: 30, datos: '2 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
+    { id: '30d-4gb', nombre: 'WISP 4GB', precio: 160, dias: 30, datos: '4 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
+    { id: '30d-12gb', nombre: 'WISP 12GB', precio: 200, dias: 30, datos: '12 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, popular: true },
+    { id: '30d-24gb', nombre: 'WISP 24GB', precio: 260, dias: 30, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
+    { id: '30d-35gb', nombre: 'WISP 35GB', precio: 320, dias: 30, datos: '35 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
+    { id: '30d-50gb', nombre: 'WISP 50GB', precio: 500, dias: 30, datos: '50 GB', llamadas: 'Ilimitadas', sms: '6000 SMS', redes: 'Redes sociales ilimitadas', comparte: true }
+  ],
+  '90 Dias': [
+    { id: '90d-24gb', nombre: 'WISP 24GB TRIMESTRAL', precio: 740, dias: 90, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, popular: true }
+  ],
+  '180 Dias': [
+    { id: '180d-24gb', nombre: 'WISP 24GB SEMESTRAL', precio: 1420, dias: 180, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, vigencia: '6 meses', popular: true }
+  ],
+  '365 Dias': [
+    { id: '365d-24gb', nombre: 'WISP 24GB ANUAL', precio: 2650, dias: 365, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, vigencia: '12 meses', popular: true }
+  ]
+};
 
 const SimSales = () => {
   const [chips, setChips] = useState(CHIPS_INICIALES);
@@ -136,17 +99,24 @@ const SimSales = () => {
   const [modoEdicion, setModoEdicion] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  const [pasoActual, setPasoActual] = useState(0);
+  const [erroresValidacion, setErroresValidacion] = useState({
+    nombre: false,
+    telefono: false,
+    nombreMensaje: '',
+    telefonoMensaje: ''
+  });
 
   const [formData, setFormData] = useState({
     numero_telefonico: '',
-    operador: '',
-    plan_asociado: '',
-    precio_venta: '',
-    estado: 'Disponible',
     cliente_nombre: '',
     cliente_telefono: '',
-    notas: ''
+    plan_seleccionado: null,
+    precio_venta: 0,
+    estado: 'Vendido'
   });
+
+  const [periodoSeleccionado, setPeriodoSeleccionado] = useState('7 Dias');
 
   const estadisticas = {
     total: chips.length,
@@ -160,34 +130,82 @@ const SimSales = () => {
     setTimeout(() => setMensaje(null), 4000);
   };
 
+  const validarSoloNumeros = (valor) => {
+    return /^\d*$/.test(valor);
+  };
+
+  const validarSoloLetras = (valor) => {
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(valor);
+  };
+
+  const handleNombreChange = (valor) => {
+    if (validarSoloLetras(valor)) {
+      setFormData({ ...formData, cliente_nombre: valor });
+      setErroresValidacion({
+        ...erroresValidacion,
+        nombre: false,
+        nombreMensaje: ''
+      });
+    } else {
+      setErroresValidacion({
+        ...erroresValidacion,
+        nombre: true,
+        nombreMensaje: 'Solo se permiten letras'
+      });
+    }
+  };
+
+  const handleTelefonoChange = (valor) => {
+    if (validarSoloNumeros(valor)) {
+      const valorLimpio = valor.replace(/\D/g, '');
+      if (valorLimpio.length <= 10) {
+        setFormData({ ...formData, cliente_telefono: valorLimpio });
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: false,
+          telefonoMensaje: ''
+        });
+      }
+    } else {
+      setErroresValidacion({
+        ...erroresValidacion,
+        telefono: true,
+        telefonoMensaje: 'Solo se permiten números'
+      });
+    }
+  };
+
   const handleOpenDialog = (chip = null) => {
     if (chip) {
       setChipEditando(chip);
       setFormData({
         numero_telefonico: chip.numero_telefonico || '',
-        operador: chip.operador || '',
-        plan_asociado: chip.plan_asociado || '',
-        precio_venta: chip.precio_venta || '',
-        estado: chip.estado || 'Disponible',
         cliente_nombre: chip.cliente_nombre || '',
         cliente_telefono: chip.cliente_telefono || '',
-        notas: chip.notas || ''
+        plan_seleccionado: null,
+        precio_venta: chip.precio_venta || 0,
+        estado: chip.estado || 'Vendido'
       });
       setModoEdicion(true);
     } else {
       setChipEditando(null);
       setFormData({
         numero_telefonico: '',
-        operador: '',
-        plan_asociado: '',
-        precio_venta: '',
-        estado: 'Disponible',
         cliente_nombre: '',
         cliente_telefono: '',
-        notas: ''
+        plan_seleccionado: null,
+        precio_venta: 0,
+        estado: 'Vendido'
       });
       setModoEdicion(false);
     }
+    setErroresValidacion({
+      nombre: false,
+      telefono: false,
+      nombreMensaje: '',
+      telefonoMensaje: ''
+    });
+    setPasoActual(0);
     setDialogOpen(true);
   };
 
@@ -195,28 +213,81 @@ const SimSales = () => {
     setDialogOpen(false);
     setChipEditando(null);
     setModoEdicion(false);
+    setPasoActual(0);
+    setErroresValidacion({
+      nombre: false,
+      telefono: false,
+      nombreMensaje: '',
+      telefonoMensaje: ''
+    });
+  };
+
+  const handleSiguientePaso = () => {
+    const nombreValido = formData.cliente_nombre.trim().length > 0 && !erroresValidacion.nombre;
+    const telefonoValido = formData.cliente_telefono.length === 10 && !erroresValidacion.telefono;
+
+    if (!nombreValido || !telefonoValido) {
+      if (!nombreValido) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          nombre: true,
+          nombreMensaje: formData.cliente_nombre.trim() === '' ? 'El nombre es obligatorio' : 'Solo se permiten letras'
+        });
+      }
+      if (!telefonoValido) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: true,
+          telefonoMensaje: formData.cliente_telefono.length === 0 ? 'El teléfono es obligatorio' : 
+                          formData.cliente_telefono.length < 10 ? `Faltan ${10 - formData.cliente_telefono.length} dígitos` :
+                          'Solo se permiten números'
+        });
+      }
+      mostrarMensaje('Por favor corrige los errores antes de continuar', 'error');
+      return;
+    }
+    setPasoActual(1);
+  };
+
+  const handleRegresarPaso = () => {
+    setPasoActual(0);
+  };
+
+  const handleSeleccionarPlan = (plan) => {
+    setFormData({
+      ...formData,
+      plan_seleccionado: plan,
+      precio_venta: plan.precio
+    });
   };
 
   const handleSaveChip = () => {
-    if (!formData.numero_telefonico || !formData.operador || !formData.plan_asociado) {
-      mostrarMensaje('Número, operador y plan son obligatorios', 'error');
+    if (!formData.plan_seleccionado) {
+      mostrarMensaje('Por favor selecciona un plan', 'error');
       return;
     }
 
     if (modoEdicion && chipEditando) {
       const chipsActualizados = chips.map(c => 
-        c.id === chipEditando.id ? { ...c, ...formData } : c
+        c.id === chipEditando.id ? { 
+          ...c, 
+          ...formData,
+          plan_asociado: formData.plan_seleccionado ? 
+            `${formData.plan_seleccionado.nombre} - ${formData.plan_seleccionado.dias} días` : c.plan_asociado
+        } : c
       );
       setChips(chipsActualizados);
-      mostrarMensaje('Chip SIM actualizado correctamente', 'success');
+      mostrarMensaje('Chip actualizado correctamente', 'success');
     } else {
       const nuevoChip = {
         ...formData,
         id: Date.now(),
-        precio_venta: parseFloat(formData.precio_venta) || 0
+        plan_asociado: formData.plan_seleccionado ? 
+          `${formData.plan_seleccionado.nombre} - ${formData.plan_seleccionado.dias} días` : '',
+        precio_venta: formData.plan_seleccionado ? formData.plan_seleccionado.precio : 0
       };
       setChips([...chips, nuevoChip]);
-      mostrarMensaje('Chip SIM registrado correctamente', 'success');
+      mostrarMensaje('Chip registrado correctamente', 'success');
     }
 
     handleCloseDialog();
@@ -225,7 +296,7 @@ const SimSales = () => {
   const handleDeleteChip = (chipId) => {
     if (window.confirm('¿Estás seguro de eliminar este chip SIM?')) {
       setChips(chips.filter(c => c.id !== chipId));
-      mostrarMensaje('Chip SIM eliminado correctamente', 'success');
+      mostrarMensaje('Chip eliminado correctamente', 'success');
     }
   };
 
@@ -233,8 +304,7 @@ const SimSales = () => {
     return (
       chip.numero_telefonico?.includes(busqueda) ||
       chip.cliente_nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      chip.plan_asociado?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      chip.operador?.toLowerCase().includes(busqueda.toLowerCase())
+      chip.plan_asociado?.toLowerCase().includes(busqueda.toLowerCase())
     );
   });
 
@@ -302,7 +372,7 @@ const SimSales = () => {
       <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
           <TextField
-            placeholder="Buscar por número, cliente, plan u operador..."
+            placeholder="Buscar por número, cliente o plan..."
             size="small"
             fullWidth
             value={busqueda}
@@ -337,19 +407,6 @@ const SimSales = () => {
                   <Typography variant="h6" color="text.secondary">
                     No hay chips SIM registrados
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {busqueda ? 'No se encontraron resultados con la búsqueda' : 'Comienza registrando tu primer chip SIM'}
-                  </Typography>
-                  {!busqueda && (
-                    <Button 
-                      variant="contained" 
-                      startIcon={<Add />} 
-                      onClick={() => handleOpenDialog()}
-                      sx={{ mt: 2 }}
-                    >
-                      Registrar Chip
-                    </Button>
-                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -409,125 +466,238 @@ const SimSales = () => {
         </Table>
       </TableContainer>
 
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="lg" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <SimCard color="primary" />
           {modoEdicion ? 'Editar Chip SIM' : 'Registrar Nuevo Chip SIM'}
         </DialogTitle>
         <DialogContent dividers>
-          <Box sx={{ pt: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
-              Información del Chip
-            </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Número Telefónico *"
-                  value={formData.numero_telefonico}
-                  onChange={(e) => setFormData({ ...formData, numero_telefonico: e.target.value })}
-                  placeholder="10 dígitos"
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Operador *"
-                  value={formData.operador}
-                  onChange={(e) => setFormData({ ...formData, operador: e.target.value })}
-                  required
-                >
-                  <MenuItem value="Telcel">Telcel</MenuItem>
-                  <MenuItem value="AT&T">AT&T</MenuItem>
-                  <MenuItem value="Movistar">Movistar</MenuItem>
-                  <MenuItem value="Altan Redes">Altan Redes</MenuItem>
-                  <MenuItem value="Otro">Otro</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Plan Asociado *"
-                  value={formData.plan_asociado}
-                  onChange={(e) => setFormData({ ...formData, plan_asociado: e.target.value })}
-                  placeholder="Ej: Plan Amigo Sin Límite"
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Precio de Venta ($)"
-                  type="number"
-                  value={formData.precio_venta}
-                  onChange={(e) => setFormData({ ...formData, precio_venta: e.target.value })}
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Estado"
-                  value={formData.estado}
-                  onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                >
-                  <MenuItem value="Disponible">Disponible</MenuItem>
-                  <MenuItem value="Vendido">Vendido</MenuItem>
-                  <MenuItem value="Activado">Activado</MenuItem>
-                  <MenuItem value="Cancelado">Cancelado</MenuItem>
-                </TextField>
-              </Grid>
-            </Grid>
+          <Stepper activeStep={pasoActual} sx={{ mb: 4 }}>
+            <Step>
+              <StepLabel>Información del Cliente</StepLabel>
+            </Step>
+            <Step>
+              <StepLabel>Seleccionar Plan</StepLabel>
+            </Step>
+          </Stepper>
 
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, mt: 3, color: '#1e293b' }}>
-              Información del Cliente
-            </Typography>
+          {pasoActual === 0 && (
+            <Box sx={{ pt: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
+                Datos del Cliente
+              </Typography>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Nombre del Cliente *"
+                    value={formData.cliente_nombre}
+                    onChange={(e) => handleNombreChange(e.target.value)}
+                    error={erroresValidacion.nombre}
+                    helperText={erroresValidacion.nombreMensaje || 'Solo se permiten letras'}
+                    required
+                    inputProps={{
+                      maxLength: 50
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Teléfono del Cliente *"
+                    value={formData.cliente_telefono}
+                    onChange={(e) => handleTelefonoChange(e.target.value)}
+                    error={erroresValidacion.telefono}
+                    helperText={erroresValidacion.telefonoMensaje || `${formData.cliente_telefono.length}/10 dígitos`}
+                    required
+                    placeholder="Ingresa exactamente 10 dígitos"
+                    inputProps={{
+                      maxLength: 10
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          )}
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Nombre del Cliente"
-                  value={formData.cliente_nombre}
-                  onChange={(e) => setFormData({ ...formData, cliente_nombre: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Teléfono del Cliente"
-                  value={formData.cliente_telefono}
-                  onChange={(e) => setFormData({ ...formData, cliente_telefono: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Notas"
-                  multiline
-                  rows={3}
-                  value={formData.notas}
-                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                  placeholder="Observaciones adicionales..."
-                />
-              </Grid>
-            </Grid>
-          </Box>
+          {pasoActual === 1 && (
+            <Box sx={{ pt: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
+                Selecciona un Plan
+              </Typography>
+
+              <Box sx={{ mb: 3 }}>
+                <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
+                  {Object.keys(PLANES_DISPONIBLES).map((periodo) => (
+                    <Chip
+                      key={periodo}
+                      label={periodo}
+                      onClick={() => setPeriodoSeleccionado(periodo)}
+                      color={periodoSeleccionado === periodo ? 'primary' : 'default'}
+                      variant={periodoSeleccionado === periodo ? 'filled' : 'outlined'}
+                      sx={{ whiteSpace: 'nowrap' }}
+                    />
+                  ))}
+                </Stack>
+              </Box>
+
+              {PLANES_DISPONIBLES[periodoSeleccionado] && PLANES_DISPONIBLES[periodoSeleccionado].length > 0 ? (
+                <Grid container spacing={2}>
+                  {PLANES_DISPONIBLES[periodoSeleccionado].map((plan) => (
+                    <Grid item xs={12} sm={6} md={4} key={plan.id}>
+                      <Card
+                        onClick={() => handleSeleccionarPlan(plan)}
+                        sx={{
+                          cursor: 'pointer',
+                          border: formData.plan_seleccionado?.id === plan.id ? '3px solid #1976d2' : '2px solid #e0e0e0',
+                          backgroundColor: formData.plan_seleccionado?.id === plan.id ? '#e3f2fd' : 'white',
+                          transition: 'all 0.3s',
+                          transform: formData.plan_seleccionado?.id === plan.id ? 'scale(1.02)' : 'scale(1)',
+                          '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 20px rgba(0,0,0,0.15)' },
+                          position: 'relative'
+                        }}
+                      >
+                        {plan.popular && (
+                          <Chip
+                            label="MÁS POPULAR"
+                            size="small"
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              background: plan.id.includes('180d') ? '#2563eb' : 
+                                         plan.id.includes('365d') ? '#f59e0b' :
+                                         plan.id.includes('30d') ? '#22c55e' : '#3b82f6',
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: '0.65rem'
+                            }}
+                          />
+                        )}
+                        <CardContent sx={{ p: 2 }}>
+                          <Box sx={{
+                            background: plan.id.includes('180d') ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' :
+                                      plan.id.includes('365d') ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                      plan.id.includes('30d') && plan.precio === 200 ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
+                                      plan.id.includes('30d') && plan.precio === 320 ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' :
+                                      plan.id.includes('30d') && plan.precio === 500 ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
+                                      'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                            color: 'white',
+                            p: 2,
+                            borderRadius: 1,
+                            mb: 2,
+                            textAlign: 'center'
+                          }}>
+                            <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontSize: '0.75rem', fontWeight: 700 }}>
+                              {plan.nombre}
+                            </Typography>
+                            <Typography variant="h3" sx={{ fontWeight: 900, fontSize: '2rem' }}>
+                              ${plan.precio.toLocaleString()}
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontSize: '0.8rem' }}>
+                              /{plan.dias} días
+                            </Typography>
+                          </Box>
+
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                            <Box sx={{ textAlign: 'center', flex: 1 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Datos</Typography>
+                              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#06b6d4', fontSize: '1rem' }}>
+                                {plan.datos}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ textAlign: 'center', flex: 1 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Llamadas</Typography>
+                              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#06b6d4', fontSize: '1rem' }}>
+                                {plan.llamadas}
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem' }}>
+                              <CheckCircle sx={{ fontSize: 14, color: '#22c55e' }} />
+                              {plan.datos} a Máxima Velocidad
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem' }}>
+                              <CheckCircle sx={{ fontSize: 14, color: '#22c55e' }} />
+                              Mins ilimitados
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem' }}>
+                              <CheckCircle sx={{ fontSize: 14, color: '#22c55e' }} />
+                              {plan.sms}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem' }}>
+                              <CheckCircle sx={{ fontSize: 14, color: '#22c55e' }} />
+                              {plan.redes}
+                            </Typography>
+                            {plan.comparte && (
+                              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem' }}>
+                                <CheckCircle sx={{ fontSize: 14, color: '#22c55e' }} />
+                                Comparte Internet
+                              </Typography>
+                            )}
+                            {plan.vigencia && (
+                              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626' }}>
+                                <CheckCircle sx={{ fontSize: 14, color: '#dc2626' }} />
+                                Vigencia {plan.vigencia}
+                              </Typography>
+                            )}
+                          </Box>
+
+                          {formData.plan_seleccionado?.id === plan.id && (
+                            <Chip
+                              label="✓ Seleccionado"
+                              color="success"
+                              size="small"
+                              sx={{ mt: 2, width: '100%', fontWeight: 700 }}
+                            />
+                          )}
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 5 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No hay planes disponibles para este período
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2, px: 3 }}>
+          {pasoActual === 1 && (
+            <Button 
+              onClick={handleRegresarPaso} 
+              startIcon={<ArrowBack />}
+            >
+              Regresar
+            </Button>
+          )}
           <Button onClick={handleCloseDialog}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSaveChip} 
-            variant="contained"
-          >
-            {modoEdicion ? 'Actualizar' : 'Registrar'}
-          </Button>
+          {pasoActual === 0 ? (
+            <Button 
+              onClick={handleSiguientePaso} 
+              variant="contained"
+              endIcon={<ArrowForward />}
+            >
+              Siguiente
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSaveChip} 
+              variant="contained"
+              disabled={!formData.plan_seleccionado}
+            >
+              {modoEdicion ? 'Actualizar' : 'Registrar'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>
