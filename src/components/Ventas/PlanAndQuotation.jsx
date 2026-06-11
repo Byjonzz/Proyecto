@@ -241,6 +241,38 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         foto_poste: ''
       };
 
+      // ----------------------------------------------------
+      // 🐛 TRAMPA DE DEBUGGING Y ASIGNACIÓN SEGURA
+      // ----------------------------------------------------
+      console.log("1. ¿Qué tiene usuarioActual en este momento?:", usuarioActual);
+
+      // Nos aseguramos de que los campos existan en el objeto antes de enviarlo
+      datosContrato.canvaceador_id = null;
+      datosContrato.tecnico_id = null;
+
+      // Verificamos que el usuario no esté vacío y sea un objeto válido
+      if (usuarioActual && typeof usuarioActual === 'object') {
+        
+        // Sacamos el ID (usamos perfil_id si existe, si no, el id normal)
+        const idEmpleado = Number(usuarioActual.perfil_id || usuarioActual.id);
+        
+        // Sacamos el rol de forma segura (por si viene con mayúsculas o espacios)
+        const rolEmpleado = String(usuarioActual.rol || '').toLowerCase().trim();
+
+        console.log(`2. Detectado: Empleado ID: ${idEmpleado} | Rol: ${rolEmpleado}`);
+
+        if (rolEmpleado === 'canvaceador') {
+          datosContrato.canvaceador_id = idEmpleado;
+        } else if (rolEmpleado === 'tecnico') {
+          datosContrato.tecnico_id = idEmpleado;
+        }
+        
+      } else {
+        console.warn("⚠️ ALERTA: usuarioActual está vacío o no es un objeto. Revisa el componente padre.");
+      }
+
+      console.log('3. 📄 JSON final que se va a enviar al Backend:', datosContrato);
+      // ----------------------------------------------------
       
       if (coordenadas && coordenadas.includes(',')) {
         const partes = coordenadas.split(',');
