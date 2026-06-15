@@ -12,12 +12,6 @@ import {
 } from '@mui/icons-material';
 import api from '../../services/api';
 
-const PRECIOS = {
-  basico: 499,
-  familiar: 649,
-  gamer: 899
-};
-
 const inputReglaStyle = {
   width: 40,
   mx: 1, 
@@ -56,10 +50,10 @@ const Comisiones = () => {
     { min: 6, porcentaje: 100 }
   ]);
 
-  
   const [equipo, setEquipo] = useState([]);
+  const [modalInfoPago, setModalInfoPago] = useState(false);
+  const [agenteGrafica, setAgenteGrafica] = useState(null);
 
-  
   useEffect(() => {
     cargarDatosDesdeBD();
   }, []);
@@ -68,72 +62,32 @@ const Comisiones = () => {
     try {
       setLoading(true);
       
+      // 1. Ya no usamos /usuarios/. Le pedimos a Django directamente la lista de Canvaceadores,
+      // la cual YA TRAE el cálculo exacto de 'contratos_pendientes' y 'volumen_pendiente'.
+      const canvResponse = await api.get('/canvaceadores/');
+      const canvaceadores = canvResponse.data;
       
-      const usuariosResponse = await api.get('/usuarios/');
-      const todosUsuarios = usuariosResponse.data;
-      
-      
-      const usuariosCanvaceadores = todosUsuarios.filter(usuario => {
-        const rol = (usuario.rol || '').toLowerCase().trim();
-        return rol === 'canvaceador' || rol === 'canvaceadora';
-      });
-      
-      
+      // 2. Traemos contratos solo para dibujar la gráfica de barras de L-D
       const contratosResponse = await api.get('/contratos/');
       const todosContratos = contratosResponse.data;
       
-      
-      const semanaActual = obtenerSemanaActual();
-      const contratosSemana = todosContratos.filter(contrato => {
-        const fechaContrato = new Date(contrato.fecha_creacion || contrato.fecha_captura);
-        return fechaContrato >= semanaActual.inicio && fechaContrato <= semanaActual.fin;
-      });
-      
-      
-      const equipoTransformado = await Promise.all(usuariosCanvaceadores.map(async (usuario) => {
+      const equipoTransformado = canvaceadores.map(canv => {
         
-        const nombreCompleto = usuario.nombre_completo || 
-                              `${usuario.nombre} ${usuario.apellido}`.trim() || 
-                              usuario.email || 
-                              `Usuario #${usuario.id}`;
+        // 🚀 AQUI ESTÁ LA MAGIA: Jalamos los datos exactos que calculó Django
+        const totalVentas = canv.contratos_pendientes || 0;
+        const volumenDinero = canv.volumen_pendiente || 0;
+        const nombreCompleto = `${canv.usuario} ${canv.apellido}`.trim() || `Agente #${canv.id}`;
         
-        
-        let canvaceadorData = null;
-        try {
-          const canvResponse = await api.get(`/canvaceadores/?usuario_id=${usuario.id}`);
-          if (canvResponse.data && canvResponse.data.length > 0) {
-            canvaceadorData = canvResponse.data[0];
-          }
-        } catch (error) {
-          console.warn(`No se encontró perfil de canvaceador para usuario ${usuario.id}`);
-        }
-        
-        
-        const contratosCanvaceador = contratosSemana.filter(
-          c => c.canvaceador_id === usuario.id || c.usuario_id === usuario.id
-        );
-        
-        
-        const paquetes = { basico: 0, familiar: 0, gamer: 0 };
-        contratosCanvaceador.forEach(contrato => {
-          const plan = (contrato.plan_contratado || '').toUpperCase();
-          if (plan.includes('BÁSICO') || plan.includes('BASICO') || plan === 'INTERMEDIO') {
-            paquetes.basico++;
-          } else if (plan.includes('FAMILIAR') || plan === 'AVANZADO') {
-            paquetes.familiar++;
-          } else if (plan.includes('GAMER') || plan === 'PLUS') {
-            paquetes.gamer++;
-          } else {
-            
-            paquetes.basico++;
-          }
-        });
-        
-        
+        // --- LÓGICA SOLO PARA LA GRÁFICA DE BARRAS DE DÍAS ---
         const contratosDiarios = [0, 0, 0, 0, 0, 0];
         const diasSemana = [6, 1, 2, 3, 4, 5]; 
         
-        contratosCanvaceador.forEach(contrato => {
+        // Filtramos solo los contratos de ESTE canvaceador que NO se han pagado
+        const contratosPendientesAgente = todosContratos.filter(
+          c => c.canvaceador_id === canv.id && c.comision_pagada === false
+        );
+
+        contratosPendientesAgente.forEach(contrato => {
           const fecha = new Date(contrato.fecha_creacion || contrato.fecha_captura);
           const dia = fecha.getDay(); 
           const indice = diasSemana.indexOf(dia);
@@ -142,29 +96,26 @@ const Comisiones = () => {
           }
         });
         
-        
-        const totalVentas = paquetes.basico + paquetes.familiar + paquetes.gamer;
-        
-        
+        // Evaluamos el estatus
         let estatus = 'Bajo Rendimiento';
         if (totalVentas >= 6) estatus = 'Excelente';
         else if (totalVentas >= 4) estatus = 'Regular';
-        
         
         const diasTrabajados = contratosDiarios.filter(d => d > 0).length;
         const horasApp = diasTrabajados * 8;
         
         return {
-          id: usuario.id,
+          id: canv.id,
           nombre: nombreCompleto,
-          zonaAsignada: canvaceadorData?.zona_asignada || `Zona ${usuario.id}`,
-          numeroEmpleado: canvaceadorData?.numero_empleado || `EMP-${usuario.id}`,
-          paquetes,
+          zonaAsignada: canv.zona_asignada || `Zona ${canv.id}`,
+          numeroEmpleado: canv.numero_empleado || `EMP-${canv.id}`,
+          totalVentas,       // Dato exacto del Backend
+          volumenDinero,     // Dato exacto del Backend
           horasApp,
           contratosDiarios,
           estatus
         };
-      }));
+      });
       
       setEquipo(equipoTransformado);
       
@@ -174,24 +125,6 @@ const Comisiones = () => {
       setLoading(false);
     }
   };
-
-  
-  const obtenerSemanaActual = () => {
-    const ahora = new Date();
-    const inicioSemana = new Date(ahora);
-    
-    inicioSemana.setDate(ahora.getDate() - ahora.getDay() + 1);
-    inicioSemana.setHours(0, 0, 0, 0);
-    
-    const finSemana = new Date(inicioSemana);
-    finSemana.setDate(inicioSemana.getDate() + 6); 
-    finSemana.setHours(23, 59, 59, 999);
-    
-    return { inicio: inicioSemana, fin: finSemana };
-  };
-
-  const [modalInfoPago, setModalInfoPago] = useState(false);
-  const [agenteGrafica, setAgenteGrafica] = useState(null);
 
   const handleConfigChange = (prop, value) => {
     setConfiguracion({ ...configuracion, [prop]: value });
@@ -203,10 +136,8 @@ const Comisiones = () => {
     setReglasMetas(nuevasReglas);
   };
 
-  const calcularRendimientoAgente = (paquetes) => {
-    const totalVentas = paquetes.basico + paquetes.familiar + paquetes.gamer;
-    const volumenDinero = (paquetes.basico * PRECIOS.basico) + (paquetes.familiar * PRECIOS.familiar) + (paquetes.gamer * PRECIOS.gamer);
-
+  // 🔥 Se optimizó el cálculo usando directamente los números que nos dio Django
+  const calcularRendimientoAgente = (totalVentas, volumenDinero) => {
     let pagoCalculado = 0;
     let porcentajeAplicado = 0;
 
@@ -231,7 +162,7 @@ const Comisiones = () => {
       porcentajeAplicado = configuracion.comisionPlana;
     }
 
-    return { totalVentas, volumenDinero, porcentajeAplicado, pagoCalculado };
+    return { porcentajeAplicado, pagoCalculado };
   };
 
   const getRendimientoColor = (estatus) => {
@@ -254,17 +185,17 @@ const Comisiones = () => {
 
       <Alert severity="warning" icon={<WarningAmberOutlined fontSize="inherit" />} sx={{ borderRadius: 2 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Aprobación Pendiente - Ing. César</Typography>
-        Configura la modalidad de pago semanal a continuación. Al presionar "Solicitar Aprobación", se enviará la propuesta a Dirección.
+        Configura la modalidad de pago a continuación. Al presionar "Solicitar Aprobación", se enviará la propuesta a Dirección.
       </Alert>
 
       <Grid container spacing={3}>
         
-        {}
+        {/* PANEL DE CONFIGURACIÓN */}
         <Grid item xs={12} lg={4}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AccountBalanceWalletOutlined color="success" /> Parámetros de Pago Semanal
+                <AccountBalanceWalletOutlined color="success" /> Parámetros de Pago
               </Typography>
 
               <Stack spacing={3}>
@@ -312,7 +243,7 @@ const Comisiones = () => {
 
                 {configuracion.modalidad === 'base_mas_comision' && (
                   <>
-                    <TextField label="Salario Base Semanal ($)" type="number" size="small" fullWidth value={configuracion.salarioBase} onChange={(e) => handleConfigChange('salarioBase', Number(e.target.value))} />
+                    <TextField label="Salario Base ($)" type="number" size="small" fullWidth value={configuracion.salarioBase} onChange={(e) => handleConfigChange('salarioBase', Number(e.target.value))} />
                     <TextField label="% de Comisión Fija" type="number" size="small" fullWidth value={configuracion.comisionPlana} onChange={(e) => handleConfigChange('comisionPlana', Number(e.target.value))} />
                   </>
                 )}
@@ -329,12 +260,12 @@ const Comisiones = () => {
           </Card>
         </Grid>
 
-        {}
+        {/* TABLA PRINCIPAL DE COMISIONES */}
         <Grid item xs={12} lg={8}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <BarChartOutlined color="primary" /> Productividad y Cálculo de Nómina Semanal
+                <BarChartOutlined color="primary" /> Productividad y Cálculo de Nómina
               </Typography>
 
               <TableContainer>
@@ -342,7 +273,7 @@ const Comisiones = () => {
                   <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 600 }}>Canvaceador</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 600 }}>Ventas Semanales</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 600 }}>Ventas Pendientes</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 600 }}>Volumen ($)</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 600 }}>Comisión Aplicada</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 600 }}>
@@ -369,12 +300,13 @@ const Comisiones = () => {
                       <TableRow>
                         <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                           <Typography color="text.secondary">
-                            No hay canvaceadores registrados esta semana
+                            No hay canvaceadores registrados en el sistema
                           </Typography>
                         </TableCell>
                       </TableRow>
                     ) : equipo.map((agente) => {
-                      const stats = calcularRendimientoAgente(agente.paquetes);
+                      // Usamos los datos directos del backend
+                      const stats = calcularRendimientoAgente(agente.totalVentas, agente.volumenDinero);
                       return (
                         <TableRow key={agente.id} hover>
                           <TableCell>
@@ -383,16 +315,14 @@ const Comisiones = () => {
                           </TableCell>
                           
                           <TableCell align="center">
-                            <Tooltip title={`Básico: ${agente.paquetes.basico} | Familiar: ${agente.paquetes.familiar} | Gamer: ${agente.paquetes.gamer}`}>
-                              <Typography variant="body2" sx={{ fontWeight: 700, color: '#3b82f6', cursor: 'help' }}>
-                                {stats.totalVentas} Contratos
-                              </Typography>
-                            </Tooltip>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#3b82f6' }}>
+                              {agente.totalVentas} Contratos
+                            </Typography>
                           </TableCell>
                           
                           <TableCell align="center">
                             <Typography variant="body2" sx={{ color: '#475569' }}>
-                              ${stats.volumenDinero.toLocaleString('en-US')}
+                              ${agente.volumenDinero.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </Typography>
                           </TableCell>
 
@@ -425,19 +355,19 @@ const Comisiones = () => {
 
               <Box sx={{ mt: 3, p: 1.5, backgroundColor: '#f1f5f9', borderRadius: 2 }}>
                 <Typography variant="caption" color="text.secondary">
-                  * El volumen de dinero ($) se calcula sumando el costo de cada paquete vendido: Básico ($499), Familiar ($649), Gamer ($899).
+                  * El volumen de dinero ($) es jalado en tiempo real desde la Base de Datos sumando el monto exacto de los contratos (que no se han pagado) de cada Canvaceador.
                 </Typography>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
-        {}
+        {/* LOGÍSTICA DE BARRAS POR DÍAS */}
         <Grid item xs={12}>
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569', mb: 2 }}>
-                Logística: Días de Mayor Productividad (Haz clic para expandir)
+                Logística: Días de Mayor Productividad (Contratos no pagados)
               </Typography>
               
               <Grid container spacing={2}>
@@ -481,7 +411,7 @@ const Comisiones = () => {
         </Grid>
       </Grid>
 
-      {}
+      {/* MODAL: GRÁFICA DE BARRAS */}
       <Dialog open={Boolean(agenteGrafica)} onClose={() => setAgenteGrafica(null)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -499,7 +429,6 @@ const Comisiones = () => {
               </Typography>
 
               <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: 280, borderBottom: '2px solid #cbd5e1', pb: 1, px: { xs: 1, sm: 4 } }}>
-                {}
                 {['Sábado', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((dia, index) => {
                   const cantidad = agenteGrafica.contratosDiarios[index];
                   const maxVentas = Math.max(...agenteGrafica.contratosDiarios, 1);
@@ -526,7 +455,7 @@ const Comisiones = () => {
               </Box>
 
               <Alert severity="info" sx={{ mt: 5, borderRadius: 2 }}>
-                La información de esta gráfica se actualiza en tiempo real cada vez que <strong>{agenteGrafica.nombre}</strong> cierra un contrato en su aplicación móvil.
+                La información de esta gráfica se lee desde la API basándose en los contratos que no se han pagado.
               </Alert>
             </Box>
           )}
@@ -536,17 +465,17 @@ const Comisiones = () => {
         </DialogActions>
       </Dialog>
 
-      {}
+      {/* MODAL: INFO DE PAGO */}
       <Dialog open={modalInfoPago} onClose={() => setModalInfoPago(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AttachMoney color="success" /> Guía de Cálculo de Nómina Semanal
+            <AttachMoney color="success" /> Guía de Cálculo de Nómina
           </Typography>
         </DialogTitle>
         <DialogContent dividers sx={{ py: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
           
           <Typography variant="body2" color="text.secondary">
-            El sistema de Solit System calcula las nóminas automáticamente dependiendo de los números configurados. A continuación se explican los escenarios utilizando un <strong>ejemplo base de 7 ventas con un volumen generado de $4,500 MXN</strong>.
+            El sistema de Solit System calcula las nóminas automáticamente leyendo el "Volumen ($)" de la base de datos de cada Canvaceador.
           </Typography>
 
           <Stack spacing={2}>
@@ -555,14 +484,10 @@ const Comisiones = () => {
                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1d4ed8', mb: 1 }}>1. Modalidad: Pago por Metas (Escalonado)</Typography>
                 <Typography variant="body2" sx={{ color: '#1e3a8a', mb: 1 }}>La comisión sube de nivel dependiendo de los contratos cerrados:</Typography>
                 <ul className="text-sm text-blue-900 space-y-1 ml-4 list-disc" style={{ paddingLeft: '20px', margin: 0 }}>
-                  <li><strong>{reglasMetas[0].min} a {reglasMetas[0].max} ventas:</strong> Se paga el {reglasMetas[0].porcentaje}% del volumen generado.</li>
-                  <li><strong>{reglasMetas[1].min} a {reglasMetas[1].max} ventas:</strong> Se paga el {reglasMetas[1].porcentaje}% del volumen generado.</li>
-                  <li><strong>{reglasMetas[2].min} o más ventas:</strong> Se paga el {reglasMetas[2].porcentaje}% del volumen generado.</li>
+                  <li><strong>{reglasMetas[0].min} a {reglasMetas[0].max} ventas:</strong> Se paga el {reglasMetas[0].porcentaje}% del volumen.</li>
+                  <li><strong>{reglasMetas[1].min} a {reglasMetas[1].max} ventas:</strong> Se paga el {reglasMetas[1].porcentaje}% del volumen.</li>
+                  <li><strong>{reglasMetas[2].min} o más ventas:</strong> Se paga el {reglasMetas[2].porcentaje}% del volumen.</li>
                 </ul>
-                <Divider sx={{ my: 1.5, borderColor: '#bfdbfe' }} />
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e40af' }}>
-                  Ejemplo: Al tener 7 ventas, se alcanza el nivel superior. El canvaceador se llevaría los $4,500 íntegros.
-                </Typography>
               </CardContent>
             </Card>
 
@@ -570,11 +495,7 @@ const Comisiones = () => {
               <CardContent>
                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#047857', mb: 1 }}>2. Modalidad: Salario Base + Comisión Fija</Typography>
                 <Typography variant="body2" sx={{ color: '#065f46', mb: 1 }}>
-                  El canvaceador recibe un sueldo fijo asegurado (${configuracion.salarioBase.toLocaleString('en-US')} MXN) más la comisión plana sobre el volumen de ventas.
-                </Typography>
-                <Divider sx={{ my: 1.5, borderColor: '#a7f3d0' }} />
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#064e3b' }}>
-                  Ejemplo: ${configuracion.salarioBase.toLocaleString('en-US')} de Base + $2,250 (al {configuracion.comisionPlana}% del volumen generado) = Ganaría ${(configuracion.salarioBase + 2250).toLocaleString('en-US', { minimumFractionDigits: 2 })} MXN.
+                  El canvaceador recibe un sueldo fijo asegurado más la comisión plana sobre el volumen de ventas.
                 </Typography>
               </CardContent>
             </Card>
@@ -583,11 +504,7 @@ const Comisiones = () => {
               <CardContent>
                 <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#b45309', mb: 1 }}>3. Modalidad: Comisión Pura Fija</Typography>
                 <Typography variant="body2" sx={{ color: '#92400e', mb: 1 }}>
-                  Se paga un porcentaje fijo y directo por el dinero generado, sin importar las metas (actualmente configurado al {configuracion.comisionPlana}%).
-                </Typography>
-                <Divider sx={{ my: 1.5, borderColor: '#fde68a' }} />
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#78350f' }}>
-                  Ejemplo: El {configuracion.comisionPlana}% del volumen de $4,500 = Ganaría ${(4500 * (configuracion.comisionPlana / 100)).toLocaleString('en-US', { minimumFractionDigits: 2 })} MXN.
+                  Se paga un porcentaje fijo y directo por el dinero generado, sin importar las metas.
                 </Typography>
               </CardContent>
             </Card>

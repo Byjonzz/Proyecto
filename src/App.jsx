@@ -157,7 +157,7 @@ function App() {
       case 'canvaceo-registro': return <NewProspect usuarioActual={usuarioActual} />;
       case 'canvaceo-ruta': return <CanvaceadorRuta />;
       case 'ventas-contrato-directo': return <PlanAndQuotation usuarioActual={usuarioActual} />;
-      case 'ventas-seguimiento': return <LeadsFollowUp />;
+      case 'ventas-seguimiento': return <LeadsFollowUp usuarioActual={usuarioActual} />;
       case 'ventas-de-chips': return <SimSales />;
       case 'logistica-agenda': return <InstallationSchedule />;
       case 'tecnico-ejecucion': return <TecnicoEjecucion usuarioActual={usuarioActual} />;

@@ -17,7 +17,8 @@ export const RUTAS_POR_ROL = {
     'canvaceo-ruta',
     'ventas-contrato-directo',
     'ventas-seguimiento',
-    'ventas-de-chips'
+    'ventas-de-chips',
+    'ventas-seguimiento'
   ],
   
   
