@@ -247,7 +247,7 @@ const CanvaceadorRuta = ({ usuarioActual }) => {
         </CardContent>
       </Card>
 
-      {/* 🟢 SECCIÓN DEL HISTORIAL DE RUTAS */}
+      {/*  HISTORIAL DE RUTAS */}
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
         <Box sx={{ p: 2, borderBottom: '1px solid #e2e8f0' }}>
           <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, color: '#475569' }}>
@@ -266,19 +266,19 @@ const CanvaceadorRuta = ({ usuarioActual }) => {
             </TableHead>
             <TableBody>
               <TableRow hover>
-                <TableCell><Typography variant="body2" color="text.secondary">📅 27/05/2026</Typography></TableCell>
+                <TableCell><Typography variant="body2" color="text.secondary"> 27/05/2026</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 600 }}>Zona Alta - San José</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 700 }}>12</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ color: '#3b82f6', fontWeight: 700 }}>75%</Typography></TableCell>
               </TableRow>
               <TableRow hover>
-                <TableCell><Typography variant="body2" color="text.secondary">📅 26/05/2026</Typography></TableCell>
+                <TableCell><Typography variant="body2" color="text.secondary"> 26/05/2026</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 600 }}>Colonia El Carmen</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 700 }}>8</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ color: '#3b82f6', fontWeight: 700 }}>50%</Typography></TableCell>
               </TableRow>
               <TableRow hover>
-                <TableCell><Typography variant="body2" color="text.secondary">📅 25/05/2026</Typography></TableCell>
+                <TableCell><Typography variant="body2" color="text.secondary"> 25/05/2026</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 600 }}>Barrio de la Soledad</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ fontWeight: 700 }}>15</Typography></TableCell>
                 <TableCell><Typography variant="body2" sx={{ color: '#3b82f6', fontWeight: 700 }}>90%</Typography></TableCell>

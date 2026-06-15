@@ -236,7 +236,6 @@ const SeleccionPlanes = ({ planSeleccionado, onPlanSeleccionado }) => {
     );
   }
 
-  // ✅ Crear array de tabs disponibles dinámicamente
   const tabsDisponibles = [];
   
   if (planesFibraSimetrica.length > 0) {
@@ -244,7 +243,7 @@ const SeleccionPlanes = ({ planSeleccionado, onPlanSeleccionado }) => {
       label: 'Fibra Simétrica',
       icon: <FiberManualRecord sx={{ color: '#2196F3', fontSize: 14 }} />,
       planes: planesFibraSimetrica,
-      mensaje: '🚀 Subida y bajada a la misma velocidad',
+      mensaje: ' Subida y bajada a la misma velocidad',
       colorBg: '#e3f2fd',
       colorBorder: '#2196F3',
       colorTexto: '#1565c0'
@@ -256,7 +255,7 @@ const SeleccionPlanes = ({ planSeleccionado, onPlanSeleccionado }) => {
       label: 'Fibra Asimétrica',
       icon: <Wifi sx={{ color: '#4CAF50', fontSize: 14 }} />,
       planes: planesFibraAsimetrica,
-      mensaje: '📶 Mayor velocidad de descarga',
+      mensaje: ' Mayor velocidad de descarga',
       colorBg: '#e8f5e9',
       colorBorder: '#4CAF50',
       colorTexto: '#2e7d32'
@@ -268,7 +267,7 @@ const SeleccionPlanes = ({ planSeleccionado, onPlanSeleccionado }) => {
       label: 'Solit + TV',
       icon: <Tv sx={{ color: '#9c27b0', fontSize: 14 }} />,
       planes: planesSolitTV,
-      mensaje: '📺 Internet + Televisión',
+      mensaje: ' Internet + Televisión',
       colorBg: '#f3e5f5',
       colorBorder: '#9c27b0',
       colorTexto: '#7b1fa2'
@@ -280,7 +279,7 @@ const SeleccionPlanes = ({ planSeleccionado, onPlanSeleccionado }) => {
       label: 'Híbrido',
       icon: <EmojiEvents sx={{ color: '#ff9800', fontSize: 14 }} />,
       planes: planesHibridos,
-      mensaje: '📡 Zonas sin fibra',
+      mensaje: ' Zonas sin fibra',
       colorBg: '#e0f7fa',
       colorBorder: '#26a69a',
       colorTexto: '#006064',
@@ -293,7 +292,7 @@ const SeleccionPlanes = ({ planSeleccionado, onPlanSeleccionado }) => {
       label: 'Antena/Wireless',
       icon: <SignalCellularAlt sx={{ color: '#7c4dff', fontSize: 14 }} />,
       planes: planesAntenaWireless,
-      mensaje: '📡 Zonas sin fibra',
+      mensaje: ' Zonas sin fibra',
       colorBg: '#f3e5f5',
       colorBorder: '#7c4dff',
       colorTexto: '#6a1b9a',
