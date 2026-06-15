@@ -28,8 +28,8 @@ import {
 
 import { Visibility, WhatsApp, Phone } from '@mui/icons-material';
 
-const LeadsFollowUp = ({ usuarioActual }) => {
-  const { prospectos, loading, error } = useProspectos(); 
+const SegumientoProspecto = ({ usuarioActual }) => {
+  const { prospectos, loading, error } = useProspectos();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prospectoSeleccionado, setProspectoSeleccionado] = useState(null);
 
@@ -51,7 +51,7 @@ const LeadsFollowUp = ({ usuarioActual }) => {
     if (rol === 'canvaceador') {
       return prospecto.canvaceador_id === Number(usuarioActual?.perfil_id);
     }
-    return true; 
+    return true;
   });
 
   const handleGuardarSeguimiento = async () => {
@@ -71,12 +71,12 @@ const LeadsFollowUp = ({ usuarioActual }) => {
 
     try {
       await axios.post('http://10.144.86.55:1423/api/interacciones/', datosInteraccion);
-      
+
       setMensaje({ tipo: 'success', texto: ' Seguimiento registrado con éxito.' });
       setNotas('');
       setTipoInteraccion('');
-      
-      
+
+
     } catch (err) {
       console.error('Error al guardar seguimiento:', err);
       setMensaje({ tipo: 'error', texto: ' Hubo un error al guardar. Verifica tu conexión.' });
@@ -131,7 +131,7 @@ const LeadsFollowUp = ({ usuarioActual }) => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-        Seguimiento de Leads ({prospectosFiltrados.length})
+        Seguimiento de Prospectos ({prospectosFiltrados.length})
       </Typography>
 
       <TableContainer component={Paper}>
@@ -161,27 +161,27 @@ const LeadsFollowUp = ({ usuarioActual }) => {
                   <TableCell>{prospecto.nombre_completo || 'Sin nombre'}</TableCell>
                   <TableCell>{prospecto.telefono_whatsapp || 'Sin teléfono'}</TableCell>
                   <TableCell>
-                    {prospecto.direccion_calle_numero 
+                    {prospecto.direccion_calle_numero
                       ? `${prospecto.direccion_calle_numero}, ${prospecto.direccion_colonia || ''}`
                       : 'Sin dirección'
                     }
                   </TableCell>
                   <TableCell>
-                    <Chip 
-                      label={prospecto.estado || 'Nuevo'} 
-                      color={getEstadoColor(prospecto.estado)} 
+                    <Chip
+                      label={prospecto.estado || 'Nuevo'}
+                      color={getEstadoColor(prospecto.estado)}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>{formatDate(prospecto.fecha_captura)}</TableCell>
                   <TableCell align="center">
-                    <Tooltip title="Ver detalles y dar seguimiento">
-                      <IconButton 
-                        size="small" 
-                        color="primary"
+                    <Tooltip title="Llamar al prospecto">
+                      <IconButton
+                        size="small"
+                        color="success"
                         onClick={() => handleView(prospecto)}
                       >
-                        <Visibility />
+                        <Phone />
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -206,26 +206,26 @@ const LeadsFollowUp = ({ usuarioActual }) => {
               <Typography variant="body2"><strong>Teléfono:</strong> {prospectoSeleccionado.telefono_whatsapp}</Typography>
               <Typography variant="body2"><strong>Dirección:</strong> {prospectoSeleccionado.direccion_calle_numero}, {prospectoSeleccionado.direccion_colonia}</Typography>
               <Typography variant="body2"><strong>Interés:</strong> {prospectoSeleccionado.plan_interes || 'N/A'}</Typography>
-              
+
               <Divider sx={{ my: 2 }} />
 
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
                 Registrar Nuevo Seguimiento
               </Typography>
-              
+
               <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-                <Button 
-                  variant={tipoInteraccion === 'WhatsApp' ? 'contained' : 'outlined'} 
-                  color="success" 
+                <Button
+                  variant={tipoInteraccion === 'WhatsApp' ? 'contained' : 'outlined'}
+                  color="success"
                   startIcon={<WhatsApp />}
                   onClick={() => setTipoInteraccion('WhatsApp')}
                   fullWidth
                 >
                   WhatsApp
                 </Button>
-                <Button 
-                  variant={tipoInteraccion === 'Llamada' ? 'contained' : 'outlined'} 
-                  color="primary" 
+                <Button
+                  variant={tipoInteraccion === 'Llamada' ? 'contained' : 'outlined'}
+                  color="primary"
                   startIcon={<Phone />}
                   onClick={() => setTipoInteraccion('Llamada')}
                   fullWidth
@@ -234,21 +234,21 @@ const LeadsFollowUp = ({ usuarioActual }) => {
                 </Button>
               </Stack>
 
-              <TextField 
-                label="Notas Comerciales (Ej. 'Le marqué y pidió que le llame mañana')" 
-                multiline 
-                rows={3} 
-                fullWidth 
+              <TextField
+                label="Notas Comerciales (Ej. 'Le marqué y pidió que le llame mañana')"
+                multiline
+                rows={3}
+                fullWidth
                 size="small"
                 value={notas}
                 onChange={(e) => setNotas(e.target.value)}
                 sx={{ mb: 2 }}
               />
 
-              <Button 
-                variant="contained" 
-                color="secondary" 
-                fullWidth 
+              <Button
+                variant="contained"
+                color="secondary"
+                fullWidth
                 onClick={handleGuardarSeguimiento}
                 disabled={enviando || !tipoInteraccion || !notas.trim()}
               >
@@ -271,4 +271,4 @@ const LeadsFollowUp = ({ usuarioActual }) => {
   );
 };
 
-export default LeadsFollowUp;
+export default SegumientoProspecto;

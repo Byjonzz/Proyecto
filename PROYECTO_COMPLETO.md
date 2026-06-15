@@ -6,19 +6,19 @@ Tu frontend React está **completamente funcional y listo** con todas las vistas
 
 ### ✨ Componentes Principales
 
-1. **Navbar** - Barra superior con notificaciones y perfil de usuario
+1. **BarradeNavegacion** - Barra superior con notificaciones y perfil de usuario
 2. **Sidebar** - Menú lateral con navegación y submenús
-3. **MetricsSection** - Tarjetas de métricas (Leads, Visitas, Ventas, Instalaciones)
+3. **SeccionMetricas** - Tarjetas de métricas (Leads, Visitas, Ventas, Instalaciones)
 4. **CoverageMap** - Mapa interactivo con controles y leyenda
 5. **RecentActivity** - Actividad reciente + popup de mapa
-6. **ProspectDetails** - Panel detallado del prospecto/lead con tabs
-7. **LeadsFollowUp** - Tabla filtrable de leads con acciones
-8. **InstallationSchedule** - Calendario semanal con horarios
+6. **DetallesProspecto** - Panel detallado del prospecto/lead con tabs
+7. **SegumientoProspecto** - Tabla filtrable de leads con acciones
+8. **AgendaInstalaciones** - Calendario semanal con horarios
 9. **Reports** - Gráficos de pastel y barras con estadísticas
 10. **Evidence** - Galería de fotos/documentos
-11. **NewProspect** - Formulario multi-paso
-12. **PlanAndQuotation** - Selector de planes
-13. **ContractAndSignature** - Gestión de contratos
+11. **NuevoProspect** - Formulario multi-paso
+12. **PlnaCotizacion** - Selector de planes
+13. **ContratoyFirma** - Gestión de contratos
 
 ## 📁 Estructura de Archivos
 
@@ -28,7 +28,7 @@ conectanet-dashboard/
 │   ├── components/
 │   │   ├── Dashboard/          # 8 componentes principales
 │   │   ├── Forms/              # 3 formularios
-│   │   ├── Navbar/             # Navegación superior
+│   │   ├── BarradeNavegacion/             # Navegación superior
 │   │   └── Sidebar/            # Menú lateral
 │   ├── services/
 │   │   └── api.js              # Cliente HTTP listo para backend
@@ -137,7 +137,7 @@ const response = await leadService.getAll();
 
 - [x] Dashboard completo con todas las secciones
 - [x] Sidebar con navegación
-- [x] Navbar con notificaciones
+- [x] BarradeNavegacion con notificaciones
 - [x] Formularios multi-paso
 - [x] Tablas con filtros
 - [x] Gráficos interactivos

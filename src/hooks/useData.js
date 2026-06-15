@@ -75,7 +75,7 @@ export const useReports = (startDate, endDate) => {
   return { metrics, loading, error };
 };
 
-export const useInstallationSchedule = (startDate, endDate) => {
+export const useAgendaInstalaciones = (startDate, endDate) => {
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

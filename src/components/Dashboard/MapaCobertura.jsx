@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { Add, Remove, Layers as LayersIcon, Map as MapIcon } from '@mui/icons-material';
 
-const CoverageMap = () => {
+const MapaCobertura = () => {
   const [capas, setCapas] = useState({
     cobertura: true,
     zonaNo: true,
@@ -141,4 +141,4 @@ const CoverageMap = () => {
   );
 };
 
-export default CoverageMap;
+export default MapaCobertura;

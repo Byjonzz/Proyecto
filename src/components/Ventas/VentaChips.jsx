@@ -92,7 +92,7 @@ const PLANES_DISPONIBLES = {
   ]
 };
 
-const SimSales = () => {
+const VentaChips = () => {
   const [chips, setChips] = useState(CHIPS_INICIALES);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [chipEditando, setChipEditando] = useState(null);
@@ -704,4 +704,4 @@ const SimSales = () => {
   );
 };
 
-export default SimSales;
+export default VentaChips;

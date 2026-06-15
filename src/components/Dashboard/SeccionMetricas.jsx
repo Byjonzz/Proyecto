@@ -35,7 +35,7 @@ const MetricCard = ({ title, value, change, icon: Icon, colorBg, colorText }) =>
   );
 };
 
-const MetricsSection = () => {
+const SeccionMetricas = () => {
   const metrics = [
     { title: 'Leads nuevos', value: '12', change: '+35%', icon: TrendingUpIcon, colorBg: '#eff6ff', colorText: '#2563eb' },
     { title: 'Visitas agendadas', value: '5', change: '+7%', icon: VisibilityIcon, colorBg: '#ecfdf5', colorText: '#059669' },
@@ -54,4 +54,4 @@ const MetricsSection = () => {
   );
 };
 
-export default MetricsSection;
+export default SeccionMetricas;

@@ -43,7 +43,7 @@ const CATEGORIAS = {
   ANTENA_WIRELESS: 'Antena/Wireless'
 };
 
-const PlansManagement = () => {
+const GestionPlanes = () => {
   const [planes, setPlanes] = useState([]);
   const [categoriaActiva, setCategoriaActiva] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -590,4 +590,4 @@ const PlansManagement = () => {
   );
 };
 
-export default PlansManagement;
+export default GestionPlanes;

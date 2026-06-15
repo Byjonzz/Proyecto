@@ -3,20 +3,19 @@ import { Box, CssBaseline, AppBar, Toolbar, IconButton, Typography, Avatar, Menu
 import { Menu as MenuIcon, Logout, Person } from '@mui/icons-material';
 import Sidebar from './components/Sidebar/Sidebar';
 import Login from './components/Login/Login';
-import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import { obtenerPrimeraRuta, obtenerNombreRol, obtenerColorRol } from './config/roles';
-
-import PlansManagement from './components/Admin/PlansManagement';
-import CoverageMap from './components/Dashboard/CoverageMap';
-import NewProspect from './components/Forms/NewProspect';
+import RutaProtegida from './components/ProtectedRoute/RutaProtegida';
+import GestionPlanes from './components/Admin/GestionPlanes';
+import MapaCobertura from './components/Dashboard/MapaCobertura';
+import NuevoProspect from './components/Forms/NuevoProspect';
 import CanvaceadorRuta from './components/Dashboard/CanvaceadorRuta';
-import PlanAndQuotation from './components/Ventas/PlanAndQuotation';
-import LeadsFollowUp from './components/Ventas/LeadsFollowUp';
-import InstallationSchedule from './components/Dashboard/InstallationSchedule';
+import PlnaCotizacion from './components/Ventas/PlnaCotizacion';
+import SegumientoProspecto from './components/Ventas/SegumientoProspecto';
+import AgendaInstalaciones from './components/Dashboard/AgendaInstalaciones';
 import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
 import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
-import SimSales from './components/Ventas/SimSales';
+import VentaChips from './components/Ventas/VentaChips';
 
 const drawerWidth = 260;
 const API_BASE_URL = 'http://10.144.86.55:1423/api';
@@ -141,19 +140,19 @@ function App() {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'canvaceo-dashboard': return <CoverageMap usuarioActual={usuarioActual} />;
-      case 'canvaceo-registro': return <NewProspect usuarioActual={usuarioActual} />;
+      case 'canvaceo-dashboard': return <MapaCobertura usuarioActual={usuarioActual} />;
+      case 'canvaceo-registro': return <NuevoProspect usuarioActual={usuarioActual} />;
       case 'canvaceo-ruta': return <CanvaceadorRuta usuarioActual={usuarioActual} />;
-      case 'ventas-contrato-directo': return <PlanAndQuotation usuarioActual={usuarioActual} />;
-      case 'ventas-seguimiento': return <LeadsFollowUp usuarioActual={usuarioActual} />;
-      case 'ventas-de-chips': return <SimSales usuarioActual={usuarioActual} />;
-      case 'logistica-agenda': return <InstallationSchedule usuarioActual={usuarioActual} />;
+      case 'ventas-contrato-directo': return <PlnaCotizacion usuarioActual={usuarioActual} />;
+      case 'ventas-seguimiento': return <SegumientoProspecto usuarioActual={usuarioActual} />;
+      case 'ventas-de-chips': return <VentaChips usuarioActual={usuarioActual} />;
+      case 'logistica-agenda': return <AgendaInstalaciones usuarioActual={usuarioActual} />;
       case 'tecnico-ejecucion': return <TecnicoEjecucion usuarioActual={usuarioActual} />;
       case 'admin-comisiones': return <Comisiones usuarioActual={usuarioActual} />;
       case 'admin-asignacion-rutas': return <AsignacionRutas usuarioActual={usuarioActual} />;
       case 'admin-rutas': return <AsignacionRutas usuarioActual={usuarioActual} />;
-      case 'admin-planes': return <PlansManagement usuarioActual={usuarioActual} />;
-      default: return <CoverageMap usuarioActual={usuarioActual} />;
+      case 'admin-planes': return <GestionPlanes usuarioActual={usuarioActual} />;
+      default: return <MapaCobertura usuarioActual={usuarioActual} />;
     }
   };
 
@@ -298,13 +297,13 @@ function App() {
           )}
         </Box>
 
-        <ProtectedRoute
+        <RutaProtegida
           usuario={usuarioActual}
           rutaActual={currentView}
           onNavigate={handleNavigate}
         >
           {renderContent()}
-        </ProtectedRoute>
+        </RutaProtegida>
       </Box>
     </Box>
   );

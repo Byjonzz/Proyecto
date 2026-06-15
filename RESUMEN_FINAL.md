@@ -11,23 +11,23 @@ Tu dashboard **está 100% listo** y corriendo en `http://localhost:3000/` ✨
 ### Componentes Desarrollados (13 componentes principales)
 
 #### Dashboard
-- ✅ **MetricsSection** - Tarjetas de métricas en tiempo real
+- ✅ **SeccionMetricas** - Tarjetas de métricas en tiempo real
 - ✅ **CoverageMap** - Mapa interactivo con zoom y leyenda
 - ✅ **RecentActivity** - Actividad reciente + popup de mapa
 - ✅ **Evidence** - Galería de evidencias/fotos
-- ✅ **LeadsFollowUp** - Tabla de leads con filtros avanzados
-- ✅ **InstallationSchedule** - Calendario semanal de instalaciones
-- ✅ **ProspectDetails** - Panel con tabs de detalles
+- ✅ **SegumientoProspecto** - Tabla de leads con filtros avanzados
+- ✅ **AgendaInstalaciones** - Calendario semanal de instalaciones
+- ✅ **DetallesProspecto** - Panel con tabs de detalles
 - ✅ **Reports** - Gráficos de pastel y barras
 
 #### Navegación
-- ✅ **Navbar** - Barra superior con perfil y notificaciones
+- ✅ **BarradeNavegacion** - Barra superior con perfil y notificaciones
 - ✅ **Sidebar** - Menú lateral con submenús
 
 #### Formularios
-- ✅ **NewProspect** - Formulario multi-paso (3 pasos)
-- ✅ **PlanAndQuotation** - Selector de planes con precios
-- ✅ **ContractAndSignature** - Gestión de contratos
+- ✅ **NuevoProspect** - Formulario multi-paso (3 pasos)
+- ✅ **PlnaCotizacion** - Selector de planes con precios
+- ✅ **ContratoyFirma** - Gestión de contratos
 
 ---
 
@@ -64,20 +64,20 @@ conectanet-dashboard/
     │
     ├── 🧩 components/
     │   ├── Dashboard/
-    │   │   ├── MetricsSection.jsx
-    │   │   ├── CoverageMap.jsx
+    │   │   ├── SeccionMetricas.jsx
+    │   │   ├── MapasCobertura
     │   │   ├── RecentActivity.jsx
     │   │   ├── Evidence.jsx
-    │   │   ├── LeadsFollowUp.jsx
-    │   │   ├── InstallationSchedule.jsx
-    │   │   ├── ProspectDetails.jsx
+    │   │   ├── SegumientoProspecto.jsx
+    │   │   ├── AgendaInstalaciones.jsx
+    │   │   ├── DetallesProspecto.jsx
     │   │   └── Reports.jsx
     │   ├── Forms/
-    │   │   ├── NewProspect.jsx
-    │   │   ├── PlanAndQuotation.jsx
-    │   │   └── ContractAndSignature.jsx
-    │   ├── Navbar/
-    │   │   └── Navbar.jsx
+    │   │   ├── NuevoProspect.jsx
+    │   │   ├── PlnaCotizacion.jsx
+    │   │   └── ContratoyFirma.jsx
+    │   ├── BarradeNavegacion/
+    │   │   └── BarradeNavegacion.jsx
     │   └── Sidebar/
     │       └── Sidebar.jsx
     │
@@ -138,10 +138,10 @@ REACT_APP_API_URL=http://tu-backend.com/api
 
 ### Paso 2: Ejemplo - Conectar Leads
 ```javascript
-// En LeadsFollowUp.jsx
+// En SegumientoProspecto.jsx
 import { useLeads } from '../hooks/useData';
 
-function LeadsFollowUp() {
+function SegumientoProspecto() {
   const { leads, loading } = useLeads();
   
   if (loading) return <div>Cargando...</div>;

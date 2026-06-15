@@ -20,7 +20,7 @@ const pasosContrato = [
   { label: 'Evidencias y Cierre', description: 'Fotos del INE, Desglose de cobro y Firma.' }
 ];
 
-const PlanAndQuotation = ({ usuarioActual }) => {
+const PlnaCotizacion = ({ usuarioActual }) => {
   const { createContrato, loading: loadingContrato } = useContratos();
   
   const [activeStep, setActiveStep] = useState(0);
@@ -621,7 +621,7 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         
         {guardado && !errorApi && (
           <Alert severity="success" sx={{ mt: 2 }}>
-            ✅ Contrato guardado exitosamente. Aparecerá en Agenda de Instalaciones.
+            ✅ Contrato guardado exitosamente. Aparecerá en AgendaInstalaciones.
           </Alert>
         )}
       </Paper>
@@ -629,4 +629,4 @@ const PlanAndQuotation = ({ usuarioActual }) => {
   );
 };
 
-export default PlanAndQuotation;
+export default PlnaCotizacion;

@@ -3,7 +3,7 @@ import { Box, Typography, Paper, Button } from '@mui/material';
 import { Lock, Home } from '@mui/icons-material';
 import { puedeAccederARuta, obtenerPrimeraRuta, obtenerNombreRol } from '../../config/roles';
 
-const ProtectedRoute = ({ usuario, rutaActual, children, onNavigate }) => {
+const RutaProtegida = ({ usuario, rutaActual, children, onNavigate }) => {
   
   const tieneAcceso = puedeAccederARuta(usuario?.rol, rutaActual);
   
@@ -63,4 +63,4 @@ const ProtectedRoute = ({ usuario, rutaActual, children, onNavigate }) => {
   return children;
 };
 
-export default ProtectedRoute;
+export default RutaProtegida;

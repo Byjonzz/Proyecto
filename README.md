@@ -4,14 +4,14 @@ Un dashboard React completo diseñado como la plataforma ConectaNet para gestió
 
 ## 🎨 Características
 
-✅ **Navbar + Sidebar** - Navegación intuitiva  
+✅ **BarradeNavegacion + Sidebar** - Navegación intuitiva  
 ✅ **Dashboard** - Métricas, mapas de cobertura, actividad reciente  
 ✅ **Nuevo prospecto** - Formulario multi-paso para crear prospectos  
 ✅ **Plan y cotización** - Selector de planes de internet  
 ✅ **Contrato y firma** - Gestión de contratos y firmas  
 ✅ **Evidencias** - Galería de fotos y documentos  
 ✅ **Leads y seguimiento** - Tabla de leads con filtros  
-✅ **Agenda de instalaciones** - Calendario semanal  
+✅ **AgendaInstalaciones** - Calendario semanal  
 ✅ **Reportes** - Gráficos y estadísticas  
 ✅ **Detalle de prospecto** - Panel de información detallada  
 
@@ -36,19 +36,19 @@ El proyecto se abrirá automáticamente en `http://localhost:3000/`
 src/
 ├── components/
 │   ├── Dashboard/          # Componentes principales del dashboard
-│   │   ├── MetricsSection.jsx
-│   │   ├── CoverageMap.jsx
+│   │   ├── SeccionMetricas.jsx
+│   │   ├── MapasCobertura
 │   │   ├── RecentActivity.jsx
 │   │   ├── Evidence.jsx
-│   │   ├── LeadsFollowUp.jsx
-│   │   ├── InstallationSchedule.jsx
-│   │   ├── ProspectDetails.jsx
+│   │   ├── SegumientoProspecto.jsx
+│   │   ├── AgendaInstalaciones.jsx
+│   │   ├── DetallesProspecto.jsx
 │   │   └── Reports.jsx
 │   ├── Forms/              # Formularios
-│   │   ├── NewProspect.jsx
-│   │   ├── PlanAndQuotation.jsx
-│   │   └── ContractAndSignature.jsx
-│   ├── Navbar/             # Barra de navegación superior
+│   │   ├── NuevoProspect.jsx
+│   │   ├── PlnaCotizacion.jsx
+│   │   └── ContratoyFirma.jsx
+│   ├── BarradeNavegacion/             # Barra de navegación superior
 │   └── Sidebar/            # Panel lateral de navegación
 ├── App.jsx                 # Componente principal
 ├── main.jsx                # Punto de entrada
@@ -109,10 +109,10 @@ export const useLeads = () => {
 
 ### 3. **Actualizar componentes**
 ```javascript
-// En LeadsFollowUp.jsx
+// En SegumientoProspecto.jsx
 import { useLeads } from '../hooks/useLeads';
 
-const LeadsFollowUp = () => {
+const SegumientoProspecto = () => {
   const { leads } = useLeads();
   // ... rest del componente
 };
@@ -120,16 +120,16 @@ const LeadsFollowUp = () => {
 
 ## 📊 Componentes Principales
 
-### MetricsSection
+### SeccionMetricas
 Muestra 4 tarjetas con métricas principales (Leads nuevos, Visitas, Ventas, Instalaciones)
 
 ### CoverageMap
 Mapa interactivo con zonas de cobertura y controles de zoom
 
-### LeadsFollowUp
+### SegumientoProspecto
 Tabla filtrable de leads con información de contacto y acciones
 
-### InstallationSchedule
+### AgendaInstalaciones
 Calendario semanal de instalaciones programadas
 
 ### Reports

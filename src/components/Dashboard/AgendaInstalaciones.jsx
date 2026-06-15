@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 import { useContratos } from '../../hooks/useContratos';
 
-const InstallationSchedule = () => {
+const AgendaInstalaciones = () => {
   const { contratos, loading, error, asignarCita, refetchPendientes } = useContratos();
   
   const [tecnicos, setTecnicos] = useState([
@@ -101,12 +101,7 @@ const InstallationSchedule = () => {
       const tecnicoSeleccionado = tecnicos.find(t => t.id === tecnico);
       const tecnicoIdReal = tecnicoIdMap[tecnico] || null;
       
-      console.log('📅 Asignando cita:', {
-        contrato_id: ordenSeleccionada.contrato_id,
-        tecnico_id: tecnicoIdReal,
-        tecnico_nombre: tecnicoSeleccionado?.nombre,
-        fecha: fecha
-      });
+   
       
       await asignarCita(ordenSeleccionada.contrato_id, {
         tecnico_id: tecnicoIdReal,
@@ -417,4 +412,4 @@ const InstallationSchedule = () => {
   );
 };
 
-export default InstallationSchedule;
+export default AgendaInstalaciones;

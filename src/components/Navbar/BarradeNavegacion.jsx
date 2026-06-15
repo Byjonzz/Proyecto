@@ -2,7 +2,7 @@ import React from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Badge, Avatar, Box } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
-const Navbar = ({ drawerWidth }) => {
+const BarradeNavegacion = ({ drawerWidth }) => {
   return (
     <AppBar
       position="fixed"
@@ -46,4 +46,4 @@ const Navbar = ({ drawerWidth }) => {
   );
 };
 
-export default Navbar;
+export default BarradeNavegacion;

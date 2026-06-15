@@ -39,26 +39,26 @@ Servidor:                    Corriendo en http://localhost:3000/
 
 #### Dashboard (8 componentes)
 ```
-✅ MetricsSection.jsx           - Tarjetas de métricas
-✅ CoverageMap.jsx               - Mapa interactivo
+✅ SeccionMetricas.jsx           - Tarjetas de métricas
+✅ MapasCobertura               - Mapa interactivo
 ✅ RecentActivity.jsx            - Actividad reciente
 ✅ Evidence.jsx                  - Galería de evidencias
-✅ LeadsFollowUp.jsx             - Tabla de leads
-✅ InstallationSchedule.jsx      - Calendario
-✅ ProspectDetails.jsx           - Panel detallado
+✅ SegumientoProspecto.jsx             - Tabla de leads
+✅ AgendaInstalaciones.jsx      - Calendario
+✅ DetallesProspecto.jsx           - Panel detallado
 ✅ Reports.jsx                   - Gráficos
 ```
 
 #### Formularios (3 componentes)
 ```
-✅ NewProspect.jsx               - Formulario 3 pasos
-✅ PlanAndQuotation.jsx          - Selector de planes
-✅ ContractAndSignature.jsx      - Gestión de contratos
+✅ NuevoProspect.jsx               - Formulario 3 pasos
+✅ PlnaCotizacion.jsx          - Selector de planes
+✅ ContratoyFirma.jsx      - Gestión de contratos
 ```
 
 #### Navegación (2 componentes)
 ```
-✅ Navbar.jsx                    - Barra superior
+✅ BarradeNavegacion.jsx                    - Barra superior
 ✅ Sidebar.jsx                   - Menú lateral
 ```
 
@@ -171,7 +171,7 @@ Tiempo de carga:               <3 segundos
 ### UI/UX
 - [x] Navegación intuitiva
 - [x] Sidebar con submenús
-- [x] Navbar con notificaciones
+- [x] BarradeNavegacion con notificaciones
 - [x] Efectos hover y transiciones
 - [x] Iconos profesionales
 
@@ -232,7 +232,7 @@ npm run dev
 ## ✅ Verificación Final
 
 ### Componentes
-- [x] Navbar - ✅ Funcional
+- [x] BarradeNavegacion - ✅ Funcional
 - [x] Sidebar - ✅ Funcional
 - [x] Metrics - ✅ Funcional
 - [x] Map - ✅ Funcional

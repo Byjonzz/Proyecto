@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Calendar, Briefcase } from 'lucide-react';
 
-const ProspectDetails = () => {
+const DetallesProspecto = () => {
   const [activeTab, setActiveTab] = useState('information');
 
   return (
@@ -142,4 +142,4 @@ const ProspectDetails = () => {
   );
 };
 
-export default ProspectDetails;
+export default DetallesProspecto;

@@ -12,7 +12,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const ContractAndSignature = () => {
+const ContratoyFirma = () => {
   const [signature, setSignature] = useState(false);
 
   return (
@@ -138,4 +138,4 @@ const ContractAndSignature = () => {
   );
 };
 
-export default ContractAndSignature;
+export default ContratoyFirma;

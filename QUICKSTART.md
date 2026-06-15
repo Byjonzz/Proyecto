@@ -43,7 +43,7 @@ O:
 | 📊 **Métricas** | Leads nuevos, visitas, ventas, instalaciones |
 | 🗺️ **Mapa** | Cobertura de zonas interactiva |
 | 📋 **Tablas** | Leads con filtros y acciones |
-| 📅 **Calendario** | Agenda de instalaciones semanal |
+| 📅 **Calendario** | AgendaInstalaciones semanal |
 | 📈 **Gráficos** | Estadísticas y reportes |
 | 📝 **Formularios** | Multi-paso para prospectos |
 

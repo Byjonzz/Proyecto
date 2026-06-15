@@ -204,7 +204,7 @@ const SeleccionPlanesCanvaceo = ({ planSeleccionado, onPlanSeleccionado, planesF
   );
 };
 
-const NewProspect = ({ usuarioActual }) => {
+const NuevoProspect = ({ usuarioActual }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [skipped, setSkipped] = useState(new Set());
   const [metodoUbicacion, setMetodoUbicacion] = useState('manual');
@@ -214,6 +214,13 @@ const NewProspect = ({ usuarioActual }) => {
   const [planInteres, setPlanInteres] = useState(null);
   const [errorApi, setErrorApi] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  
+  const [erroresValidacion, setErroresValidacion] = useState({
+    nombre: false,
+    nombreMensaje: '',
+    telefono: false,
+    telefonoMensaje: ''
+  });
 
   const { createProspecto } = useProspectos();
   const { canvaceadores, loading: loadingCanvaceadores, error: errorCanvaceadores } = useCanvaceadores();
@@ -240,17 +247,114 @@ const NewProspect = ({ usuarioActual }) => {
   const isStepOptional = (step) => step === 1;
   const isStepSkipped = (step) => skipped.has(step);
 
+  const validarNombre = (valor) => {
+    // Permite letras, espacios, acentos y ñ
+    const regexSoloLetras = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/;
+    return regexSoloLetras.test(valor);
+  };
+
+  const validarTelefono = (valor) => {
+    const regexSoloNumeros = /^\d*$/;
+    return regexSoloNumeros.test(valor);
+  };
+
+  const handleNombreChange = (valor) => {
+    if (validarNombre(valor)) {
+      setFormData({ ...formData, nombre_completo: valor });
+      setErroresValidacion({
+        ...erroresValidacion,
+        nombre: false,
+        nombreMensaje: ''
+      });
+    } else {
+      setErroresValidacion({
+        ...erroresValidacion,
+        nombre: true,
+        nombreMensaje: 'Solo se permiten letras y espacios'
+      });
+    }
+  };
+
+  const handleTelefonoChange = (valor) => {
+    if (validarTelefono(valor)) {
+      const valorLimpio = valor.slice(0, 10);
+      setFormData({ ...formData, telefono_whatsapp: valorLimpio });
+            if (valorLimpio.length > 0 && valorLimpio.length < 10) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: true,
+          telefonoMensaje: `Faltan ${10 - valorLimpio.length} dígitos`
+        });
+      } else if (valorLimpio.length === 10) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: false,
+          telefonoMensaje: ''
+        });
+      } else {
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: false,
+          telefonoMensaje: ''
+        });
+      }
+    } else {
+      setErroresValidacion({
+        ...erroresValidacion,
+        telefono: true,
+        telefonoMensaje: 'Solo se permiten números'
+      });
+    }
+  };
+
   const validarPaso = () => {
     if (activeStep === 0) {
       if (usuarioActual?.tipo !== 'canvaceador' && !formData.canvaceador_id) {
         setErrorApi('Debes seleccionar un canvaceador');
         return false;
       }
-      if (!formData.nombre_completo.trim() || !formData.telefono_whatsapp.trim()) {
-        setErrorApi('Nombre y teléfono son obligatorios');
+
+      if (!formData.nombre_completo.trim()) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          nombre: true,
+          nombreMensaje: 'El nombre es obligatorio'
+        });
+        setErrorApi('El nombre completo es obligatorio');
+        return false;
+      }
+
+      if (erroresValidacion.nombre) {
+        setErrorApi('El nombre solo puede contener letras');
+        return false;
+      }
+
+      if (!formData.telefono_whatsapp.trim()) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: true,
+          telefonoMensaje: 'El teléfono es obligatorio'
+        });
+        setErrorApi('El teléfono es obligatorio');
+        return false;
+      }
+
+      if (formData.telefono_whatsapp.length !== 10) {
+        setErroresValidacion({
+          ...erroresValidacion,
+          telefono: true,
+          telefonoMensaje: 'El teléfono debe tener exactamente 10 dígitos'
+        });
+        setErrorApi('El teléfono debe tener exactamente 10 dígitos');
+        return false;
+      }
+
+      if (erroresValidacion.telefono) {
+        setErrorApi('El teléfono solo puede contener números');
         return false;
       }
     }
+
     setErrorApi(null);
     return true;
   };
@@ -302,15 +406,11 @@ const NewProspect = ({ usuarioActual }) => {
         }
       }
 
-
       const nuevoProspecto = await createProspecto(datosParaBackend);
-
       setActiveStep((prev) => prev + 1);
       
     } catch (err) {
-
       if (err.response && err.response.data) {
-
         if (typeof err.response.data === 'string') {
           setErrorApi(`Error: ${err.response.data}`);
         } else if (err.response.data.detail) {
@@ -350,6 +450,12 @@ const NewProspect = ({ usuarioActual }) => {
     setMetodoUbicacion('manual');
     setPlanInteres(null);
     setErrorApi(null);
+    setErroresValidacion({
+      nombre: false,
+      nombreMensaje: '',
+      telefono: false,
+      telefonoMensaje: ''
+    });
     setFormData({
       canvaceador_id: '',
       nombre_completo: '',
@@ -387,7 +493,7 @@ const NewProspect = ({ usuarioActual }) => {
             {usuarioActual?.tipo === 'canvaceador' ? (
               <Alert severity="success" icon={<CheckCircle />} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                  👤 Canvaceador: {usuarioActual.nombre}
+                   Canvaceador: {usuarioActual.nombre}
                 </Typography>
                 <Typography variant="caption" display="block">
                   ID: {usuarioActual.id} • Empleado: {usuarioActual.numero_empleado}
@@ -427,22 +533,34 @@ const NewProspect = ({ usuarioActual }) => {
             )}
 
             <TextField
-              label="Nombre Completo del Prospecto"
+              label="Nombre Completo del Prospecto *"
               variant="outlined"
               fullWidth
               size="small"
               required
               value={formData.nombre_completo}
-              onChange={(e) => setFormData({ ...formData, nombre_completo: e.target.value })}
+              onChange={(e) => handleNombreChange(e.target.value)}
+              error={erroresValidacion.nombre}
+              helperText={erroresValidacion.nombreMensaje || 'Solo letras y espacios (ej: Juan Pérez García)'}
+              inputProps={{
+                maxLength: 100
+              }}
             />
+
             <TextField
-              label="Teléfono (WhatsApp)"
+              label="Teléfono (WhatsApp) *"
               variant="outlined"
               fullWidth
               size="small"
               required
               value={formData.telefono_whatsapp}
-              onChange={(e) => setFormData({ ...formData, telefono_whatsapp: e.target.value })}
+              onChange={(e) => handleTelefonoChange(e.target.value)}
+              error={erroresValidacion.telefono}
+              helperText={erroresValidacion.telefonoMensaje || `${formData.telefono_whatsapp.length}/10 dígitos`}
+              placeholder="10 dígitos"
+              inputProps={{
+                maxLength: 10
+              }}
             />
           </Box>
         );
@@ -590,12 +708,12 @@ const NewProspect = ({ usuarioActual }) => {
             <Alert severity="info" sx={{ mb: 2 }}>
               <strong>Resumen del Prospecto:</strong>
               <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                <li>👤 Canvaceador: <strong>{nombreCanvaceador}</strong></li>
-                <li>👤 Nombre prospecto: <strong>{formData.nombre_completo}</strong></li>
-                <li>📱 Teléfono: <strong>{formData.telefono_whatsapp}</strong></li>
-                {formData.direccion_calle_numero && <li>📍 Dirección: {formData.direccion_calle_numero}, {formData.direccion_colonia}</li>}
-                {planInteres && <li>📦 Plan: <strong>{planInteres.nombre}</strong> - ${planInteres.precio}/mes</li>}
-                {coordenadas && <li>🗺️ Coordenadas: {coordenadas}</li>}
+                <li>Canvaceador: <strong>{nombreCanvaceador}</strong></li>
+                <li> Nombre prospecto: <strong>{formData.nombre_completo}</strong></li>
+                <li> Teléfono: <strong>{formData.telefono_whatsapp}</strong></li>
+                {formData.direccion_calle_numero && <li> Dirección: {formData.direccion_calle_numero}, {formData.direccion_colonia}</li>}
+                {planInteres && <li> Plan: <strong>{planInteres.nombre}</strong> - ${planInteres.precio}/mes</li>}
+                {coordenadas && <li> Coordenadas: {coordenadas}</li>}
               </ul>
             </Alert>
             <Typography variant="body2" color="text.secondary">
@@ -681,4 +799,4 @@ const NewProspect = ({ usuarioActual }) => {
   );
 };
 
-export default NewProspect;
+export default NuevoProspect;

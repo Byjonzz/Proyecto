@@ -29,22 +29,22 @@
 ═══════════════════════════════════════════════════════════════════════
 
 ┌─ DASHBOARD (8 componentes)
-│   ├─ ✅ MetricsSection          Tarjetas de métricas
+│   ├─ ✅ SeccionMetricas          Tarjetas de métricas
 │   ├─ ✅ CoverageMap             Mapa interactivo
 │   ├─ ✅ RecentActivity          Actividad reciente
 │   ├─ ✅ Evidence                Galería de fotos
-│   ├─ ✅ LeadsFollowUp           Tabla de leads
-│   ├─ ✅ InstallationSchedule    Calendario
-│   ├─ ✅ ProspectDetails         Panel detallado
+│   ├─ ✅ SegumientoProspecto           Tabla de leads
+│   ├─ ✅ AgendaInstalaciones    Calendario
+│   ├─ ✅ DetallesProspecto         Panel detallado
 │   └─ ✅ Reports                 Gráficos
 
 ┌─ FORMULARIOS (3 componentes)
-│   ├─ ✅ NewProspect             Formulario 3 pasos
-│   ├─ ✅ PlanAndQuotation        Selector de planes
-│   └─ ✅ ContractAndSignature    Gestión contratos
+│   ├─ ✅ NuevoProspect             Formulario 3 pasos
+│   ├─ ✅ PlnaCotizacion        Selector de planes
+│   └─ ✅ ContratoyFirma    Gestión contratos
 
 ┌─ NAVEGACIÓN (2 componentes)
-│   ├─ ✅ Navbar                  Barra superior
+│   ├─ ✅ BarradeNavegacion                  Barra superior
 │   └─ ✅ Sidebar                 Menú lateral
 
 ┌─ SERVICIOS & HOOKS (2 archivos)
@@ -106,7 +106,7 @@
     │   ├── components/
     │   │   ├── Dashboard/             (8 componentes)
     │   │   ├── Forms/                 (3 componentes)
-    │   │   ├── Navbar/                (1 componente)
+    │   │   ├── BarradeNavegacion/                (1 componente)
     │   │   └── Sidebar/               (1 componente)
     │   ├── services/
     │   │   └── api.js                 (Cliente API)
@@ -233,7 +233,7 @@
     Componentes:
     ✅ Dashboard
     ✅ Sidebar
-    ✅ Navbar
+    ✅ BarradeNavegacion
     ✅ Formularios
     ✅ Tablas
     ✅ Gráficos

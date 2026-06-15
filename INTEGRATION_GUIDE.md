@@ -27,7 +27,7 @@ import { leadService, prospectService, reportService } from '../services/api';
 import { useState, useEffect } from 'react';
 import { leadService } from '../services/api';
 
-function LeadsFollowUp() {
+function SegumientoProspecto() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -297,6 +297,6 @@ Esto crea una carpeta `dist/` optimizada lista para desplegar.
 Revisa los siguientes archivos:
 - `/src/services/api.js` - Definición de endpoints
 - `/src/hooks/useData.js` - Hooks personalizados
-- `/src/components/Dashboard/LeadsFollowUp.jsx` - Ejemplo de uso
+- `/src/components/Dashboard/SegumientoProspecto.jsx` - Ejemplo de uso
 
 ¡Buen desarrollo! 🚀
