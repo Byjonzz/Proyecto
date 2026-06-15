@@ -10,10 +10,8 @@ export const usePlanes = () => {
   const fetchPlanes = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('📡 [usePlanes] Solicitando planes desde API...');
       
       const response = await api.get('/planes/');
-      console.log('✅ [usePlanes] Total de planes recibidos:', response.data.length);
       
       if (!Array.isArray(response.data)) {
         setPlanes([]);
@@ -21,15 +19,12 @@ export const usePlanes = () => {
       }
       
       const planesActivos = response.data.filter(p => p.activo === true);
-      console.log('✅ [usePlanes] Planes activos:', planesActivos.length);
       
       const categoriasUnicas = [...new Set(planesActivos.map(p => p.categoria))];
-      console.log('📊 [usePlanes] Categorías:', categoriasUnicas);
       
       setPlanes(planesActivos);
       setLastUpdate(new Date());
     } catch (err) {
-      console.error('❌ [usePlanes] Error:', err);
       setError(err.message);
       setPlanes([]);
     } finally {
@@ -40,19 +35,15 @@ export const usePlanes = () => {
   useEffect(() => {
     fetchPlanes();
     
-    // ✅ Refrescar cada 30 segundos automáticamente
     const interval = setInterval(() => {
-      console.log('🔄 [usePlanes] Refrescando planes...');
       fetchPlanes();
-    }, 30000); // 30 segundos
+    }, 30000); 
     
     return () => clearInterval(interval);
   }, [fetchPlanes]);
 
-  // ✅ Escuchar cambios en localStorage (cuando se crea un plan)
   useEffect(() => {
     const handleStorageChange = () => {
-      console.log('🔄 [usePlanes] Detectado cambio, refrescando...');
       fetchPlanes();
     };
 
@@ -132,14 +123,7 @@ export const usePlanes = () => {
   const planesHibridos = obtenerPlanesPorCategoria('Híbrido').map(transformarPlan);
   const planesAntenaWireless = obtenerPlanesPorCategoria('Antena/Wireless').map(transformarPlan);
 
-  console.log('📊 [usePlanes] Resumen:', {
-    fibraSimetrica: planesFibraSimetrica.length,
-    fibraAsimetrica: planesFibraAsimetrica.length,
-    solitTV: planesSolitTV.length,
-    hibridos: planesHibridos.length,
-    antenaWireless: planesAntenaWireless.length,
-    lastUpdate: lastUpdate
-  });
+  
 
   return {
     planes,

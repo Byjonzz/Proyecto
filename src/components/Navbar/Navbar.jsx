@@ -17,7 +17,7 @@ const Navbar = ({ drawerWidth }) => {
       <Toolbar>
         <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-            ¡Hola, Carlos! 👋
+            ¡Hola, Carlos! 
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Bienvenido a SOLIT - Plataforma de Canvaceo

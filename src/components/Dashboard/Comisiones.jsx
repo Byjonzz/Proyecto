@@ -3,7 +3,7 @@ import {
   Box, Card, CardContent, Typography, Grid, TextField, MenuItem,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, Chip, Alert, Stack, Divider, Tooltip, IconButton,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress
 } from '@mui/material';
 import { 
   AttachMoney, MapOutlined, BarChartOutlined,
@@ -37,6 +37,7 @@ const inputReglaStyle = {
 
 const Comisiones = () => {
   const [loading, setLoading] = useState(true);
+  const [guardando, setGuardando] = useState(false);
   
   const [configuracion, setConfiguracion] = useState({
     modalidad: 'solo_metas',
@@ -62,30 +63,54 @@ const Comisiones = () => {
     try {
       setLoading(true);
       
-      // 1. Ya no usamos /usuarios/. Le pedimos a Django directamente la lista de Canvaceadores,
-      // la cual YA TRAE el cálculo exacto de 'contratos_pendientes' y 'volumen_pendiente'.
       const canvResponse = await api.get('/canvaceadores/');
       const canvaceadores = canvResponse.data;
       
-      // 2. Traemos contratos solo para dibujar la gráfica de barras de L-D
       const contratosResponse = await api.get('/contratos/');
       const todosContratos = contratosResponse.data;
+
+      try {
+        const resEsquema = await api.get('/esquemas_pago/');
+        if (resEsquema.data && resEsquema.data.length > 0) {
+          const ultimoEsquema = resEsquema.data[resEsquema.data.length - 1];
+          
+          let modGuardada = ultimoEsquema.modalidad;
+          const validMods = ['solo_metas', 'base_mas_comision', 'comision_pura'];
+          
+          if (!validMods.includes(modGuardada)) {
+            modGuardada = 'solo_metas';
+          }
+
+          setConfiguracion({
+            modalidad: modGuardada,
+            salarioBase: parseFloat(ultimoEsquema.salario_base || 1000),
+            comisionPlana: parseFloat(ultimoEsquema.comision_plana_porcentaje || 50)
+          });
+        }
+      } catch (e) {
+      }
       
       const equipoTransformado = canvaceadores.map(canv => {
-        
-        // 🚀 AQUI ESTÁ LA MAGIA: Jalamos los datos exactos que calculó Django
         const totalVentas = canv.contratos_pendientes || 0;
         const volumenDinero = canv.volumen_pendiente || 0;
-        const nombreCompleto = `${canv.usuario} ${canv.apellido}`.trim() || `Agente #${canv.id}`;
+        const nombreCompleto = `${canv.usuario || ''} ${canv.apellido || ''}`.trim() || `Agente #${canv.id}`;
         
-        // --- LÓGICA SOLO PARA LA GRÁFICA DE BARRAS DE DÍAS ---
         const contratosDiarios = [0, 0, 0, 0, 0, 0];
         const diasSemana = [6, 1, 2, 3, 4, 5]; 
         
-        // Filtramos solo los contratos de ESTE canvaceador que NO se han pagado
         const contratosPendientesAgente = todosContratos.filter(
           c => c.canvaceador_id === canv.id && c.comision_pagada === false
         );
+
+        const conteoPlanes = {};
+        contratosPendientesAgente.forEach(contrato => {
+          const nombrePlan = contrato.plan_contratado || 'Desconocido';
+          conteoPlanes[nombrePlan] = (conteoPlanes[nombrePlan] || 0) + 1;
+        });
+
+        const desgloseTooltip = Object.keys(conteoPlanes).length > 0 
+          ? Object.entries(conteoPlanes).map(([plan, cant]) => `${plan}: ${cant}`).join(' | ') 
+          : 'Sin contratos para desglosar';
 
         contratosPendientesAgente.forEach(contrato => {
           const fecha = new Date(contrato.fecha_creacion || contrato.fecha_captura);
@@ -96,7 +121,6 @@ const Comisiones = () => {
           }
         });
         
-        // Evaluamos el estatus
         let estatus = 'Bajo Rendimiento';
         if (totalVentas >= 6) estatus = 'Excelente';
         else if (totalVentas >= 4) estatus = 'Regular';
@@ -109,25 +133,25 @@ const Comisiones = () => {
           nombre: nombreCompleto,
           zonaAsignada: canv.zona_asignada || `Zona ${canv.id}`,
           numeroEmpleado: canv.numero_empleado || `EMP-${canv.id}`,
-          totalVentas,       // Dato exacto del Backend
-          volumenDinero,     // Dato exacto del Backend
+          totalVentas,       
+          volumenDinero,     
           horasApp,
           contratosDiarios,
-          estatus
+          estatus,
+          desgloseTooltip    
         };
       });
       
       setEquipo(equipoTransformado);
       
     } catch (error) {
-      console.error('❌ Error al cargar datos:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleConfigChange = (prop, value) => {
-    setConfiguracion({ ...configuracion, [prop]: value });
+    setConfiguracion(prev => ({ ...prev, [prop]: value }));
   };
 
   const handleMetasChange = (index, field, value) => {
@@ -136,7 +160,31 @@ const Comisiones = () => {
     setReglasMetas(nuevasReglas);
   };
 
-  // 🔥 Se optimizó el cálculo usando directamente los números que nos dio Django
+  const handleGuardarEsquema = async () => {
+    setGuardando(true);
+    
+    // Calculamos las fechas que exige el modelo de Django
+    const fechaActual = new Date();
+    const hoy = fechaActual.toISOString().split('T')[0]; 
+    const fechaFin = new Date(fechaActual.setDate(fechaActual.getDate() + 7));
+    const fin = fechaFin.toISOString().split('T')[0];    
+
+    try {
+      await api.post('/esquemas_pago/', {
+        modalidad: configuracion.modalidad,
+        salario_base: configuracion.salarioBase,
+        comision_plana_porcentaje: configuracion.comisionPlana, 
+        fecha_inicio: hoy, 
+        fecha_fin: fin     
+      });
+      alert(' Esquema de pago actualizado exitosamente. Los canvaceadores ya pueden ver su nueva modalidad.');
+    } catch (error) {
+      alert(' Hubo un error al guardar. Verifica la consola para más detalles.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const calcularRendimientoAgente = (totalVentas, volumenDinero) => {
     let pagoCalculado = 0;
     let porcentajeAplicado = 0;
@@ -185,12 +233,11 @@ const Comisiones = () => {
 
       <Alert severity="warning" icon={<WarningAmberOutlined fontSize="inherit" />} sx={{ borderRadius: 2 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Aprobación Pendiente - Ing. César</Typography>
-        Configura la modalidad de pago a continuación. Al presionar "Solicitar Aprobación", se enviará la propuesta a Dirección.
+        Configura la modalidad de pago a continuación. Al presionar "Solicitar Aprobación", se actualizará el esquema de los Canvaceadores.
       </Alert>
 
       <Grid container spacing={3}>
         
-        {/* PANEL DE CONFIGURACIÓN */}
         <Grid item xs={12} lg={4}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
@@ -199,7 +246,14 @@ const Comisiones = () => {
               </Typography>
 
               <Stack spacing={3}>
-                <TextField select label="Modalidad de Trabajo" size="small" fullWidth value={configuracion.modalidad} onChange={(e) => handleConfigChange('modalidad', e.target.value)}>
+                <TextField 
+                  select 
+                  label="Modalidad de Trabajo" 
+                  size="small" 
+                  fullWidth 
+                  value={configuracion.modalidad} 
+                  onChange={(e) => handleConfigChange('modalidad', e.target.value)}
+                >
                   <MenuItem value="solo_metas">Pago por Metas (Escalonado)</MenuItem>
                   <MenuItem value="base_mas_comision">Salario Base + Comisión Fija</MenuItem>
                   <MenuItem value="comision_pura">Comisión Pura (Fija %)</MenuItem>
@@ -252,15 +306,21 @@ const Comisiones = () => {
                   <TextField label="% de Comisión Fija Pareja" type="number" size="small" fullWidth value={configuracion.comisionPlana} onChange={(e) => handleConfigChange('comisionPlana', Number(e.target.value))} />
                 )}
 
-                <Button variant="contained" color="primary" fullWidth sx={{ fontWeight: 700, mt: 2 }}>
-                  Solicitar Aprobación de Esquema
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  fullWidth 
+                  sx={{ fontWeight: 700, mt: 2 }}
+                  onClick={handleGuardarEsquema}
+                  disabled={guardando}
+                >
+                  {guardando ? <CircularProgress size={24} color="inherit" /> : 'SOLICITAR APROBACIÓN DE ESQUEMA'}
                 </Button>
               </Stack>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* TABLA PRINCIPAL DE COMISIONES */}
         <Grid item xs={12} lg={8}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
@@ -305,7 +365,6 @@ const Comisiones = () => {
                         </TableCell>
                       </TableRow>
                     ) : equipo.map((agente) => {
-                      // Usamos los datos directos del backend
                       const stats = calcularRendimientoAgente(agente.totalVentas, agente.volumenDinero);
                       return (
                         <TableRow key={agente.id} hover>
@@ -315,9 +374,11 @@ const Comisiones = () => {
                           </TableCell>
                           
                           <TableCell align="center">
-                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#3b82f6' }}>
-                              {agente.totalVentas} Contratos
-                            </Typography>
+                            <Tooltip title={agente.desgloseTooltip} arrow placement="top">
+                              <Typography variant="body2" sx={{ fontWeight: 700, color: '#3b82f6', cursor: 'help' }}>
+                                {agente.totalVentas} Contratos
+                              </Typography>
+                            </Tooltip>
                           </TableCell>
                           
                           <TableCell align="center">
@@ -362,7 +423,6 @@ const Comisiones = () => {
           </Card>
         </Grid>
 
-        {/* LOGÍSTICA DE BARRAS POR DÍAS */}
         <Grid item xs={12}>
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
@@ -411,7 +471,6 @@ const Comisiones = () => {
         </Grid>
       </Grid>
 
-      {/* MODAL: GRÁFICA DE BARRAS */}
       <Dialog open={Boolean(agenteGrafica)} onClose={() => setAgenteGrafica(null)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -465,7 +524,6 @@ const Comisiones = () => {
         </DialogActions>
       </Dialog>
 
-      {/* MODAL: INFO DE PAGO */}
       <Dialog open={modalInfoPago} onClose={() => setModalInfoPago(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>

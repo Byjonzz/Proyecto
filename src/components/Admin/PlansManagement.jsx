@@ -73,10 +73,8 @@ const PlansManagement = () => {
   const cargarPlanes = async () => {
     try {
       setLoading(true);
-      console.log('📡 Cargando planes desde API...');
       
       const response = await api.get('/planes/');
-      console.log('✅ Planes cargados:', response.data);
       
       setPlanes(response.data);
       
@@ -84,7 +82,6 @@ const PlansManagement = () => {
         mostrarMensaje('No hay planes registrados. Agrega el primer plan.', 'info');
       }
     } catch (error) {
-      console.error('❌ Error al cargar planes:', error);
       mostrarMensaje('Error al cargar los planes desde el servidor.', 'error');
     } finally {
       setLoading(false);
@@ -162,14 +159,11 @@ const PlansManagement = () => {
         activo: formData.activo
       };
 
-      console.log('📤 Enviando plan a la API:', planData);
 
       let response;
       
       if (modoEdicion && planEditando) {
-        console.log('✏️ Actualizando plan ID:', planEditando.id);
         response = await api.put(`/planes/${planEditando.id}/`, planData);
-        console.log('✅ Plan actualizado:', response.data);
         
         const planesActualizados = planes.map(p => 
           p.id === planEditando.id ? response.data : p
@@ -177,9 +171,7 @@ const PlansManagement = () => {
         setPlanes(planesActualizados);
         mostrarMensaje('Plan actualizado correctamente', 'success');
       } else {
-        console.log('➕ Creando nuevo plan');
         response = await api.post('/planes/', planData);
-        console.log('✅ Plan creado:', response.data);
         
         setPlanes([...planes, response.data]);
         mostrarMensaje('Plan creado correctamente', 'success');
@@ -187,10 +179,8 @@ const PlansManagement = () => {
       
       handleCloseDialog();
     } catch (error) {
-      console.error('❌ Error al guardar plan:', error);
       
       if (error.response && error.response.data) {
-        console.error('🔴 Error detallado del backend:', error.response.data);
         
         let mensajeError = 'Error al guardar el plan:\n';
         
@@ -218,16 +208,13 @@ const PlansManagement = () => {
     if (window.confirm('¿Estás seguro de eliminar este plan? Esta acción no se puede deshacer.')) {
       try {
         setLoading(true);
-        console.log('🗑️ Eliminando plan ID:', planId);
         
         await api.delete(`/planes/${planId}/`);
-        console.log('✅ Plan eliminado');
         
         const planesActualizados = planes.filter(p => p.id !== planId);
         setPlanes(planesActualizados);
         mostrarMensaje('Plan eliminado correctamente', 'success');
       } catch (error) {
-        console.error('❌ Error al eliminar plan:', error);
         mostrarMensaje('Error al eliminar el plan', 'error');
       } finally {
         setLoading(false);
@@ -242,10 +229,8 @@ const PlansManagement = () => {
       
       const nuevoEstado = !plan.activo;
       
-      console.log(`🔄 Cambiando estado del plan ${planId} a: ${nuevoEstado}`);
       
       const response = await api.patch(`/planes/${planId}/`, { activo: nuevoEstado });
-      console.log('✅ Estado actualizado:', response.data);
       
       const planesActualizados = planes.map(p => 
         p.id === planId ? response.data : p
@@ -253,7 +238,6 @@ const PlansManagement = () => {
       setPlanes(planesActualizados);
       mostrarMensaje(`Plan ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success');
     } catch (error) {
-      console.error('❌ Error al cambiar estado:', error);
       mostrarMensaje('Error al cambiar el estado del plan', 'error');
     }
   };

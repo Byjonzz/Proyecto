@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import SeleccionPlanes from '../Forms/SeleccionPlanes';
 import { useContratos } from '../../hooks/useContratos';
+import api from '../../services/api';
 
 import {
   Box, Paper, Typography, TextField, Button, MenuItem, 
@@ -95,7 +96,6 @@ const PlanAndQuotation = ({ usuarioActual }) => {
           setLoadingGps(false); 
         },
         (error) => { 
-          console.error("Error obteniendo ubicación:", error); 
           alert("Por favor, permite el acceso a la ubicación en tu navegador."); 
           setLoadingGps(false); 
         },
@@ -200,7 +200,6 @@ const PlanAndQuotation = ({ usuarioActual }) => {
 
     try {
       const firmaDigital = canvas.toDataURL('image/jpeg', 0.5);
-      console.log('📏 Tamaño de la firma:', firmaDigital.length, 'caracteres');
 
       
       let calleNumeroFinal = '';
@@ -241,25 +240,16 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         foto_poste: ''
       };
 
-      // ----------------------------------------------------
-      // 🐛 TRAMPA DE DEBUGGING Y ASIGNACIÓN SEGURA
-      // ----------------------------------------------------
-      console.log("1. ¿Qué tiene usuarioActual en este momento?:", usuarioActual);
 
-      // Nos aseguramos de que los campos existan en el objeto antes de enviarlo
       datosContrato.canvaceador_id = null;
       datosContrato.tecnico_id = null;
 
-      // Verificamos que el usuario no esté vacío y sea un objeto válido
       if (usuarioActual && typeof usuarioActual === 'object') {
         
-        // Sacamos el ID (usamos perfil_id si existe, si no, el id normal)
         const idEmpleado = Number(usuarioActual.perfil_id || usuarioActual.id);
         
-        // Sacamos el rol de forma segura (por si viene con mayúsculas o espacios)
         const rolEmpleado = String(usuarioActual.rol || '').toLowerCase().trim();
 
-        console.log(`2. Detectado: Empleado ID: ${idEmpleado} | Rol: ${rolEmpleado}`);
 
         if (rolEmpleado === 'canvaceador') {
           datosContrato.canvaceador_id = idEmpleado;
@@ -267,12 +257,8 @@ const PlanAndQuotation = ({ usuarioActual }) => {
           datosContrato.tecnico_id = idEmpleado;
         }
         
-      } else {
-        console.warn("⚠️ ALERTA: usuarioActual está vacío o no es un objeto. Revisa el componente padre.");
-      }
+      } 
 
-      console.log('3. 📄 JSON final que se va a enviar al Backend:', datosContrato);
-      // ----------------------------------------------------
       
       if (coordenadas && coordenadas.includes(',')) {
         const partes = coordenadas.split(',');
@@ -295,11 +281,8 @@ const PlanAndQuotation = ({ usuarioActual }) => {
         }
       }
 
-      console.log('📄 Guardando contrato:', datosContrato);
-      console.log('👤 Usuario actual:', usuarioActual);
       
       const nuevoContrato = await createContrato(datosContrato);
-      console.log('✅ Contrato guardado exitosamente:', nuevoContrato);
       
       
       setTimeout(() => {
@@ -316,10 +299,8 @@ const PlanAndQuotation = ({ usuarioActual }) => {
       }, 3000);
       
     } catch (err) {
-      console.error('❌ Error al guardar contrato:', err);
       
       if (err.response && err.response.data) {
-        console.error('🔴 Error detallado del backend:', JSON.stringify(err.response.data, null, 2));
         
         const errores = Object.entries(err.response.data)
           .map(([campo, mensajes]) => {

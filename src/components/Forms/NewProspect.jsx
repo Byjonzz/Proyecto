@@ -302,18 +302,14 @@ const NewProspect = ({ usuarioActual }) => {
         }
       }
 
-      console.log('📤 Enviando datos al backend:', datosParaBackend);
 
       const nuevoProspecto = await createProspecto(datosParaBackend);
 
-      console.log('✅ Prospecto guardado:', nuevoProspecto);
       setActiveStep((prev) => prev + 1);
       
     } catch (err) {
-      console.error('❌ Error al guardar:', err);
 
       if (err.response && err.response.data) {
-        console.error('🔴 Error detallado del backend:', err.response.data);
 
         if (typeof err.response.data === 'string') {
           setErrorApi(`Error: ${err.response.data}`);

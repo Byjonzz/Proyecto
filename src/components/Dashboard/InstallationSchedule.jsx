@@ -114,7 +114,6 @@ const InstallationSchedule = () => {
         estatus: 'Asignado'
       });
       
-      console.log('✅ Cita asignada exitosamente');
 
       setMensajeExito(true);
       handleCerrarModal();
@@ -123,7 +122,6 @@ const InstallationSchedule = () => {
       setTimeout(() => setMensajeExito(false), 3000);
       
     } catch (err) {
-      console.error('❌ Error al asignar cita:', err);
       setErrorAsignacion(`Error al asignar la cita: ${err.message}`);
     }
   };

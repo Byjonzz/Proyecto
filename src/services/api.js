@@ -31,16 +31,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      console.error('Error de API:', error.response.status, error.response.data);
       
       if (error.response.status === 401) {
-        console.warn('No autorizado');
       }
     } else if (error.request) {
-      console.error('No hay respuesta del servidor:', error.request);
-      console.error('URL intentada:', error.config?.url);
     } else {
-      console.error('Error:', error.message);
     }
     return Promise.reject(error);
   }

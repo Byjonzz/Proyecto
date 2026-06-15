@@ -14,7 +14,6 @@ export const useProspectos = () => {
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error al cargar prospectos:', err);
     } finally {
       setLoading(false);
     }

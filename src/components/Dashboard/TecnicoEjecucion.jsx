@@ -76,21 +76,17 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       setLoading(true);
       setError('');
       
-      console.log('🔍 Usuario actual:', usuarioActual);
-      console.log('🎭 Rol:', usuarioActual?.rol);
       
       
       const rol = usuarioActual?.rol?.toLowerCase().trim();
       const esAdmin = rol === 'admin' || rol === 'administrador' || rol === 'supervisor';
       
       setVistaAdmin(esAdmin);
-      console.log('👁️ ¿Es admin?', esAdmin);
       
       
       const contratosResponse = await api.get('/contratos/');
       const todosLosContratos = contratosResponse.data;
       
-      console.log('📋 Total contratos:', todosLosContratos.length);
       
       let contratosFiltrados = [];
       
@@ -109,14 +105,12 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
           return tieneTecnico && estatusValido;
         });
         
-        console.log('✅ Admin ve TODAS las instalaciones:', contratosFiltrados.length);
         
         
         try {
           const tecnicosResponse = await api.get('/tecnicos/');
           setTecnicos(tecnicosResponse.data);
         } catch (err) {
-          console.warn('No se pudieron cargar los técnicos:', err);
         }
         
       } else {
@@ -127,10 +121,8 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
           return esMio && estatusValido;
         });
         
-        console.log('✅ Técnico ve SUS instalaciones:', contratosFiltrados.length);
       }
       
-      console.log('📦 Contratos filtrados:', contratosFiltrados);
       
       
       const instalacionesFormateadas = contratosFiltrados.map(contrato => {
@@ -159,7 +151,6 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
       setInstalaciones(instalacionesFormateadas);
       
     } catch (error) {
-      console.error('❌ Error fetching installations:', error);
       setError('Error al cargar las instalaciones: ' + error.message);
     } finally {
       setLoading(false);
@@ -244,13 +235,12 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
         fecha_completada: new Date().toISOString()
       });
 
-      setSuccess('✅ Instalación completada correctamente');
+      setSuccess('Instalación completada correctamente');
       setTimeout(() => {
         setDialogOpen(false);
         fetchInstalaciones();
       }, 1500);
     } catch (error) {
-      console.error('Error completing installation:', error);
       setError('Error al completar: ' + (error.response?.data?.detail || error.message));
     }
   };
@@ -505,8 +495,8 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Schedule fontSize="small" color="action" />
                       <Typography variant="body2">
-                        📅 {inst.fecha_programada || 'Fecha por definir'}
-                        {inst.hora_asignada && ` ⏰ ${inst.hora_asignada}`}
+                         {inst.fecha_programada || 'Fecha por definir'}
+                        {inst.hora_asignada && `  ${inst.hora_asignada}`}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -678,7 +668,7 @@ const TecnicoEjecucion = ({ usuarioActual }) => {
                 {}
                 {(instalacionSeleccionada.estado === 'Completado' || instalacionSeleccionada.estado === 'Completada') && (
                   <Alert severity="success" sx={{ mt: 2 }}>
-                    ✅ Esta instalación ya fue completada
+                    Esta instalación ya fue completada
                   </Alert>
                 )}
               </Stack>

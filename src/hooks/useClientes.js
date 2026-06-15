@@ -19,10 +19,8 @@ export const useCanvaceadores = () => {
       
       setCanvaceadores(canvaceadoresNormalizados);
       setError(null);
-      console.log('✅ Canvaceadores cargados:', canvaceadoresNormalizados);
     } catch (err) {
       setError(err.message);
-      console.error('❌ Error al cargar canvaceadores:', err);
     } finally {
       setLoading(false);
     }

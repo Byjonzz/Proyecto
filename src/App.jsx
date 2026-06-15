@@ -6,7 +6,6 @@ import Login from './components/Login/Login';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import { obtenerPrimeraRuta, obtenerNombreRol, obtenerColorRol } from './config/roles';
 
-
 import PlansManagement from './components/Admin/PlansManagement';
 import CoverageMap from './components/Dashboard/CoverageMap';
 import NewProspect from './components/Forms/NewProspect';
@@ -19,15 +18,11 @@ import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
 import SimSales from './components/Ventas/SimSales';
 
-
 const drawerWidth = 260;
 const API_BASE_URL = 'http://10.144.86.55:1423/api';
 
-
-
 const loginUsuario = async (email, password) => {
   try {
-    console.log('🔍 Intentando login con GET a /api/usuarios/');
     
     const response = await fetch(`${API_BASE_URL}/usuarios/`);
     
@@ -41,7 +36,6 @@ const loginUsuario = async (email, password) => {
       usuarios = usuarios.results || usuarios.data || [];
     }
     
-    console.log('📋 Usuarios recibidos:', usuarios.length);
     
     const emailLimpio = email.toLowerCase().trim();
     const passwordLimpia = password.trim();
@@ -56,7 +50,6 @@ const loginUsuario = async (email, password) => {
       throw new Error('Credenciales inválidas');
     }
     
-    console.log('✅ Usuario encontrado:', usuarioEncontrado);
     
     const rol = usuarioEncontrado.rol?.toLowerCase().trim();
     let perfilData = null;
@@ -79,7 +72,6 @@ const loginUsuario = async (email, password) => {
         perfilData = supervisores.find(s => s.usuario_id === usuarioEncontrado.id);
       }
     } catch (err) {
-      console.warn('⚠️ Error obteniendo perfil:', err.message);
     }
     
     const resultado = {
@@ -94,15 +86,12 @@ const loginUsuario = async (email, password) => {
       }
     };
     
-    console.log('✅ Retornando resultado:', resultado);
     return resultado;
     
   } catch (error) {
-    console.error('❌ Error en login:', error);
     throw error;
   }
 };
-
 
 function App() {
   const [usuarioActual, setUsuarioActual] = useState(null);
@@ -121,7 +110,6 @@ function App() {
   }, []);
 
   const handleLoginSuccess = (datosUsuario) => {
-    console.log('🎉 Login exitoso, guardando usuario:', datosUsuario);
     localStorage.setItem('usuario_actual', JSON.stringify(datosUsuario));
     setUsuarioActual(datosUsuario);
     const primeraRuta = obtenerPrimeraRuta(datosUsuario.rol);
@@ -153,19 +141,19 @@ function App() {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'canvaceo-dashboard': return <CoverageMap />;
+      case 'canvaceo-dashboard': return <CoverageMap usuarioActual={usuarioActual} />;
       case 'canvaceo-registro': return <NewProspect usuarioActual={usuarioActual} />;
-      case 'canvaceo-ruta': return <CanvaceadorRuta />;
+      case 'canvaceo-ruta': return <CanvaceadorRuta usuarioActual={usuarioActual} />;
       case 'ventas-contrato-directo': return <PlanAndQuotation usuarioActual={usuarioActual} />;
       case 'ventas-seguimiento': return <LeadsFollowUp usuarioActual={usuarioActual} />;
-      case 'ventas-de-chips': return <SimSales />;
-      case 'logistica-agenda': return <InstallationSchedule />;
+      case 'ventas-de-chips': return <SimSales usuarioActual={usuarioActual} />;
+      case 'logistica-agenda': return <InstallationSchedule usuarioActual={usuarioActual} />;
       case 'tecnico-ejecucion': return <TecnicoEjecucion usuarioActual={usuarioActual} />;
-      case 'admin-comisiones': return <Comisiones />;
-      case 'admin-asignacion-rutas': return <AsignacionRutas />;
-      case 'admin-rutas': return <AsignacionRutas />;
-      case 'admin-planes': return <PlansManagement />;
-      default: return <CoverageMap />;
+      case 'admin-comisiones': return <Comisiones usuarioActual={usuarioActual} />;
+      case 'admin-asignacion-rutas': return <AsignacionRutas usuarioActual={usuarioActual} />;
+      case 'admin-rutas': return <AsignacionRutas usuarioActual={usuarioActual} />;
+      case 'admin-planes': return <PlansManagement usuarioActual={usuarioActual} />;
+      default: return <CoverageMap usuarioActual={usuarioActual} />;
     }
   };
 
@@ -256,14 +244,8 @@ function App() {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
               slotProps={{
                 paper: {
                   elevation: 3,
@@ -273,16 +255,9 @@ function App() {
                     overflow: 'visible',
                     borderRadius: 2,
                     '&:before': {
-                      content: '""',
-                      display: 'block',
-                      position: 'absolute',
-                      top: 0,
-                      right: 14,
-                      width: 10,
-                      height: 10,
-                      bgcolor: 'background.paper',
-                      transform: 'translateY(-50%) rotate(45deg)',
-                      zIndex: 0,
+                      content: '""', display: 'block', position: 'absolute', top: 0,
+                      right: 14, width: 10, height: 10, bgcolor: 'background.paper',
+                      transform: 'translateY(-50%) rotate(45deg)', zIndex: 0,
                     },
                   },
                 },
@@ -311,10 +286,7 @@ function App() {
                 onClick={handleLogout}
                 sx={{ 
                   color: 'error.main',
-                  '&:hover': { 
-                    bgcolor: 'error.light',
-                    color: 'white'
-                  }
+                  '&:hover': { bgcolor: 'error.light', color: 'white' }
                 }}
               >
                 <ListItemIcon>

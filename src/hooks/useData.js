@@ -14,7 +14,6 @@ export const useLeads = () => {
         setLeads(response.data);
       } catch (err) {
         setError(err.message);
-        console.error('Error fetching leads:', err);
       } finally {
         setLoading(false);
       }
@@ -39,7 +38,6 @@ export const useProspects = () => {
         setProspects(response.data);
       } catch (err) {
         setError(err.message);
-        console.error('Error fetching prospects:', err);
       } finally {
         setLoading(false);
       }

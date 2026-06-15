@@ -14,7 +14,6 @@ export const useCanvaceadores = () => {
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error al cargar canvaceadores:', err);
     } finally {
       setLoading(false);
     }

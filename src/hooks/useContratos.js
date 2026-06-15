@@ -14,7 +14,6 @@ export const useContratos = () => {
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error al cargar contratos:', err);
     } finally {
       setLoading(false);
     }
@@ -28,7 +27,6 @@ export const useContratos = () => {
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error al cargar contratos pendientes:', err);
     } finally {
       setLoading(false);
     }
@@ -43,7 +41,6 @@ export const useContratos = () => {
       setError(null);
     } catch (err) {
       setError(err.message);
-      console.error('Error al cargar contratos del técnico:', err);
     } finally {
       setLoading(false);
     }

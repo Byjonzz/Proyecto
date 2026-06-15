@@ -57,7 +57,6 @@ const AsignacionRutas = () => {
       const searchQuery = `${query}, Tehuacán, Puebla, México`;
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=8&polygon_geojson=1&addressdetails=1`;
       
-      console.log('Buscando:', url);
       
       const response = await fetch(url, {
         headers: {
@@ -70,7 +69,6 @@ const AsignacionRutas = () => {
       }
       
       const data = await response.json();
-      console.log('Resultados de Nominatim:', data);
 
       if (data && data.length > 0) {
         const lugaresEncontrados = data.map(place => ({
@@ -84,14 +82,11 @@ const AsignacionRutas = () => {
           boundingbox: place.boundingbox || null
         }));
         
-        console.log('Lugares procesados:', lugaresEncontrados);
         setOpcionesColonias(lugaresEncontrados);
       } else {
-        console.log('No se encontraron resultados');
         setOpcionesColonias([]);
       }
     } catch (error) {
-      console.error('Error con Nominatim:', error);
       setOpcionesColonias([]);
     } finally {
       setLoading(false);
@@ -121,7 +116,6 @@ const AsignacionRutas = () => {
       return;
     }
 
-    console.log('Colonia seleccionada:', seleccion);
     setCentroMapa([seleccion.lat, seleccion.lng]);
     
     if (seleccion.geojson) {
@@ -180,7 +174,6 @@ const AsignacionRutas = () => {
         }
       }
     } catch (error) {
-      console.error("Error al calcular la ruta peatonal:", error);
     }
   };
 

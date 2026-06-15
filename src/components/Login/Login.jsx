@@ -35,19 +35,14 @@ const Login = ({ onLoginSuccess, loginFunction }) => {
     setLoading(true);
 
     try {
-      console.log('🚀 Iniciando proceso de login...');
       const result = await loginFunction(email, password);
       
-      console.log('📥 Resultado recibido:', result);
-      
       if (result.success) {
-        console.log('✅ Login exitoso, llamando onLoginSuccess');
         onLoginSuccess(result.usuario);
       } else {
         setError(result.error || 'Error en el login');
       }
     } catch (err) {
-      console.error('❌ Error en login:', err);
       
       if (err.message === 'Credenciales inválidas') {
         setError('Correo o contraseña incorrectos');
