@@ -52,7 +52,7 @@ Servidor:                    Corriendo en http://localhost:3000/
 #### Formularios (3 componentes)
 ```
 ✅ NuevoProspect.jsx               - Formulario 3 pasos
-✅ PlnaCotizacion.jsx          - Selector de planes
+✅ PlanCotizacion.jsx          - Selector de planes
 ✅ ContratoyFirma.jsx      - Gestión de contratos
 ```
 

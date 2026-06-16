@@ -46,7 +46,7 @@ src/
 │   │   └── Reports.jsx
 │   ├── Forms/              # Formularios
 │   │   ├── NuevoProspect.jsx
-│   │   ├── PlnaCotizacion.jsx
+│   │   ├── PlanCotizacion.jsx
 │   │   └── ContratoyFirma.jsx
 │   ├── BarradeNavegacion/             # Barra de navegación superior
 │   └── Sidebar/            # Panel lateral de navegación

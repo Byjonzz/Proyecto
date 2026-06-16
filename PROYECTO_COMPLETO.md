@@ -17,7 +17,7 @@ Tu frontend React está **completamente funcional y listo** con todas las vistas
 9. **Reports** - Gráficos de pastel y barras con estadísticas
 10. **Evidence** - Galería de fotos/documentos
 11. **NuevoProspect** - Formulario multi-paso
-12. **PlnaCotizacion** - Selector de planes
+12. **PlanCotizacion** - Selector de planes
 13. **ContratoyFirma** - Gestión de contratos
 
 ## 📁 Estructura de Archivos

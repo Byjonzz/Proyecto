@@ -9,7 +9,7 @@ import GestionPlanes from './components/Admin/GestionPlanes';
 import MapaCobertura from './components/Dashboard/MapaCobertura';
 import NuevoProspect from './components/Forms/NuevoProspect';
 import CanvaceadorRuta from './components/Dashboard/CanvaceadorRuta';
-import PlnaCotizacion from './components/Ventas/PlnaCotizacion';
+import PlanCotizacion from './components/Ventas/PlanCotizacion';
 import SegumientoProspecto from './components/Ventas/SegumientoProspecto';
 import AgendaInstalaciones from './components/Dashboard/AgendaInstalaciones';
 import TecnicoEjecucion from './components/Dashboard/TecnicoEjecucion';
@@ -143,7 +143,7 @@ function App() {
       case 'canvaceo-dashboard': return <MapaCobertura usuarioActual={usuarioActual} />;
       case 'canvaceo-registro': return <NuevoProspect usuarioActual={usuarioActual} />;
       case 'canvaceo-ruta': return <CanvaceadorRuta usuarioActual={usuarioActual} />;
-      case 'ventas-contrato-directo': return <PlnaCotizacion usuarioActual={usuarioActual} />;
+      case 'ventas-contrato-directo': return <PlanCotizacion usuarioActual={usuarioActual} />;
       case 'ventas-seguimiento': return <SegumientoProspecto usuarioActual={usuarioActual} />;
       case 'ventas-de-chips': return <VentaChips usuarioActual={usuarioActual} />;
       case 'logistica-agenda': return <AgendaInstalaciones usuarioActual={usuarioActual} />;

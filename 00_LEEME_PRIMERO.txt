@@ -40,7 +40,7 @@
 
 ┌─ FORMULARIOS (3 componentes)
 │   ├─ ✅ NuevoProspect             Formulario 3 pasos
-│   ├─ ✅ PlnaCotizacion        Selector de planes
+│   ├─ ✅ PlanCotizacion        Selector de planes
 │   └─ ✅ ContratoyFirma    Gestión contratos
 
 ┌─ NAVEGACIÓN (2 componentes)

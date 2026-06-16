@@ -26,7 +26,7 @@ Tu dashboard **está 100% listo** y corriendo en `http://localhost:3000/` ✨
 
 #### Formularios
 - ✅ **NuevoProspect** - Formulario multi-paso (3 pasos)
-- ✅ **PlnaCotizacion** - Selector de planes con precios
+- ✅ **PlanCotizacion** - Selector de planes con precios
 - ✅ **ContratoyFirma** - Gestión de contratos
 
 ---
@@ -74,7 +74,7 @@ conectanet-dashboard/
     │   │   └── Reports.jsx
     │   ├── Forms/
     │   │   ├── NuevoProspect.jsx
-    │   │   ├── PlnaCotizacion.jsx
+    │   │   ├── PlanCotizacion.jsx
     │   │   └── ContratoyFirma.jsx
     │   ├── BarradeNavegacion/
     │   │   └── BarradeNavegacion.jsx

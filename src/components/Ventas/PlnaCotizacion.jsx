@@ -20,7 +20,7 @@ const pasosContrato = [
   { label: 'Evidencias y Cierre', description: 'Fotos del INE, Desglose de cobro y Firma.' }
 ];
 
-const PlnaCotizacion = ({ usuarioActual }) => {
+const PlanCotizacion = ({ usuarioActual }) => {
   const { createContrato, loading: loadingContrato } = useContratos();
   
   const [activeStep, setActiveStep] = useState(0);
@@ -629,4 +629,4 @@ const PlnaCotizacion = ({ usuarioActual }) => {
   );
 };
 
-export default PlnaCotizacion;
+export default PlanCotizacion;
