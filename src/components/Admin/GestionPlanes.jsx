@@ -1,41 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Chip,
-  Alert,
-  Tabs,
-  Tab,
-  Divider,
-  Tooltip,
-  Switch,
-  FormControlLabel,
+  Box, Paper, Typography, Button, Grid, Card, CardContent, IconButton,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem,
+  Chip, Alert, Tabs, Tab, Divider, Tooltip, Switch, FormControlLabel,
   CircularProgress
 } from '@mui/material';
 import {
-  Add,
-  Edit,
-  Delete,
-  Save,
-  Close,
-  Speed,
-  CheckCircle
+  Add, Edit, Delete, Save, Close, Speed, CheckCircle, PhoneAndroid, Router
 } from '@mui/icons-material';
 import api from '../../services/api';
 
-const CATEGORIAS = {
+const CATEGORIAS_INTERNET = {
   FIBRA_SIMETRICA: 'Fibra Simétrica',
   FIBRA_ASIMETRICA: 'Fibra Asimétrica',
   SOLIT_TV: 'Solit + TV',
@@ -43,10 +18,103 @@ const CATEGORIAS = {
   ANTENA_WIRELESS: 'Antena/Wireless'
 };
 
+const CATEGORIAS_CHIPS = {
+  DIAS_7: '7 Días',
+  DIAS_15: '15 Días',
+  DIAS_30: '30 Días',
+  DIAS_90: '90 Días',
+  DIAS_180: '180 Días',
+  DIAS_365: '365 Días'
+};
+
+// ✅ PALETA DE COLORES PASTEL VARIADOS
+const COLORES_PASTEL = [
+  '#FFB3BA', // Rosa pastel
+  '#FFDFBA', // Durazno
+  '#FFFFBA', // Amarillo pastel
+  '#BAFFC9', // Verde menta
+  '#BAE1FF', // Azul cielo
+  '#E0BBE4', // Lavanda
+  '#FFD1DC', // Rosa claro
+  '#C1F0C1', // Menta
+  '#D4BBFF', // Lila
+  '#FFCBA4', // Durazno claro
+  '#AFEEEE', // Turquesa pastel
+  '#FFC0CB', // Rosa bebé
+  '#F0E68C', // Caqui
+  '#DDA0DD', // Ciruela
+  '#98FB98', // Verde pastel
+  '#B0E0E6', // Azul polvo
+  '#F5DEB3', // Trigo
+  '#FFE4B5', // Melocotón claro
+  '#D8BFD8', // Cardo
+  '#E6E6FA'  // Lavanda claro
+];
+
+const getColorFromName = (nombre) => {
+  if (!nombre) return COLORES_PASTEL[0];
+  
+  let hash = 0;
+  for (let i = 0; i < nombre.length; i++) {
+    const char = nombre.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convertir a entero de 32 bits
+  }
+  
+  const index = Math.abs(hash) % COLORES_PASTEL.length;
+  return COLORES_PASTEL[index];
+};
+
+const getLuminance = (color) => {
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+  
+  const a = [r, g, b].map(v => {
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  
+  return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+};
+
+const getContrastTextColor = (backgroundColor) => {
+  const luminance = getLuminance(backgroundColor);
+  return luminance > 0.5 ? '#1e293b' : '#ffffff';
+};
+
+const getBadgeColor = (backgroundColor) => {
+  const hex = backgroundColor.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  
+  if (r > g && r > b && g > b * 0.8) {
+    return '#1e40af'; 
+  }
+  if (b > r && b > g) {
+    return '#be185d'; 
+  }
+  if (g > r && g > b) {
+    return '#6b21a8'; 
+  }
+  if (r > 200 && g > 200 && b < 200) {
+    return '#1e3a8a';
+  }
+  if (r > b && b > g) {
+    return '#166534'; 
+  }
+  
+  return '#7c2d12'; 
+};
+
 const GestionPlanes = () => {
   const [planes, setPlanes] = useState([]);
-  const [categoriaActiva, setCategoriaActiva] = useState(0);
+  const [categoriaActivaInternet, setCategoriaActivaInternet] = useState(0);
+  const [categoriaActivaChip, setCategoriaActivaChip] = useState(0);
+  
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [tipoModal, setTipoModal] = useState('internet');
   const [planEditando, setPlanEditando] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [mensaje, setMensaje] = useState(null);
@@ -54,13 +122,17 @@ const GestionPlanes = () => {
   
   const [formData, setFormData] = useState({
     nombre: '',
-    categoria: CATEGORIAS.FIBRA_SIMETRICA,
+    categoria: '',
     precio: '',
     descarga: '',
     subida: '',
     velocidad: '',
     simetrica: true,
     canales: '',
+    datos: '',
+    llamadas: '',
+    sms: '',
+    beneficios: '',
     ift: '',
     destacado: false,
     activo: true
@@ -73,14 +145,8 @@ const GestionPlanes = () => {
   const cargarPlanes = async () => {
     try {
       setLoading(true);
-      
       const response = await api.get('/planes/');
-      
       setPlanes(response.data);
-      
-      if (response.data.length === 0) {
-        mostrarMensaje('No hay planes registrados. Agrega el primer plan.', 'info');
-      }
     } catch (error) {
       mostrarMensaje('Error al cargar los planes desde el servidor.', 'error');
     } finally {
@@ -93,12 +159,13 @@ const GestionPlanes = () => {
     setTimeout(() => setMensaje(null), 4000);
   };
 
-  const handleOpenDialog = (plan = null) => {
+  const handleOpenDialogInternet = (plan = null) => {
+    setTipoModal('internet');
     if (plan) {
       setPlanEditando(plan);
       setFormData({ 
         nombre: plan.nombre || '',
-        categoria: plan.categoria || CATEGORIAS.FIBRA_SIMETRICA,
+        categoria: plan.categoria || CATEGORIAS_INTERNET.FIBRA_SIMETRICA,
         precio: plan.precio || '',
         descarga: plan.descarga || '',
         subida: plan.subida || '',
@@ -114,13 +181,49 @@ const GestionPlanes = () => {
       setPlanEditando(null);
       setFormData({
         nombre: '',
-        categoria: Object.values(CATEGORIAS)[categoriaActiva] || CATEGORIAS.FIBRA_SIMETRICA,
+        categoria: Object.values(CATEGORIAS_INTERNET)[categoriaActivaInternet],
         precio: '',
         descarga: '',
         subida: '',
         velocidad: '',
         simetrica: true,
         canales: '',
+        ift: '',
+        destacado: false,
+        activo: true
+      });
+      setModoEdicion(false);
+    }
+    setDialogOpen(true);
+  };
+
+  const handleOpenDialogChip = (plan = null) => {
+    setTipoModal('chip');
+    if (plan) {
+      setPlanEditando(plan);
+      setFormData({ 
+        nombre: plan.nombre || '',
+        categoria: plan.categoria || CATEGORIAS_CHIPS.DIAS_7,
+        precio: plan.precio || '',
+        datos: plan.descarga || '',
+        llamadas: plan.subida || '',
+        sms: plan.velocidad || '',
+        beneficios: plan.canales || '',
+        ift: plan.ift || '',
+        destacado: plan.destacado !== undefined ? plan.destacado : false,
+        activo: plan.activo !== undefined ? plan.activo : true
+      });
+      setModoEdicion(true);
+    } else {
+      setPlanEditando(null);
+      setFormData({
+        nombre: '',
+        categoria: Object.values(CATEGORIAS_CHIPS)[categoriaActivaChip],
+        precio: '',
+        datos: '',
+        llamadas: 'Ilimitadas',
+        sms: '',
+        beneficios: 'Redes sociales ilimitadas, Comparte Internet',
         ift: '',
         destacado: false,
         activo: true
@@ -145,60 +248,51 @@ const GestionPlanes = () => {
     try {
       setLoading(true);
       
-      const planData = {
-        nombre: formData.nombre.trim(),
-        categoria: formData.categoria,
-        precio: parseFloat(formData.precio).toFixed(2),
-        descarga: formData.descarga?.toString().trim() || '0',
-        subida: formData.subida?.toString().trim() || '0',
-        velocidad: formData.velocidad?.toString().trim() || '0',
-        simetrica: formData.simetrica,
-        canales: formData.canales?.trim() || null,
-        ift: formData.ift.trim(),
-        destacado: formData.destacado,
-        activo: formData.activo
-      };
-
+      let planData;
+      if (tipoModal === 'internet') {
+        planData = {
+          nombre: formData.nombre.trim(),
+          categoria: formData.categoria,
+          precio: parseFloat(formData.precio).toFixed(2),
+          descarga: formData.descarga?.toString().trim() || '0',
+          subida: formData.subida?.toString().trim() || '0',
+          velocidad: formData.velocidad?.toString().trim() || '0',
+          simetrica: formData.simetrica,
+          canales: formData.canales?.trim() || null,
+          ift: formData.ift.trim(),
+          destacado: formData.destacado,
+          activo: formData.activo
+        };
+      } else {
+        planData = {
+          nombre: formData.nombre.trim(),
+          categoria: formData.categoria,
+          precio: parseFloat(formData.precio).toFixed(2),
+          descarga: formData.datos?.toString().trim() || '0', 
+          subida: formData.llamadas?.toString().trim() || '0', 
+          velocidad: formData.sms?.toString().trim() || '0',   
+          canales: formData.beneficios?.trim() || null,        
+          simetrica: false,
+          ift: formData.ift.trim(),
+          destacado: formData.destacado,
+          activo: formData.activo
+        };
+      }
 
       let response;
-      
       if (modoEdicion && planEditando) {
         response = await api.put(`/planes/${planEditando.id}/`, planData);
-        
-        const planesActualizados = planes.map(p => 
-          p.id === planEditando.id ? response.data : p
-        );
+        const planesActualizados = planes.map(p => p.id === planEditando.id ? response.data : p);
         setPlanes(planesActualizados);
         mostrarMensaje('Plan actualizado correctamente', 'success');
       } else {
         response = await api.post('/planes/', planData);
-        
         setPlanes([...planes, response.data]);
         mostrarMensaje('Plan creado correctamente', 'success');
       }
-      
       handleCloseDialog();
     } catch (error) {
-      
-      if (error.response && error.response.data) {
-        
-        let mensajeError = 'Error al guardar el plan:\n';
-        
-        if (typeof error.response.data === 'object') {
-          Object.entries(error.response.data).forEach(([campo, mensajes]) => {
-            const mensajeCampo = Array.isArray(mensajes) ? mensajes.join(', ') : mensajes;
-            mensajeError += `\n• ${campo}: ${mensajeCampo}`;
-          });
-        } else {
-          mensajeError += error.response.data;
-        }
-        
-        mostrarMensaje(mensajeError, 'error');
-      } else if (error.request) {
-        mostrarMensaje('No se pudo conectar con el servidor. Verifica tu conexión.', 'error');
-      } else {
-        mostrarMensaje('Error inesperado: ' + error.message, 'error');
-      }
+      mostrarMensaje('Error al guardar el plan. Verifica tu conexión o que el IFT sea único.', 'error');
     } finally {
       setLoading(false);
     }
@@ -208,9 +302,7 @@ const GestionPlanes = () => {
     if (window.confirm('¿Estás seguro de eliminar este plan? Esta acción no se puede deshacer.')) {
       try {
         setLoading(true);
-        
         await api.delete(`/planes/${planId}/`);
-        
         const planesActualizados = planes.filter(p => p.id !== planId);
         setPlanes(planesActualizados);
         mostrarMensaje('Plan eliminado correctamente', 'success');
@@ -226,15 +318,9 @@ const GestionPlanes = () => {
     try {
       const plan = planes.find(p => p.id === planId);
       if (!plan) return;
-      
       const nuevoEstado = !plan.activo;
-      
-      
       const response = await api.patch(`/planes/${planId}/`, { activo: nuevoEstado });
-      
-      const planesActualizados = planes.map(p => 
-        p.id === planId ? response.data : p
-      );
+      const planesActualizados = planes.map(p => p.id === planId ? response.data : p);
       setPlanes(planesActualizados);
       mostrarMensaje(`Plan ${nuevoEstado ? 'activado' : 'desactivado'}`, 'success');
     } catch (error) {
@@ -242,127 +328,141 @@ const GestionPlanes = () => {
     }
   };
 
-  const categorias = Object.values(CATEGORIAS);
-  const planesFiltrados = planes.filter(p => p.categoria === categorias[categoriaActiva]);
-
-  const getCardColor = (categoria) => {
+  const getCardColorInternet = (categoria) => {
     const colors = {
-      [CATEGORIAS.FIBRA_SIMETRICA]: '#d63384',
-      [CATEGORIAS.FIBRA_ASIMETRICA]: '#4CAF50',
-      [CATEGORIAS.SOLIT_TV]: '#9c27b0',
-      [CATEGORIAS.HIBRIDO]: '#26a69a',
-      [CATEGORIAS.ANTENA_WIRELESS]: '#7c4dff'
+      [CATEGORIAS_INTERNET.FIBRA_SIMETRICA]: '#d63384',
+      [CATEGORIAS_INTERNET.FIBRA_ASIMETRICA]: '#4CAF50',
+      [CATEGORIAS_INTERNET.SOLIT_TV]: '#9c27b0',
+      [CATEGORIAS_INTERNET.HIBRIDO]: '#26a69a',
+      [CATEGORIAS_INTERNET.ANTENA_WIRELESS]: '#7c4dff'
     };
     return colors[categoria] || '#1976d2';
   };
+
+  const categoriasInternetList = Object.values(CATEGORIAS_INTERNET);
+  const planesInternetFiltrados = planes.filter(p => p.categoria === categoriasInternetList[categoriaActivaInternet]);
+
+  const categoriasChipsList = Object.values(CATEGORIAS_CHIPS);
+  const planesChipsFiltrados = planes.filter(p => p.categoria === categoriasChipsList[categoriaActivaChip]);
 
   if (loading && planes.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
         <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Cargando planes...</Typography>
+        <Typography sx={{ ml: 2 }}>Cargando catálogo general...</Typography>
       </Box>
     );
   }
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          Administración de Planes
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Gestiona los planes de internet, precios y características
-        </Typography>
-      </Box>
-
       {mensaje && (
         <Alert severity={mensaje.tipo} sx={{ mb: 3, whiteSpace: 'pre-line' }}>
           {mensaje.texto}
         </Alert>
       )}
 
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Router fontSize="large" color="primary" />
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Administración de Planes (Internet)
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Gestiona los planes de internet de casa, velocidades y Solit+TV
+          </Typography>
+        </Box>
+      </Box>
+
       <Tabs 
-        value={categoriaActiva} 
-        onChange={(e, newValue) => setCategoriaActiva(newValue)}
+        value={categoriaActivaInternet} 
+        onChange={(e, newValue) => setCategoriaActivaInternet(newValue)}
         sx={{ mb: 3 }}
         variant="scrollable"
         scrollButtons="auto"
       >
-        {categorias.map((cat, idx) => (
+        {categoriasInternetList.map((cat, idx) => (
           <Tab key={idx} label={cat} />
         ))}
       </Tabs>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">
-          {categorias[categoriaActiva]} ({planesFiltrados.length} planes)
+          {categoriasInternetList[categoriaActivaInternet]} ({planesInternetFiltrados.length} planes)
         </Typography>
         <Button 
           variant="contained" 
           startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
+          onClick={() => handleOpenDialogInternet()}
           sx={{ 
-            background: getCardColor(categorias[categoriaActiva]),
+            background: getCardColorInternet(categoriasInternetList[categoriaActivaInternet]),
             '&:hover': { opacity: 0.9 }
           }}
         >
-          Agregar Plan
+          Agregar Plan de Internet
         </Button>
       </Box>
 
       <Grid container spacing={3}>
-        {planesFiltrados.map((plan) => (
+        {planesInternetFiltrados.map((plan) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={plan.id}>
             <Card sx={{ 
               position: 'relative',
               border: plan.activo ? '2px solid' : '2px solid #e0e0e0',
-              borderColor: plan.activo ? getCardColor(plan.categoria) : '#e0e0e0',
+              borderColor: plan.activo ? getCardColorInternet(plan.categoria) : '#e0e0e0',
               opacity: plan.activo ? 1 : 0.6,
               transition: 'all 0.3s',
+              overflow: 'hidden',
               '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }
             }}>
               {plan.destacado && (
-                <Chip 
-                  label="DESTACADO" 
-                  size="small"
-                  sx={{ 
-                    position: 'absolute', 
-                    top: 8, 
-                    right: 8, 
-                    background: '#ff9800', 
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: 100,
+                  height: 100,
+                  overflow: 'hidden',
+                  pointerEvents: 'none',
+                  zIndex: 5
+                }}>
+                  <Box sx={{
+                    position: 'absolute',
+                    top: '18px',
+                    right: '-28px',
+                    width: '130px',
+                    padding: '4px 0',
+                    backgroundColor: '#ff6b6b',
                     color: 'white',
-                    fontWeight: 700,
-                    fontSize: '0.7rem'
-                  }} 
-                />
-              )}
-              
-              <CardContent sx={{ p: 2 }}>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                    {plan.nombre}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: getCardColor(plan.categoria) }}>
-                      ${parseFloat(plan.precio).toFixed(0)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      /mes
-                    </Typography>
+                    textAlign: 'center',
+                    transform: 'rotate(45deg)',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    letterSpacing: 0.5,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                    textTransform: 'uppercase'
+                  }}>
+                    ★ Popular
                   </Box>
                 </Box>
-
+              )}
+              <CardContent sx={{ p: 2 }}>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>{plan.nombre}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 900, color: getCardColorInternet(plan.categoria) }}>
+                      ${parseFloat(plan.precio).toFixed(0)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">/mes</Typography>
+                  </Box>
+                </Box>
                 <Divider sx={{ my: 1.5 }} />
-
                 <Box sx={{ mb: 1.5 }}>
                   {plan.descarga && plan.descarga !== '0' && plan.subida && plan.subida !== '0' ? (
                     <>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                         <Speed fontSize="small" sx={{ color: '#9c27b0' }} />
-                        <Typography variant="body2">
-                          {plan.descarga} Mbps ↓ / {plan.subida} Mbps ↑
-                        </Typography>
+                        <Typography variant="body2">{plan.descarga} Mbps ↓ / {plan.subida} Mbps ↑</Typography>
                       </Box>
                       <Typography variant="caption" color={plan.simetrica ? 'success.main' : 'warning.main'}>
                         {plan.simetrica ? '✓ Simétrica' : '⚠ Asimétrica'}
@@ -376,47 +476,20 @@ const GestionPlanes = () => {
                       </Typography>
                     </Box>
                   )}
-                  
-                  {plan.canales && (
-                    <Typography variant="body2" sx={{ mt: 0.5 }}>
-                      📺 {plan.canales}
-                    </Typography>
-                  )}
-                  
-                  <Typography variant="caption" display="block" sx={{ mt: 0.5, color: 'text.secondary' }}>
-                    IFT: {plan.ift}
-                  </Typography>
+                  {plan.canales && <Typography variant="body2" sx={{ mt: 0.5 }}> {plan.canales}</Typography>}
+                  <Typography variant="caption" display="block" sx={{ mt: 0.5, color: 'text.secondary' }}>IFT: {plan.ift}</Typography>
                 </Box>
-
                 <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                   <Tooltip title={plan.activo ? 'Desactivar' : 'Activar'}>
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleToggleActivo(plan.id)}
-                      color={plan.activo ? 'success' : 'default'}
-                    >
+                    <IconButton size="small" onClick={() => handleToggleActivo(plan.id)} color={plan.activo ? 'success' : 'default'}>
                       {plan.activo ? <CheckCircle /> : <Close />}
                     </IconButton>
                   </Tooltip>
-                  
                   <Tooltip title="Editar">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleOpenDialog(plan)}
-                      color="primary"
-                    >
-                      <Edit />
-                    </IconButton>
+                    <IconButton size="small" onClick={() => handleOpenDialogInternet(plan)} color="primary"><Edit /></IconButton>
                   </Tooltip>
-                  
                   <Tooltip title="Eliminar">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleDeletePlan(plan.id)}
-                      color="error"
-                    >
-                      <Delete />
-                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDeletePlan(plan.id)} color="error"><Delete /></IconButton>
                   </Tooltip>
                 </Box>
               </CardContent>
@@ -425,164 +498,314 @@ const GestionPlanes = () => {
         ))}
       </Grid>
 
-      {planesFiltrados.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="body1" color="text.secondary">
-            No hay planes en esta categoría
+      <Divider sx={{ my: 4, borderStyle: 'dashed', borderColor: '#cbd5e1' }} />
+
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <PhoneAndroid fontSize="large" sx={{ color: '#3b82f6' }} />
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Administración de Chips
           </Typography>
-          <Button 
-            variant="outlined" 
-            startIcon={<Add />}
-            onClick={() => handleOpenDialog()}
-            sx={{ mt: 2 }}
-          >
-            Crear primer plan
-          </Button>
+          <Typography variant="body2" color="text.secondary">
+            Gestiona los planes WISP, cuotas de Gigabytes y días de vigencia.
+          </Typography>
         </Box>
-      )}
+      </Box>
+
+      <Tabs 
+        value={categoriaActivaChip} 
+        onChange={(e, newValue) => setCategoriaActivaChip(newValue)}
+        sx={{ mb: 3 }}
+        variant="scrollable"
+        scrollButtons="auto"
+      >
+        {categoriasChipsList.map((cat, idx) => (
+          <Tab key={idx} label={cat} />
+        ))}
+      </Tabs>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6">
+          Vigencia de {categoriasChipsList[categoriaActivaChip]} ({planesChipsFiltrados.length} planes)
+        </Typography>
+        <Button 
+          variant="contained" 
+          startIcon={<Add />}
+          onClick={() => handleOpenDialogChip()}
+          sx={{ background: '#1e293b', '&:hover': { background: '#0f172a' } }}
+        >
+          Agregar Plan de Chip
+        </Button>
+      </Box>
+
+      <Grid container spacing={3}>
+        {planesChipsFiltrados.map((plan) => {
+          const chipColor = getColorFromName(plan.nombre);
+          const textColor = getContrastTextColor(chipColor);
+          const badgeColor = getBadgeColor(chipColor);
+          
+          return (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={plan.id}>
+              <Card sx={{ 
+                bgcolor: '#111827', 
+                color: 'white', 
+                borderRadius: 3, 
+                position: 'relative',
+                overflow: 'hidden',
+                opacity: plan.activo ? 1 : 0.5, 
+                transition: 'all 0.3s',
+                '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 6px 15px rgba(0,0,0,0.4)' }
+              }}>
+                {plan.destacado && (
+                  <Box sx={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: 120,
+                    height: 120,
+                    overflow: 'hidden',
+                    pointerEvents: 'none',
+                    zIndex: 10
+                  }}>
+                    <Box sx={{
+                      position: 'absolute',
+                      top: '22px',
+                      right: '-32px',
+                      width: '160px',
+                      padding: '5px 0',
+                      backgroundColor: badgeColor,
+                      color: 'white',
+                      textAlign: 'center',
+                      transform: 'rotate(45deg)',
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      letterSpacing: 0.8,
+                      boxShadow: '0 3px 8px rgba(0,0,0,0.4)',
+                      textTransform: 'uppercase',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      ★ POPULAR
+                    </Box>
+                  </Box>
+                )}
+
+                <Box sx={{ 
+                  bgcolor: chipColor, 
+                  pt: 2, 
+                  pb: 2, 
+                  textAlign: plan.destacado ? 'left' : 'center',
+                  paddingLeft: plan.destacado ? 2.5 : 0,
+                  borderRadius: '12px 12px 0 0',
+                  position: 'relative'
+                }}>
+                  <Typography variant="caption" sx={{ 
+                    fontWeight: 800, 
+                    letterSpacing: 0.5, 
+                    fontSize: '0.75rem', 
+                    color: textColor,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    display: 'block',
+                    width: plan.destacado ? '70%' : '100%'
+                  }}>
+                    {plan.nombre.toUpperCase()}
+                  </Typography>
+                  <Typography variant="h5" sx={{ 
+                    fontWeight: 900, 
+                    mt: 0.5, 
+                    fontSize: '1.8rem', 
+                    color: textColor,
+                    textShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                  }}>
+                    <span style={{ fontSize: '1.1rem', verticalAlign: 'top', marginRight: '2px' }}>$</span>
+                    {parseFloat(plan.precio).toFixed(0)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ 
+                    opacity: 0.85, 
+                    fontSize: '0.75rem', 
+                    color: textColor,
+                    fontWeight: 600
+                  }}>
+                    /{plan.categoria.toLowerCase()}
+                  </Typography>
+                </Box>
+                
+                <CardContent sx={{ p: 1.5 }}>
+                  <Grid container sx={{ mb: 1.5, textAlign: 'center', borderBottom: '1px solid #374151', pb: 1 }}>
+                    <Grid item xs={6} sx={{ borderRight: '1px solid #374151' }}>
+                      <Typography variant="caption" sx={{ color: '#9ca3af', display: 'block', mb: 0.3, fontSize: '0.65rem' }}>Datos</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: chipColor, fontSize: '0.9rem' }}>{plan.descarga}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="caption" sx={{ color: '#9ca3af', display: 'block', mb: 0.3, fontSize: '0.65rem' }}>Llamadas</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: chipColor, fontSize: '0.9rem' }}>{plan.subida}</Typography>
+                    </Grid>
+                  </Grid>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, mb: 2, minHeight: 80 }}>
+                    {plan.descarga && (
+                      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                        <CheckCircle sx={{ color: '#10b981', fontSize: 13 }} /> 
+                        <Typography variant="caption" sx={{ color: '#e5e7eb', fontSize: '0.7rem' }}>{plan.descarga} a Máxima Velocidad</Typography>
+                      </Box>
+                    )}
+                    {plan.subida && (
+                      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                        <CheckCircle sx={{ color: '#10b981', fontSize: 13 }} /> 
+                        <Typography variant="caption" sx={{ color: '#e5e7eb', fontSize: '0.7rem' }}>Mins {plan.subida.toLowerCase()}</Typography>
+                      </Box>
+                    )}
+                    {plan.velocidad && plan.velocidad !== '0' && (
+                      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                        <CheckCircle sx={{ color: '#10b981', fontSize: 13 }} /> 
+                        <Typography variant="caption" sx={{ color: '#e5e7eb', fontSize: '0.7rem' }}>{plan.velocidad} SMS</Typography>
+                      </Box>
+                    )}
+                    {plan.canales && plan.canales.split(',').map((beneficio, i) => (
+                      <Box key={i} sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                        <CheckCircle sx={{ color: '#10b981', fontSize: 13 }} /> 
+                        <Typography variant="caption" sx={{ color: '#e5e7eb', fontSize: '0.7rem' }}>{beneficio.trim()}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                    <Button 
+                      size="small" 
+                      variant="contained" 
+                      onClick={() => handleToggleActivo(plan.id)} 
+                      sx={{ 
+                        minWidth: 0, 
+                        px: 1.5, 
+                        fontSize: '0.7rem', 
+                        py: 0.5,
+                        background: plan.activo ? '#22c55e' : '#ef4444',
+                        color: 'white',
+                        fontWeight: 700,
+                        '&:hover': { 
+                          background: plan.activo ? '#16a34a' : '#dc2626',
+                        }
+                      }}
+                    >
+                      {plan.activo ? 'ON' : 'OFF'}
+                    </Button>
+                    <Button 
+                      size="small" 
+                      variant="outlined" 
+                      sx={{ 
+                        color: 'white', 
+                        borderColor: '#4b5563', 
+                        '&:hover': { borderColor: 'white' }, 
+                        fontSize: '0.7rem', 
+                        py: 0.5, 
+                        px: 1.5 
+                      }} 
+                      onClick={() => handleOpenDialogChip(plan)}
+                    >
+                      Editar
+                    </Button>
+                    <Button 
+                      size="small" 
+                      variant="outlined" 
+                      color="error" 
+                      onClick={() => handleDeletePlan(plan.id)} 
+                      sx={{ minWidth: 0, px: 1, py: 0.5 }}
+                    >
+                      <Delete sx={{ fontSize: 14 }} />
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
 
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {tipoModal === 'internet' ? <Router color="primary"/> : <PhoneAndroid color="primary"/>}
           {modoEdicion ? 'Editar Plan' : 'Agregar Nuevo Plan'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
+        <DialogContent dividers>
+          <Box sx={{ pt: 1 }}>
             <TextField
-              fullWidth
-              label="Nombre del Plan"
-              value={formData.nombre}
+              fullWidth label="Nombre del Plan" value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              sx={{ mb: 2 }}
-              required
+              sx={{ mb: 2 }} required helperText={tipoModal === 'chip' ? "Ej: WISP 10GB" : "Ej: Terw, Gat"}
             />
 
             <TextField
-              select
-              fullWidth
-              label="Categoría"
-              value={formData.categoria}
+              select fullWidth label="Vigencia / Categoría" value={formData.categoria}
               onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
               sx={{ mb: 2 }}
             >
-              {categorias.map((cat) => (
+              {(tipoModal === 'internet' ? categoriasInternetList : categoriasChipsList).map((cat) => (
                 <MenuItem key={cat} value={cat}>{cat}</MenuItem>
               ))}
             </TextField>
 
             <TextField
-              fullWidth
-              label="Precio Mensual ($)"
-              type="number"
-              value={formData.precio}
+              fullWidth label="Precio ($)" type="number" value={formData.precio}
               onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
-              sx={{ mb: 2 }}
-              required
-              InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+              sx={{ mb: 2 }} required InputProps={{ inputProps: { min: 0, step: 0.01 } }}
             />
 
-            {formData.categoria !== CATEGORIAS.HIBRIDO && formData.categoria !== CATEGORIAS.ANTENA_WIRELESS && (
+            {tipoModal === 'internet' && (
               <>
-                <Grid container spacing={2} sx={{ mb: 2 }}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Velocidad Descarga (Mbps)"
-                      value={formData.descarga}
-                      onChange={(e) => setFormData({ ...formData, descarga: e.target.value })}
-                      helperText="Ej: 30, 60, 100"
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Velocidad Subida (Mbps)"
-                      value={formData.subida}
-                      onChange={(e) => setFormData({ ...formData, subida: e.target.value })}
-                      helperText="Ej: 30, 60, 100"
-                    />
-                  </Grid>
-                </Grid>
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.simetrica}
-                      onChange={(e) => setFormData({ ...formData, simetrica: e.target.checked })}
-                    />
-                  }
-                  label="Conexión Simétrica"
-                  sx={{ mb: 2, display: 'block' }}
-                />
-
-                {formData.categoria === CATEGORIAS.SOLIT_TV && (
-                  <TextField
-                    fullWidth
-                    label="Canales"
-                    value={formData.canales}
-                    onChange={(e) => setFormData({ ...formData, canales: e.target.value })}
-                    sx={{ mb: 2 }}
-                    placeholder="Ej: 47 (41 HD / 6 SD)"
-                  />
+                {formData.categoria !== CATEGORIAS_INTERNET.HIBRIDO && formData.categoria !== CATEGORIAS_INTERNET.ANTENA_WIRELESS && (
+                  <>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      <Grid item xs={6}>
+                        <TextField fullWidth label="Descarga (Mbps)" value={formData.descarga} onChange={(e) => setFormData({ ...formData, descarga: e.target.value })} />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <TextField fullWidth label="Subida (Mbps)" value={formData.subida} onChange={(e) => setFormData({ ...formData, subida: e.target.value })} />
+                      </Grid>
+                    </Grid>
+                    <FormControlLabel control={<Switch checked={formData.simetrica} onChange={(e) => setFormData({ ...formData, simetrica: e.target.checked })}/>} label="Conexión Simétrica" sx={{ mb: 2, display: 'block' }}/>
+                    {formData.categoria === CATEGORIAS_INTERNET.SOLIT_TV && (
+                      <TextField fullWidth label="Canales" value={formData.canales} onChange={(e) => setFormData({ ...formData, canales: e.target.value })} sx={{ mb: 2 }} placeholder="Ej: 47 (41 HD / 6 SD)" />
+                    )}
+                  </>
+                )}
+                {(formData.categoria === CATEGORIAS_INTERNET.HIBRIDO || formData.categoria === CATEGORIAS_INTERNET.ANTENA_WIRELESS) && (
+                  <TextField fullWidth label="Velocidad (Mbps)" value={formData.velocidad} onChange={(e) => setFormData({ ...formData, velocidad: e.target.value })} sx={{ mb: 2 }} />
                 )}
               </>
             )}
 
-            {(formData.categoria === CATEGORIAS.HIBRIDO || formData.categoria === CATEGORIAS.ANTENA_WIRELESS) && (
-              <TextField
-                fullWidth
-                label="Velocidad (Mbps)"
-                value={formData.velocidad}
-                onChange={(e) => setFormData({ ...formData, velocidad: e.target.value })}
-                sx={{ mb: 2 }}
-                helperText="Ej: 5, 10, 20, 40, 60"
-              />
+            {tipoModal === 'chip' && (
+              <>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={6}>
+                    <TextField fullWidth label="Datos (GB)" value={formData.datos} onChange={(e) => setFormData({ ...formData, datos: e.target.value })} helperText="Ej: 6 GB" required />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField fullWidth label="Llamadas" value={formData.llamadas} onChange={(e) => setFormData({ ...formData, llamadas: e.target.value })} helperText="Ej: Ilimitadas, 100 Mins" required />
+                  </Grid>
+                </Grid>
+                <TextField fullWidth label="Mensajes (SMS)" value={formData.sms} onChange={(e) => setFormData({ ...formData, sms: e.target.value })} sx={{ mb: 2 }} helperText="Ej: 875, 1750, 3500" required />
+                <TextField fullWidth label="Beneficios (Separados por coma)" value={formData.beneficios} onChange={(e) => setFormData({ ...formData, beneficios: e.target.value })} sx={{ mb: 2 }} helperText="Ej: Redes sociales ilimitadas, Comparte Internet" />
+              </>
             )}
 
-            <TextField
-              fullWidth
-              label="Número IFT *"
-              value={formData.ift}
-              onChange={(e) => setFormData({ ...formData, ift: e.target.value })}
-              sx={{ mb: 2 }}
-              required
-              helperText="Este campo debe ser único"
-            />
+            <TextField fullWidth label="Número IFT *" value={formData.ift} onChange={(e) => setFormData({ ...formData, ift: e.target.value })} sx={{ mb: 2 }} required helperText="Obligatorio y único" />
+            <FormControlLabel control={<Switch checked={formData.destacado} onChange={(e) => setFormData({ ...formData, destacado: e.target.checked })}/>} label="Marcar como plan DESTACADO / MÁS POPULAR" sx={{ display: 'block' }}/>
+            <FormControlLabel control={<Switch checked={formData.activo} onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}/>} label="Plan activo (Visible para ventas)" sx={{ display: 'block', mt: 1 }}/>
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.destacado}
-                  onChange={(e) => setFormData({ ...formData, destacado: e.target.checked })}
-                />
-              }
-              label="Marcar como plan destacado"
-              sx={{ display: 'block' }}
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.activo}
-                  onChange={(e) => setFormData({ ...formData, activo: e.target.checked })}
-                />
-              }
-              label="Plan activo"
-              sx={{ display: 'block', mt: 1 }}
-            />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} startIcon={<Close />} disabled={loading}>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={handleCloseDialog} startIcon={<Close />} disabled={loading} color="inherit">
             Cancelar
           </Button>
           <Button 
             onClick={handleSavePlan} 
             variant="contained" 
-            startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
             disabled={loading}
-            sx={{ background: getCardColor(formData.categoria) }}
+            sx={{ background: tipoModal === 'internet' ? getCardColorInternet(formData.categoria) : getColorFromName(formData.nombre) }}
           >
-            {loading ? 'Guardando...' : (modoEdicion ? 'Actualizar' : 'Guardar')}
+            {loading ? 'Guardando...' : (modoEdicion ? 'Actualizar' : 'Guardar Plan')}
           </Button>
         </DialogActions>
       </Dialog>
