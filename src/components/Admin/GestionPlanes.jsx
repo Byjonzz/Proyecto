@@ -421,7 +421,6 @@ const GestionPlanes = ({ usuarioActual }) => {
         </Button>
       </Box>
 
-      {/* ✅ SE MANTIENE TU TAMAÑO ORIGINAL CON "item" */}
       <Grid container spacing={3}>
         {planesInternetFiltrados.map((plan) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={plan.id}>
@@ -557,7 +556,6 @@ const GestionPlanes = ({ usuarioActual }) => {
         </Button>
       </Box>
 
-      {/* ✅ SE MANTIENE TU TAMAÑO ORIGINAL CON "item" */}
       <Grid container spacing={3}>
         {planesChipsFiltrados.map((plan) => {
           const chipColor = getColorFromName(plan.nombre);
@@ -775,7 +773,6 @@ const GestionPlanes = ({ usuarioActual }) => {
               ))}
             </TextField>
 
-            {/* ✅ SOLO CAMBIÉ InputProps A slotProps */}
             <TextField
               fullWidth label="Precio ($)" type="number" value={formData.precio}
               onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
