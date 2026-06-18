@@ -7,11 +7,12 @@ import {
   Box, Paper, Typography, TextField, Button, MenuItem, 
   Alert, Stack, Stepper, Step, StepLabel, StepContent, Divider,
   Radio, RadioGroup, FormControlLabel, FormControl, FormLabel,
-  CircularProgress, InputAdornment, Tooltip, IconButton, Chip
+  CircularProgress, InputAdornment, Tooltip, IconButton, Chip,
+  Checkbox, Card, CardContent
 } from '@mui/material';
 import { 
   BorderColor, Save, CheckCircle, AddPhotoAlternate, InfoOutlined,
-  MyLocation, ContentCopy, WhatsApp, PinDrop, LocalOffer
+  MyLocation, ContentCopy, WhatsApp, PinDrop, LocalOffer, SimCard
 } from '@mui/icons-material';
 
 const pasosContrato = [
@@ -28,6 +29,7 @@ const PlanCotizacion = ({ usuarioActual }) => {
   const [errorDireccion, setErrorDireccion] = useState(false);
   const [errorPlan, setErrorPlan] = useState(false);
   const [errorApi, setErrorApi] = useState(null);
+  const [activarChip, setActivarChip] = useState(false); 
 
   const [formData, setFormData] = useState({
     ine: '',
@@ -217,6 +219,10 @@ const PlanCotizacion = ({ usuarioActual }) => {
           : 'Ubicación por mapa';
       }
 
+      const costoChip = activarChip ? 80 : 0;
+      const montoPrimerMes = Number(formData.plan.precio) || 0;
+      const montoTotal = montoPrimerMes + costoChip;
+
       
       const datosContrato = {
         ine_cliente: formData.ine,
@@ -230,8 +236,10 @@ const PlanCotizacion = ({ usuarioActual }) => {
         detalles_fachada: formData.detallesCasa || '',
         plan_contratado: formData.plan.nombre,
         monto_instalacion: 0,
-        monto_primer_mes: Number(formData.plan.precio) || 0,
-        monto_total: Number(formData.plan.precio) || 0,
+        monto_primer_mes: montoPrimerMes,
+        monto_total: montoTotal,
+        extra_chip: activarChip, 
+        costo_chip: costoChip,
         firma_digital: firmaDigital,
         estatus: 'Pendiente Asignar',
         foto_ine_frente: '',
@@ -295,6 +303,7 @@ const PlanCotizacion = ({ usuarioActual }) => {
         });
         setCoordenadas('');
         setMetodoUbicacion('manual');
+        setActivarChip(false); 
         limpiarFirma();
       }, 3000);
       
@@ -319,11 +328,12 @@ const PlanCotizacion = ({ usuarioActual }) => {
   };
 
   const calcularTotales = () => {
-    if (!formData.plan) return { instalacion: 0, primerMes: 0, total: 0 };
+    if (!formData.plan) return { instalacion: 0, primerMes: 0, chip: 0, total: 0 };
     const primerMes = formData.plan.precio || 0;
     const instalacion = 0;
-    const total = instalacion + primerMes;
-    return { instalacion, primerMes, total };
+    const chip = activarChip ? 80 : 0; 
+    const total = instalacion + primerMes + chip;
+    return { instalacion, primerMes, chip, total };
   };
 
   const renderStepContent = (step) => {
@@ -529,6 +539,38 @@ const PlanCotizacion = ({ usuarioActual }) => {
                 <input type="file" hidden accept="image/*" capture="environment" />
               </Button>
             </Stack>
+
+            <Card variant="outlined" sx={{ mb: 3, borderColor: '#0ea5e9', bgcolor: '#f0f9ff' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                  <SimCard sx={{ color: '#0369a1', fontSize: 28, mt: 0.5 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox 
+                          checked={activarChip}
+                          onChange={(e) => setActivarChip(e.target.checked)}
+                          color="primary"
+                          sx={{ '&.Mui-checked': { color: '#0369a1' } }}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#0369a1' }}>
+                            Activar Chip SIM por $80.00 adicionales
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#0c4a6e', display: 'block' }}>
+                            Incluye chip físico con número telefónico
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ width: '100%', m: 0 }}
+                    />
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
             <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f8fafc', mb: 3, borderRadius: 2 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Desglose de Cobros</Typography>
               {formData.plan && (
@@ -542,21 +584,46 @@ const PlanCotizacion = ({ usuarioActual }) => {
                 <Typography variant="body2">Instalación:</Typography>
                 <Typography variant="body2">${totales.instalacion.toFixed(2)}</Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                 <Typography variant="body2">Primer mes:</Typography>
                 <Typography variant="body2">${totales.primerMes.toFixed(2)}</Typography>
               </Box>
+              
+              {activarChip && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  mb: 0.5,
+                  p: 1,
+                  backgroundColor: '#f0f9ff',
+                  borderRadius: 1,
+                  border: '1px dashed #0ea5e9'
+                }}>
+                  <Typography variant="body2" sx={{ color: '#0369a1', fontWeight: 600 }}>
+                    Activación de Chip SIM:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#0369a1', fontWeight: 700 }}>
+                    $80.00
+                  </Typography>
+                </Box>
+              )}
+              
               <Divider sx={{ mb: 1 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Total:</Typography>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#16a34a' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                p: 1.5,
+                backgroundColor: '#ecfdf5',
+                borderRadius: 1,
+                border: '1px solid #a7f3d0'
+              }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#065f46' }}>Total:</Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#059669', fontSize: '1.1rem' }}>
                   ${totales.total.toFixed(2)}
                 </Typography>
               </Box>
             </Paper>
-            <Alert severity="info" icon={<InfoOutlined />} sx={{ mb: 3 }}>
-              Tiempo estimado: <strong>3 a 5 días hábiles</strong>.
-            </Alert>
+            
             <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Firma del Cliente *</Typography>
             <Box sx={{ backgroundColor: '#fff', border: '2px dashed #cbd5e1', borderRadius: 2, height: 200, touchAction: 'none' }}>
               <canvas 
