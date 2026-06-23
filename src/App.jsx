@@ -17,24 +17,23 @@ import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
 import VentaChips from './components/Ventas/VentaChips';
 
+// 👇 1. IMPORTAMOS TU NUEVO ASISTENTE DE IA 👇
+import AsistenteFlotante from './components/AsistenteFlotante'; 
+
 const drawerWidth = 260;
 const API_BASE_URL = 'http://10.144.86.55:1423/api';
 
 const loginUsuario = async (email, password) => {
   try {
-    
     const response = await fetch(`${API_BASE_URL}/usuarios/`);
-    
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
     
     let usuarios = await response.json();
-    
     if (!Array.isArray(usuarios)) {
       usuarios = usuarios.results || usuarios.data || [];
     }
-    
     
     const emailLimpio = email.toLowerCase().trim();
     const passwordLimpia = password.trim();
@@ -48,7 +47,6 @@ const loginUsuario = async (email, password) => {
     if (!usuarioEncontrado) {
       throw new Error('Credenciales inválidas');
     }
-    
     
     const rol = usuarioEncontrado.rol?.toLowerCase().trim();
     let perfilData = null;
@@ -195,7 +193,8 @@ function App() {
           mt: { xs: 7, md: 0 }, 
           width: { md: `calc(100% - ${drawerWidth}px)` },
           overflowY: 'auto',
-          minHeight: '100vh'
+          minHeight: '100vh',
+          position: 'relative' // Asegura que el asistente flote correctamente
         }}
       >
         <Box sx={{ 
@@ -304,6 +303,7 @@ function App() {
         >
           {renderContent()}
         </RutaProtegida>
+        <AsistenteFlotante />
       </Box>
     </Box>
   );
