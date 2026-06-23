@@ -4,8 +4,8 @@ import {
     Avatar, CircularProgress
 } from '@mui/material';
 import { SmartToy, Close, Send, AccountCircle } from '@mui/icons-material';
-import api from '../services/api'; // Ajusta la ruta si es necesario
-import ReactMarkdown from 'react-markdown'; // 👈 NUEVA IMPORTACIÓN MAGICA
+import api from '../services/api';
+import ReactMarkdown from 'react-markdown';
 
 const AsistenteFlotante = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -65,7 +65,6 @@ const AsistenteFlotante = () => {
                     width: { xs: 320, sm: 380 }, height: 500, borderRadius: 4, display: 'flex',
                     flexDirection: 'column', overflow: 'hidden', boxShadow: '0 12px 24px rgba(0,0,0,0.15)'
                 }}>
-                    {/* Encabezado */}
                     <Box sx={{ bgcolor: '#0f172a', color: 'white', px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <SmartToy sx={{ color: '#3b82f6' }} />
@@ -79,7 +78,6 @@ const AsistenteFlotante = () => {
                         </IconButton>
                     </Box>
 
-                    {/* Cuerpo del Chat */}
                     <Box ref={contenedorChatRef} sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {historial.map((msg, idx) => {
                             const isUser = msg.role === 'user';
@@ -97,7 +95,6 @@ const AsistenteFlotante = () => {
                                         borderTopRightRadius: isUser ? 4 : 12,
                                         borderTopLeftRadius: isUser ? 12 : 4,
                                     }}>
-                                        {/* 👇 AQUÍ ESTÁ LA MAGIA DEL DISEÑO 👇 */}
                                         {isUser ? (
                                             <Typography variant="body2" sx={{ whiteSpace: 'pre-line', fontSize: '0.9rem' }}>
                                                 {msg.content}
@@ -105,15 +102,10 @@ const AsistenteFlotante = () => {
                                         ) : (
                                             <ReactMarkdown
                                                 components={{
-                                                    // Damos estilo a los Títulos (###)
                                                     h3: ({ node, ...props }) => <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#2563eb', mt: 1.5, mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }} {...props} />,
-                                                    // Damos estilo a los Párrafos
                                                     p: ({ node, ...props }) => <Typography variant="body2" sx={{ mb: 1, fontSize: '0.85rem', lineHeight: 1.5 }} {...props} />,
-                                                    // Damos estilo a la Lista
                                                     ul: ({ node, ...props }) => <Box component="ul" sx={{ pl: 2.5, m: 0, mb: 1 }} {...props} />,
-                                                    // Damos estilo a cada elemento de la lista
                                                     li: ({ node, ...props }) => <Typography component="li" variant="body2" sx={{ mb: 0.8, fontSize: '0.85rem', lineHeight: 1.4 }} {...props} />,
-                                                    // Damos estilo a las Negritas (**)
                                                     strong: ({ node, ...props }) => <Box component="span" sx={{ fontWeight: 800, color: '#0f172a' }} {...props} />
                                                 }}
                                             >
