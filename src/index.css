@@ -40,7 +40,7 @@ body {
 
 .leaflet-container img {
   max-width: none !important;
-  height: auto !important;
+  height: none !important;
 }
 
 .leaflet-container {

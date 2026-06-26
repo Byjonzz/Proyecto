@@ -238,9 +238,9 @@ const VentaChips = () => {
         setErroresValidacion({
           ...erroresValidacion,
           telefono: true,
-          telefonoMensaje: formData.cliente_telefono.length === 0 ? 'El teléfono es obligatorio' : 
-                          formData.cliente_telefono.length < 10 ? `Faltan ${10 - formData.cliente_telefono.length} dígitos` :
-                          'Solo se permiten números'
+          telefonoMensaje: formData.cliente_telefono.length === 0 ? 'El teléfono es obligatorio' :
+            formData.cliente_telefono.length < 10 ? `Faltan ${10 - formData.cliente_telefono.length} dígitos` :
+              'Solo se permiten números'
         });
       }
       mostrarMensaje('Por favor corrige los errores antes de continuar', 'error');
@@ -268,11 +268,11 @@ const VentaChips = () => {
     }
 
     if (modoEdicion && chipEditando) {
-      const chipsActualizados = chips.map(c => 
-        c.id === chipEditando.id ? { 
-          ...c, 
+      const chipsActualizados = chips.map(c =>
+        c.id === chipEditando.id ? {
+          ...c,
           ...formData,
-          plan_asociado: formData.plan_seleccionado ? 
+          plan_asociado: formData.plan_seleccionado ?
             `${formData.plan_seleccionado.nombre} - ${formData.plan_seleccionado.dias} días` : c.plan_asociado
         } : c
       );
@@ -282,7 +282,7 @@ const VentaChips = () => {
       const nuevoChip = {
         ...formData,
         id: Date.now(),
-        plan_asociado: formData.plan_seleccionado ? 
+        plan_asociado: formData.plan_seleccionado ?
           `${formData.plan_seleccionado.nombre} - ${formData.plan_seleccionado.dias} días` : '',
         precio_venta: formData.plan_seleccionado ? formData.plan_seleccionado.precio : 0
       };
@@ -319,8 +319,8 @@ const VentaChips = () => {
             Control de inventario y ventas de chips/tarjetas SIM
           </Typography>
         </Box>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           startIcon={<Add />}
           onClick={() => handleOpenDialog()}
           sx={{ fontWeight: 700 }}
@@ -486,7 +486,7 @@ const VentaChips = () => {
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
                 Datos del Cliente
               </Typography>
-              
+
               <Grid container spacing={3}>
                 <Grid item xs={12}>
                   <TextField
@@ -566,9 +566,9 @@ const VentaChips = () => {
                               position: 'absolute',
                               top: 8,
                               right: 8,
-                              background: plan.id.includes('180d') ? '#2563eb' : 
-                                         plan.id.includes('365d') ? '#f59e0b' :
-                                         plan.id.includes('30d') ? '#22c55e' : '#3b82f6',
+                              background: plan.id.includes('180d') ? '#2563eb' :
+                                plan.id.includes('365d') ? '#f59e0b' :
+                                  plan.id.includes('30d') ? '#22c55e' : '#3b82f6',
                               color: 'white',
                               fontWeight: 700,
                               fontSize: '0.65rem'
@@ -578,10 +578,10 @@ const VentaChips = () => {
                         <CardContent sx={{ p: 2 }}>
                           <Box sx={{
                             background: plan.id.includes('180d') ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' :
-                                      plan.id.includes('365d') ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                                      plan.id.includes('30d') && plan.precio === 200 ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
-                                      plan.id.includes('30d') && plan.precio === 320 ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' :
-                                      plan.id.includes('30d') && plan.precio === 500 ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
+                              plan.id.includes('365d') ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                plan.id.includes('30d') && plan.precio === 200 ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
+                                  plan.id.includes('30d') && plan.precio === 320 ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' :
+                                    plan.id.includes('30d') && plan.precio === 500 ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
                                       'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                             color: 'white',
                             p: 2,
@@ -671,8 +671,8 @@ const VentaChips = () => {
         </DialogContent>
         <DialogActions sx={{ p: 2, px: 3 }}>
           {pasoActual === 1 && (
-            <Button 
-              onClick={handleRegresarPaso} 
+            <Button
+              onClick={handleRegresarPaso}
               startIcon={<ArrowBack />}
             >
               Regresar
@@ -682,16 +682,16 @@ const VentaChips = () => {
             Cancelar
           </Button>
           {pasoActual === 0 ? (
-            <Button 
-              onClick={handleSiguientePaso} 
+            <Button
+              onClick={handleSiguientePaso}
               variant="contained"
               endIcon={<ArrowForward />}
             >
               Siguiente
             </Button>
           ) : (
-            <Button 
-              onClick={handleSaveChip} 
+            <Button
+              onClick={handleSaveChip}
               variant="contained"
               disabled={!formData.plan_seleccionado}
             >

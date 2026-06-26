@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Card, CardContent, TextField,
   FormGroup, FormControlLabel, Checkbox, Button, Paper, IconButton
 } from '@mui/material';
-import { Add, Remove, Layers as LayersIcon, Map as MapIcon } from '@mui/icons-material';
+import { Add, Remove, Layers as LayersIcon } from '@mui/icons-material';
+
+import { MapContainer, TileLayer, Circle, Popup, ZoomControl } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const MapaCobertura = () => {
   const [capas, setCapas] = useState({
@@ -17,6 +20,29 @@ const MapaCobertura = () => {
   const handleChangeCapa = (event) => {
     setCapas({ ...capas, [event.target.name]: event.target.checked });
   };
+
+  const [cajasCobertura, setCajasCobertura] = useState([]);
+
+  useEffect(() => {
+    const obtenerCajas = async () => {
+      try {
+        const response = await fetch('http://10.144.86.55:1423/api/cajas_distribucion/');
+        const data = await response.json();
+
+        const cajasValidas = data.filter(caja =>
+          caja.certified === true && caja.implanted === true
+        );
+
+        setCajasCobertura(cajasValidas);
+      } catch (error) {
+        console.error('Error al obtener las cajas de distribución:', error);
+      }
+    };
+
+    obtenerCajas();
+  }, []);
+
+  const centroTehuacan = [18.4628, -97.3928];
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -46,25 +72,44 @@ const MapaCobertura = () => {
             overflow: 'hidden' 
           }}>
             
-            <Box sx={{ 
-              width: '100%', 
-              height: '100%', 
-              backgroundColor: '#e2e8f0',
-              backgroundImage: 'url("https://www.transparenttextures.com/patterns/cubes.png")',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-                <MapIcon sx={{ fontSize: 100, color: '#94a3b8', opacity: 0.5 }} />
-            </Box>
+            <MapContainer 
+              center={centroTehuacan} 
+              zoom={14} 
+              zoomControl={false} 
+              style={{ height: '100%', width: '100%', zIndex: 0 }} 
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
 
-            <Box sx={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Paper variant="outlined" sx={{ display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-                <IconButton size="small"><Add fontSize="small" /></IconButton>
-                <Box sx={{ borderBottom: '1px solid #e2e8f0' }} />
-                <IconButton size="small"><Remove fontSize="small" /></IconButton>
-              </Paper>
-              <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+              {capas.cobertura && cajasCobertura.map((caja, index) => (
+                <Circle
+                  key={caja.id_caja || index}
+                  center={[caja.lat, caja.lng]}
+                  radius={250} // RADIO EXACTO DE 250 METROS
+                  pathOptions={{
+                    color: '#3b82f6',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.2, // Transparencia
+                    weight: 2
+                  }}
+                >
+                  <Popup>
+                    <div style={{ textAlign: 'center' }}>
+                      <strong>{caja.name}</strong><br/>
+                      <span style={{color: 'green'}}>✅ Activa (250m)</span>
+                    </div>
+                  </Popup>
+                </Circle>
+              ))}
+
+              {/* Botones de Zoom de la librería conectados a tu diseño */}
+              <ZoomControl position="topleft" />
+            </MapContainer>
+
+            <Box sx={{ position: 'absolute', top: 16, left: 16, display: 'flex', flexDirection: 'column', gap: 1, zIndex: 1000 }}>
+              <Paper variant="outlined" sx={{ borderRadius: 2, mt: 8 }}>
                 <IconButton size="small"><LayersIcon fontSize="small" /></IconButton>
               </Paper>
             </Box>
@@ -76,7 +121,8 @@ const MapaCobertura = () => {
               p: 2, 
               borderRadius: 2,
               maxWidth: { xs: 200, sm: 250 }, 
-              backgroundColor: 'rgba(255, 255, 255, 0.95)'
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              zIndex: 1000
             }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, lineHeight: 1.1 }}>
                 Cobertura disponible
@@ -101,7 +147,6 @@ const MapaCobertura = () => {
                 </Box>
               </Box>
             </Paper>
-
           </Card>
         </Box>
 
