@@ -45,7 +45,7 @@ const AsistenteFlotante = () => {
             }
         } catch (error) {
             console.error('Error en el chat de IA:', error);
-            setHistorial([...historialActualizado, { role: 'assistant', content: '❌ Error de comunicación con el servidor central.' }]);
+            setHistorial([...historialActualizado, { role: 'assistant', content: ' Error de comunicación con el servidor central.' }]);
         } finally {
             setLoading(false);
         }

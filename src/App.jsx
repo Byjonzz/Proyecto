@@ -17,7 +17,6 @@ import Comisiones from './components/Dashboard/Comisiones';
 import AsignacionRutas from './components/Dashboard/AsignacionRutas';
 import VentaChips from './components/Ventas/VentaChips';
 
-// 👇 1. IMPORTAMOS TU NUEVO ASISTENTE DE IA 👇
 import AsistenteFlotante from './components/AsistenteFlotante'; 
 
 const drawerWidth = 260;
@@ -194,7 +193,7 @@ function App() {
           width: { md: `calc(100% - ${drawerWidth}px)` },
           overflowY: 'auto',
           minHeight: '100vh',
-          position: 'relative' // Asegura que el asistente flote correctamente
+          position: 'relative' 
         }}
       >
         <Box sx={{ 

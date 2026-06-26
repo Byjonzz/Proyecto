@@ -35,13 +35,10 @@ const inputReglaStyle = {
   }
 };
 
-// Constante de fecha de hoy fija en el entorno del sistema (19 de Junio de 2026)
 const FECHA_HOY_REAL = new Date(2026, 5, 19);
 
-// Helper para limpiar horas y comparar solo fechas de forma segura
 const normalizarFecha = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-// Helper para formatear un objeto Date a string "YYYY-MM-DD"
 const obtenerKeyFecha = (date) => {
   if (!date) return '';
   const y = date.getFullYear();
@@ -76,15 +73,13 @@ const Comisiones = () => {
   const [equipo, setEquipo] = useState([]);
   const [modalInfoPago, setModalInfoPago] = useState(false);
   
-  // ESTADOS DEL CALENDARIO DINÁMICO
-  const [mesFoco, setMesFoco] = useState(new Date(2026, 5, 1)); // Mes que se muestra actualmente (Junio 2026 inicial)
-  const [diaSeleccionado, setDiaSeleccionado] = useState(new Date(2026, 5, 1)); // Día seleccionado por el usuario
+  const [mesFoco, setMesFoco] = useState(new Date(2026, 5, 1)); 
+  const [diaSeleccionado, setDiaSeleccionado] = useState(new Date(2026, 5, 1)); 
 
   useEffect(() => {
     cargarDatosDesdeBD();
   }, []);
 
-  // Generador dinámico de matriz de calendario de 42 días (6 semanas exactas)
   const generarDiasCalendario = (fechaBase) => {
     const año = fechaBase.getFullYear();
     const mes = fechaBase.getMonth();
@@ -95,7 +90,6 @@ const Comisiones = () => {
 
     const celdas = [];
 
-    // Días del mes anterior (grisados si se permitiera, u ocultos si son futuros)
     for (let i = primerDiaMes - 1; i >= 0; i--) {
       const d = totalDiasMesAnterior - i;
       celdas.push({
@@ -105,7 +99,6 @@ const Comisiones = () => {
       });
     }
 
-    // Días del mes actual
     for (let d = 1; d <= totalDiasMesActual; d++) {
       celdas.push({
         day: d,
@@ -114,7 +107,6 @@ const Comisiones = () => {
       });
     }
 
-    // Días del mes siguiente para rellenar la cuadrícula
     const restantes = 42 - celdas.length;
     for (let d = 1; d <= restantes; d++) {
       celdas.push({
@@ -156,7 +148,6 @@ const Comisiones = () => {
           });
         }
       } catch (e) {
-        // Esquema por defecto
       }
       
       const equipoTransformado = canvaceadores.map(canv => {
@@ -452,7 +443,6 @@ const Comisiones = () => {
           </Card>
         </Grid>
 
-        {/* ================= SECCIÓN DE LOGÍSTICA / CALENDARIO DINÁMICO ================= */}
         <Grid item xs={12}>
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
@@ -461,7 +451,6 @@ const Comisiones = () => {
               </Typography>
               
               <Grid container spacing={4}>
-                {/* LADO IZQUIERDO: WIDGET CALENDARIO DINÁMICO CON BLOQUEO FUTURO */}
                 <Grid item xs={12} md={5} lg={4} sx={{ display: 'flex', justifyContent: 'center' }}>
                   <Box sx={{ 
                     width: '100%', 
@@ -482,7 +471,6 @@ const Comisiones = () => {
                       </Box>
                     </Box>
 
-                    {/* Contenido Interno */}
                     <Box sx={{ p: '16px' }}>
                       {/* Control de Flechas del Mes (image_2b8361.png) */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, px: '4px' }}>
@@ -501,7 +489,6 @@ const Comisiones = () => {
                         </Stack>
                       </Box>
 
-                      {/* Cabecera Días */}
                       <Grid container spacing={0} sx={{ mb: 1, textAlign: 'center' }}>
                         {['do.', 'lu.', 'ma.', 'mi.', 'ju.', 'vi.', 'sá.'].map((d) => (
                           <Grid item xs={12/7} key={d}>
@@ -512,16 +499,13 @@ const Comisiones = () => {
                         ))}
                       </Grid>
 
-                      {/* Cuadrícula de Números Dinámicos */}
                       <Grid container spacing={0} sx={{ textAlign: 'center', rowGap: '4px' }}>
                         {listaDiasCalendario.map((item, index) => {
                           const fechaKey = obtenerKeyFecha(item.date);
                           const esMismoDia = obtenerKeyFecha(diaSeleccionado) === fechaKey;
                           
-                          // LÓGICA DE BLOQUEO DE FUTURO: Compara si la celda es posterior al 19 de Junio de 2026
                           const esFuturo = normalizarFecha(item.date) > normalizarFecha(FECHA_HOY_REAL);
 
-                          // Validar si hay contratos pendientes en este día exacto
                           const tieneContratos = equipo.some(
                             agente => (agente.contratosPorFecha[fechaKey] || 0) > 0
                           );
@@ -541,7 +525,6 @@ const Comisiones = () => {
                                   fontWeight: esMismoDia ? 600 : 500,
                                   position: 'relative',
                                   
-                                  // EFECTO DESBLOQUEO: Si es futuro se oculta por completo y no recibe clicks
                                   visibility: esFuturo ? 'hidden' : 'visible',
                                   pointerEvents: esFuturo ? 'none' : 'auto',
                                   cursor: 'pointer',
@@ -555,7 +538,6 @@ const Comisiones = () => {
                               >
                                 {item.day}
 
-                                {/* Puntito azul dinámico */}
                                 {tieneContratos && (
                                   <Box 
                                     sx={{
@@ -577,7 +559,6 @@ const Comisiones = () => {
                   </Box>
                 </Grid>
 
-                {/* LADO DERECHO: DETALLE DINÁMICO POR DÍA */}
                 <Grid item xs={12} md={7} lg={8}>
                   <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b', mb: 2, textTransform: 'capitalize' }}>
@@ -650,7 +631,6 @@ const Comisiones = () => {
         </Grid>
       </Grid>
 
-      {/* MODAL INFORMATIVO */}
       <Dialog open={modalInfoPago} onClose={() => setModalInfoPago(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
