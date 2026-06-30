@@ -39,7 +39,7 @@ const MENU_ITEMS = [
   {
     section: 'CANVACEO',
     items: [
-      { text: 'Dashboard', icon: <Dashboard />, key: 'canvaceo-dashboard' },
+      { text: 'Cobertura', icon: <Dashboard />, key: 'canvaceo-dashboard' },
       { text: 'Nuevo Prospecto', icon: <PersonAdd />, key: 'canvaceo-registro' },
       { text: 'Rutas', icon: <Route />, key: 'canvaceo-ruta' }
     ]

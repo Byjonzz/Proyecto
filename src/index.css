@@ -38,11 +38,18 @@ body {
   background: #94A3B8;
 }
 
-.leaflet-container img {
-  max-width: none !important;
-  height: none !important;
-}
-
 .leaflet-container {
   z-index: 10 !important;
+}
+
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.leaflet-container .leaflet-tile {
+  width: 256px !important;
+  height: 256px !important;
 }
