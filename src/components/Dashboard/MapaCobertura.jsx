@@ -6,6 +6,7 @@ import * as turf from '@turf/turf';
 
 import { GeoSearchControl, GoogleProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
+import api from '../../services/api';
 
 const BuscadorIntegrado = () => {
   const map = useMap();
@@ -41,8 +42,9 @@ const MapaCobertura = () => {
   useEffect(() => {
     const obtenerCajas = async () => {
       try {
-        const response = await fetch('http://10.144.86.55:1423/api/cajas_distribucion/');
-        const data = await response.json();
+        const response = await api.get('/cajas_distribucion/');
+        
+        const data = response.data;
 
         const datosSeguros = data.filter(caja => caja.lat && caja.lng && !isNaN(parseFloat(caja.lat)));
         const activas = datosSeguros.filter(caja => caja.certified === true && caja.implanted === true);
@@ -52,6 +54,7 @@ const MapaCobertura = () => {
         setCajasInactivas(inactivas);
 
         if (activas.length > 0) {
+          // 2. CREAR MANCHAS AZULES (COBERTURA 200M)
           const puntos = activas.map(caja => turf.point([parseFloat(caja.lng), parseFloat(caja.lat)]));
           const buffers = turf.buffer(turf.featureCollection(puntos), 200, { units: 'meters' });
           const areaUnificada = turf.dissolve(buffers);

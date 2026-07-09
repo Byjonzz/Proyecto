@@ -26,8 +26,8 @@ const iconInicio = createCustomIcon('#10b981');
 const iconPunto = createCustomIcon('#3b82f6');
 const iconDestino = createCustomIcon('#f43f5e');
 
-const API_RUTAS_URL = 'http://10.144.86.55:1423/api/rutas_canvaceadores/';
-const API_USUARIOS_URL = 'http://10.144.86.55:1423/api/usuarios/';
+const API_RUTAS_URL = '/rutas_canvaceadores/';
+const API_USUARIOS_URL = '/usuarios/';
 
 const AsignacionRutas = () => {
   const [canvaceadorId, setCanvaceadorId] = useState('');
