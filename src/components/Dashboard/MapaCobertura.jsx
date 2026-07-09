@@ -43,7 +43,6 @@ const MapaCobertura = () => {
     const obtenerCajas = async () => {
       try {
         const response = await api.get('/cajas_distribucion/');
-        
         const data = response.data;
 
         const datosSeguros = data.filter(caja => caja.lat && caja.lng && !isNaN(parseFloat(caja.lat)));
@@ -54,7 +53,6 @@ const MapaCobertura = () => {
         setCajasInactivas(inactivas);
 
         if (activas.length > 0) {
-          // 2. CREAR MANCHAS AZULES (COBERTURA 200M)
           const puntos = activas.map(caja => turf.point([parseFloat(caja.lng), parseFloat(caja.lat)]));
           const buffers = turf.buffer(turf.featureCollection(puntos), 200, { units: 'meters' });
           const areaUnificada = turf.dissolve(buffers);
@@ -94,7 +92,12 @@ const MapaCobertura = () => {
       }}>
         
         <MapContainer center={centroTehuacan} zoom={14} zoomControl={false} style={{ height: '100%', width: '100%', zIndex: 0 }}>
-          <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; OpenStreetMap' />
+          
+          {/* 👇 AQUÍ ESTÁ EL CAMBIO PRINCIPAL: CAPA DE GOOGLE MAPS (ESTÁNDAR) 👇 */}
+          <TileLayer 
+            url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}" 
+            attribution='&copy; Google Maps'
+          />
           
           <BuscadorIntegrado />
 
