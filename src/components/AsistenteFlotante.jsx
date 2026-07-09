@@ -125,7 +125,6 @@ const AsistenteFlotante = () => {
                         )}
                     </Box>
 
-                    {/* Formulario */}
                     <Box component="form" onSubmit={handleEnviarMensaje} sx={{ p: 1.5, bgcolor: 'white', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 1, alignItems: 'center' }}>
                         <TextField
                             placeholder="Pregúntame por planes..." fullWidth size="small" variant="standard"

@@ -7,22 +7,26 @@ import * as turf from '@turf/turf';
 import { GeoSearchControl, GoogleProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
 
-// =====================================================================
-// COMPONENTE: BUSCADOR DE GOOGLE MAPS FLOTANTE
-// =====================================================================
 const BuscadorIntegrado = () => {
   const map = useMap();
   useEffect(() => {
     const provider = new GoogleProvider({
-      apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'TU_API_KEY_AQUI', 
+      apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY, 
       region: 'mx',
       language: 'es',
     });
 
     const searchControl = new GeoSearchControl({
-      provider: provider, style: 'bar', searchLabel: 'Buscar colonia o dirección...',
-      showMarker: true, showPopup: true, autoClose: true, animateZoom: true, keepResult: true      
+      provider: provider, 
+      style: 'bar', 
+      searchLabel: 'Buscar colonia o dirección...',
+      showMarker: true, 
+      showPopup: true, 
+      autoClose: true, 
+      animateZoom: true, 
+      keepResult: true      
     });
+    
     map.addControl(searchControl);
     return () => map.removeControl(searchControl);
   }, [map]);
@@ -40,7 +44,6 @@ const MapaCobertura = () => {
         const response = await fetch('http://10.144.86.55:1423/api/cajas_distribucion/');
         const data = await response.json();
 
-        // 1. LIMPIEZA DE DATOS
         const datosSeguros = data.filter(caja => caja.lat && caja.lng && !isNaN(parseFloat(caja.lat)));
         const activas = datosSeguros.filter(caja => caja.certified === true && caja.implanted === true);
         const inactivas = datosSeguros.filter(caja => caja.certified === false || caja.implanted === false);
@@ -49,7 +52,6 @@ const MapaCobertura = () => {
         setCajasInactivas(inactivas);
 
         if (activas.length > 0) {
-          // 2. CREAR MANCHAS AZULES (COBERTURA 200M)
           const puntos = activas.map(caja => turf.point([parseFloat(caja.lng), parseFloat(caja.lat)]));
           const buffers = turf.buffer(turf.featureCollection(puntos), 200, { units: 'meters' });
           const areaUnificada = turf.dissolve(buffers);
@@ -116,7 +118,6 @@ const MapaCobertura = () => {
           <ZoomControl position="bottomright" />
         </MapContainer>
 
-        {/* LEYENDA (SIMBOLOGÍA) SIMPLIFICADA */}
         <Paper variant="outlined" sx={{ position: 'absolute', bottom: 16, left: 16, p: 2, borderRadius: 2, maxWidth: 250, backgroundColor: 'rgba(255, 255, 255, 0.95)', zIndex: 1000 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5 }}>Simbología</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

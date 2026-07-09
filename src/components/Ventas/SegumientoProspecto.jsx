@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 
 import { Visibility, WhatsApp, Phone } from '@mui/icons-material';
+import api from '../../services/api';
 
 const SegumientoProspecto = ({ usuarioActual }) => {
   const { prospectos, loading, error } = useProspectos();
@@ -70,7 +71,7 @@ const SegumientoProspecto = ({ usuarioActual }) => {
     };
 
     try {
-      await axios.post('http://10.144.86.55:1423/api/interacciones/', datosInteraccion);
+      await api.post('interacciones/', datosInteraccion);
 
       setMensaje({ tipo: 'success', texto: ' Seguimiento registrado con éxito.' });
       setNotas('');
