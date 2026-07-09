@@ -72,7 +72,7 @@ const MapaCobertura = () => {
         }
 
       } catch (error) {
-        console.error('Error al obtener cajas de la API:', error);
+        console.error('Error al obtener cajas de la API:f', error);
       }
     };
 

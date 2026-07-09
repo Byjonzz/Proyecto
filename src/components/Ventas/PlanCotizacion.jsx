@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import SeleccionPlanes from '../Forms/SeleccionPlanes';
 import { useContratos } from '../../hooks/useContratos';
 import api from '../../services/api';
-i
+
 import {
   Box, Paper, Typography, TextField, Button, MenuItem, 
   Alert, Stack, Stepper, Step, StepLabel, StepContent, Divider,
