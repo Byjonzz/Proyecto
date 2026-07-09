@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Card, Paper, FormControlLabel, Checkbox } from '@mui/material';
-import { MapContainer, TileLayer, GeoJSON, ZoomControl, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, ZoomControl, CircleMarker, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as turf from '@turf/turf'; 
 
@@ -38,8 +38,6 @@ const MapaCobertura = () => {
   const [poligonoCobertura, setPoligonoCobertura] = useState(null);
   const [cajasActivas, setCajasActivas] = useState([]);
   const [cajasInactivas, setCajasInactivas] = useState([]);
-
-  // 👇 NUEVO: Un número simple para controlar la actualización del GeoJSON sin usar JSON.stringify 👇
   const [coberturaVersion, setCoberturaVersion] = useState(0);
 
   const [verActivas, setVerActivas] = useState(false);
@@ -63,13 +61,12 @@ const MapaCobertura = () => {
         setCajasInactivas(inactivas);
 
         if (activas.length > 0) {
-          // El cálculo matemático pesado se ejecuta UNA SOLA VEZ aquí
           const puntos = activas.map(caja => turf.point([parseFloat(caja.lng), parseFloat(caja.lat)]));
           const buffers = turf.buffer(turf.featureCollection(puntos), 200, { units: 'meters' });
           const areaUnificada = turf.dissolve(buffers);
           
           setPoligonoCobertura(areaUnificada);
-          setCoberturaVersion(prev => prev + 1); // 🚀 Cambiamos el ID de la capa de forma ligera
+          setCoberturaVersion(prev => prev + 1);
         } else {
           setPoligonoCobertura(null);
         }
@@ -79,7 +76,6 @@ const MapaCobertura = () => {
       }
     };
 
-    // Mantenemos el retraso de red para dar prioridad visual a Google Maps
     const timer = setTimeout(() => {
       obtenerCajas();
     }, 1000); 
@@ -90,7 +86,6 @@ const MapaCobertura = () => {
     };
   }, []);
 
-  // 🚀 OPTIMIZACIÓN EXTRA: Memorizar los marcadores para que no causen lag al hacer clics (INP)
   const renderCajasActivas = useMemo(() => {
     if (!verActivas) return null;
     return cajasActivas.map((caja, idx) => (
@@ -99,7 +94,6 @@ const MapaCobertura = () => {
         center={[parseFloat(caja.lat), parseFloat(caja.lng)]} 
         radius={5} 
         pathOptions={{ color: '#16a34a', fillColor: '#22c55e', fillOpacity: 1, weight: 2 }}
-        // 👇 El truco: El popup ahora se genera bajo demanda solo al hacer clic 👇
         eventHandlers={{
           click: (e) => {
             e.target.bindPopup(`<b>${caja.name}</b><br/>✅ Caja Activa`).openPopup();
@@ -109,7 +103,6 @@ const MapaCobertura = () => {
     ));
   }, [verActivas, cajasActivas]);
 
-  // 🚀 OPTIMIZACIÓN DE POPUPS EN CAJAS INACTIVAS
   const renderCajasInactivas = useMemo(() => {
     if (!verInactivas) return null;
     return cajasInactivas.map((caja, idx) => (
@@ -118,7 +111,6 @@ const MapaCobertura = () => {
         center={[parseFloat(caja.lat), parseFloat(caja.lng)]} 
         radius={5} 
         pathOptions={{ color: '#dc2626', fillColor: '#ef4444', fillOpacity: 1, weight: 2 }}
-        // 👇 El truco: El popup ahora se genera bajo demanda solo al hacer clic 👇
         eventHandlers={{
           click: (e) => {
             e.target.bindPopup(`<b>${caja.name}</b><br/>❌ Caja Pendiente`).openPopup();
@@ -132,7 +124,7 @@ const MapaCobertura = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
           Mapa de Cobertura
         </Typography>
@@ -141,9 +133,59 @@ const MapaCobertura = () => {
         </Typography>
       </Box>
 
+      <Paper 
+        variant="outlined" 
+        sx={{ 
+          p: '8px 16px', 
+          mb: 2, 
+          borderRadius: 2, 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' }, 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          gap: { xs: 1, sm: 3 },
+          backgroundColor: '#f8fafc'
+        }}
+      >
+        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#475569' }}>
+          Capas Visibles:
+        </Typography>
+        
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 0.5, sm: 2 } }}>
+          <FormControlLabel
+            control={<Checkbox size="small" checked={verCobertura} onChange={(e) => setVerCobertura(e.target.checked)} />}
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: '#3b82f6', opacity: 0.6, flexShrink: 0 }} />
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>Zona con Cobertura</Typography>
+              </Box>
+            }
+          />
+
+          <FormControlLabel
+            control={<Checkbox size="small" color="success" checked={verActivas} onChange={(e) => setVerActivas(e.target.checked)} />}
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#22c55e', border: '2px solid #16a34a', flexShrink: 0 }} />
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>Cajas Activas (Verdes)</Typography>
+              </Box>
+            }
+          />
+
+          <FormControlLabel
+            control={<Checkbox size="small" color="error" checked={verInactivas} onChange={(e) => setVerInactivas(e.target.checked)} />}
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#ef4444', border: '2px solid #dc2626', flexShrink: 0 }} />
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>Cajas Pendientes (Rojas)</Typography>
+              </Box>
+            }
+          />
+        </Box>
+      </Paper>
+
       <Card variant="outlined" sx={{ 
         width: '100%', 
-        height: { xs: 500, md: 'calc(100vh - 180px)' }, 
+        height: { xs: 500, md: 'calc(100vh - 220px)' }, 
         minHeight: 500, 
         position: 'relative', 
         borderRadius: 3, 
@@ -164,7 +206,6 @@ const MapaCobertura = () => {
           
           <BuscadorIntegrado />
 
-          {/* 🚀 AHORA USA UN ID NUMÉRICO ULTRA LIGERO COMO KEY, ELIMINANDO EL STRINGIFY 🚀 */}
           {verCobertura && poligonoCobertura && (
             <GeoJSON 
               key={`cobertura-v-${coberturaVersion}`} 
@@ -173,49 +214,11 @@ const MapaCobertura = () => {
             />
           )}
 
-          {/* Inyectamos los marcadores memorizados ultra rápidos */}
           {renderCajasActivas}
           {renderCajasInactivas}
 
           <ZoomControl position="bottomright" />
         </MapContainer>
-
-        <Paper variant="outlined" sx={{ position: 'absolute', bottom: 16, left: 16, p: 2, borderRadius: 2, maxWidth: 250, backgroundColor: 'rgba(255, 255, 255, 0.95)', zIndex: 1000 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Simbología</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            
-            <FormControlLabel
-              control={<Checkbox size="small" color="success" checked={verActivas} onChange={(e) => setVerActivas(e.target.checked)} />}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#22c55e', border: '2px solid #16a34a', flexShrink: 0 }} />
-                  <Typography variant="caption" sx={{ fontWeight: 600 }}>Caja Activa</Typography>
-                </Box>
-              }
-            />
-
-            <FormControlLabel
-              control={<Checkbox size="small" checked={verCobertura} onChange={(e) => setVerCobertura(e.target.checked)} />}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ width: 12, height: 12, borderRadius: 1, bgcolor: '#3b82f6', opacity: 0.5, flexShrink: 0 }} />
-                  <Typography variant="caption" sx={{ fontWeight: 600 }}>Zona con Cobertura</Typography>
-                </Box>
-              }
-            />
-
-            <FormControlLabel
-              control={<Checkbox size="small" color="error" checked={verInactivas} onChange={(e) => setVerInactivas(e.target.checked)} />}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#ef4444', border: '2px solid #dc2626', flexShrink: 0 }} />
-                  <Typography variant="caption" sx={{ fontWeight: 600 }}>Caja Pendiente</Typography>
-                </Box>
-              }
-            />
-
-          </Box>
-        </Paper>
       </Card>
     </Box>
   );
