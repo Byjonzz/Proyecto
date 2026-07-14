@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useProspectos } from '../../hooks/useProspectos';
 import {
   Box,
@@ -26,10 +27,12 @@ import {
   CircularProgress
 } from '@mui/material';
 
-import { Visibility, WhatsApp, Phone } from '@mui/icons-material';
+import { Visibility, WhatsApp, Phone, AssignmentTurnedIn } from '@mui/icons-material';
 import api from '../../services/api';
 
 const SegumientoProspecto = ({ usuarioActual }) => {
+  const navigate = useNavigate();
+
   const { prospectos, loading, error } = useProspectos();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prospectoSeleccionado, setProspectoSeleccionado] = useState(null);
@@ -45,6 +48,33 @@ const SegumientoProspecto = ({ usuarioActual }) => {
     setNotas('');
     setMensaje(null);
     setDialogOpen(true);
+  };
+
+  const handleGenerarContrato = (prospecto) => {
+    const direccionCompleta = [prospecto.direccion_calle_numero, prospecto.direccion_colonia]
+      .filter(Boolean)
+      .join(', ');
+
+    let coordenadasLimpias = '';
+    if (prospecto.ubicacion_gps && prospecto.ubicacion_gps.includes('POINT')) {
+      const puntos = prospecto.ubicacion_gps.replace('POINT(', '').replace(')', '').split(' ');
+      if (puntos.length === 2) {
+        coordenadasLimpias = `${puntos[1]}, ${puntos[0]}`; 
+      }
+    }
+
+    navigate('/contratos', {
+      state: {
+        datosDesdeProspecto: {
+          nombre: prospecto.nombre_completo || '',
+          telefono1: prospecto.telefono_whatsapp || '',
+          calleNumero: direccionCompleta || '',
+          referencias: prospecto.referencia_domicilio || '',
+          plan: prospecto.plan_interes ? { nombre: prospecto.plan_interes } : null,
+          coordenadasGPS: coordenadasLimpias
+        }
+      }
+    });
   };
 
   const prospectosFiltrados = prospectos.filter(prospecto => {
@@ -72,12 +102,9 @@ const SegumientoProspecto = ({ usuarioActual }) => {
 
     try {
       await api.post('interacciones/', datosInteraccion);
-
       setMensaje({ tipo: 'success', texto: ' Seguimiento registrado con éxito.' });
       setNotas('');
       setTipoInteraccion('');
-
-
     } catch (err) {
       console.error('Error al guardar seguimiento:', err);
       setMensaje({ tipo: 'error', texto: ' Hubo un error al guardar. Verifica tu conexión.' });
@@ -175,17 +202,32 @@ const SegumientoProspecto = ({ usuarioActual }) => {
                     />
                   </TableCell>
                   <TableCell>{formatDate(prospecto.fecha_captura)}</TableCell>
+
                   <TableCell align="center">
-                    <Tooltip title="Llamar al prospecto">
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={() => handleView(prospecto)}
-                      >
-                        <Phone />
-                      </IconButton>
-                    </Tooltip>
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      <Tooltip title="Registrar Seguimiento">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => handleView(prospecto)}
+                        >
+                          <Phone />
+                        </IconButton>
+                      </Tooltip>
+
+                      {/* 🚀 NUEVO BOTÓN: GENERAR CONTRATO DIRECTO */}
+                      <Tooltip title="Generar Contrato">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => handleGenerarContrato(prospecto)}
+                        >
+                          <AssignmentTurnedIn />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
                   </TableCell>
+
                 </TableRow>
               ))
             )}

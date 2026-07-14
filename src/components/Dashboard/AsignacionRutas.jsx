@@ -5,16 +5,16 @@ import {
   Chip, Avatar, IconButton, Tooltip, Stack, Alert, InputAdornment, Divider,
   CircularProgress, Autocomplete
 } from '@mui/material';
-import { 
-  AddLocationAlt, SaveOutlined, LayersOutlined, 
+import {
+  AddLocationAlt, SaveOutlined, LayersOutlined,
   DeleteOutlined, MyLocation, RouteOutlined, SearchOutlined,
-  UndoOutlined
+  UndoOutlined, LocationOn
 } from '@mui/icons-material';
 
 import { MapContainer, TileLayer, Marker, Polyline, GeoJSON, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { GeoSearchControl, LocationIQProvider } from 'leaflet-geosearch';
+import api from '../../services/api';
 
 const createCustomIcon = (color) => new L.DivIcon({
   className: 'custom-icon',
@@ -31,137 +31,165 @@ const API_USUARIOS_URL = '/usuarios/';
 
 const AsignacionRutas = () => {
   const [canvaceadorId, setCanvaceadorId] = useState('');
-  const [busquedaColonia, setBusquedaColonia] = useState('');
+
+  const [inputValue, setInputValue] = useState('');
+  const [coloniaSeleccionada, setColoniaSeleccionada] = useState(null);
   const [opcionesColonias, setOpcionesColonias] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   const [centroMapa, setCentroMapa] = useState([18.4628, -97.3928]);
   const [limiteColonia, setLimiteColonia] = useState(null);
-  
+
   const [puntosRuta, setPuntosRuta] = useState([]);
   const [rutaTrazada, setRutaTrazada] = useState([]);
-  
+
   const debounceTimerRef = useRef(null);
-  
+
+  const [googleCargado, setGoogleCargado] = useState(false);
+  const [cargandoGoogle, setCargandoGoogle] = useState(false);
+
   const [canvaceadoresDisponibles, setCanvaceadoresDisponibles] = useState([]);
   const [rutasAsignadas, setRutasAsignadas] = useState([]);
 
+  useEffect(() => {
+    cargarDatosIniciales();
+  }, []);
+
   const cargarDatosIniciales = async () => {
     try {
-      const responseUsuarios = await fetch(API_USUARIOS_URL);
-      const usuariosData = await responseUsuarios.json();
-
-      const canvaceadoresFiltrados = usuariosData
+      const responseUsuarios = await api.get(API_USUARIOS_URL);
+      const canvaceadoresFiltrados = responseUsuarios.data
         .filter(usuario => usuario.rol && usuario.rol.toLowerCase() === 'canvaceador')
         .map(usuario => ({
           id: usuario.id,
           nombre: `${usuario.nombre} ${usuario.apellido || ''}`.trim()
         }));
-
       setCanvaceadoresDisponibles(canvaceadoresFiltrados);
 
-      const responseRutas = await fetch(API_RUTAS_URL);
-      const rutasData = await responseRutas.json();
-      
-      const rutasFormateadas = rutasData.map(ruta => {
-        const idBuscado = ruta.canvaceador || ruta.canvaceador_id;
-        const canv = canvaceadoresFiltrados.find(c => c.id === idBuscado);
-        
-        let puntosMarcados = 0;
-        if (ruta.camino_trazado && ruta.camino_trazado.includes('LINESTRING')) {
-          puntosMarcados = ruta.camino_trazado.split(',').length;
-        }
-        
+      const responseRutas = await api.get(API_RUTAS_URL);
+      const rutasFormateadas = responseRutas.data.map(ruta => {
+        const canv = canvaceadoresFiltrados.find(c => c.id === (ruta.canvaceador || ruta.canvaceador_id));
+        let puntosMarcados = ruta.camino_trazado?.includes('LINESTRING') ? ruta.camino_trazado.split(',').length : 0;
         return {
           id: ruta.id,
-          canvaceador: canv ? canv.nombre : `Desconocido (ID: ${idBuscado})`,
+          canvaceador: canv ? canv.nombre : `Desconocido`,
           zona: ruta.zona_asignada,
           puntosMarcados: puntosMarcados,
           estado: ruta.estado
         };
       });
-      
       setRutasAsignadas(rutasFormateadas);
     } catch (error) {
       console.error('Error de conexión al cargar datos:', error);
     }
   };
 
-  useEffect(() => {
-    cargarDatosIniciales();
-  }, []);
-  
-  const buscarConNominatim = async (query) => {
-    if (!query || query.length < 2) {
-      setOpcionesColonias([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const queryLimpia = query.replace(/^(colonia|col\.|fraccionamiento|fracc\.|barrio)\s+/i, '').trim();
-      const searchQuery = `${queryLimpia}, Tehuacán, Puebla`;
-      
-      const token_locationiq = 'pk.9fa27d5eba9a709ced3f58083e83b432'; 
-      const url = `https://us1.locationiq.com/v1/search.php?key=${token_locationiq}&q=${encodeURIComponent(searchQuery)}&format=json&polygon_geojson=1&addressdetails=1&countrycodes=mx`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      
-      const data = await response.json();
+  const iniciarGoogleMaps = async () => {
+    if (window.google?.maps?.importLibrary || googleCargado || cargandoGoogle) return;
+    setCargandoGoogle(true);
 
-      if (data && data.length > 0) {
-        const lugaresEncontrados = data.map(place => ({
-          id: place.place_id,
-          nombre: place.display_name.split(',')[0],
-          direccion: place.display_name,
-          lat: parseFloat(place.lat),
-          lng: parseFloat(place.lon),
-          geojson: place.geojson || null,
-          boundingbox: place.boundingbox || null
-        }));
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    (g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })({
+      key: apiKey,
+      v: "weekly"
+    });
+
+    try {
+      await window.google.maps.importLibrary("places");
+      await window.google.maps.importLibrary("geocoding");
+      setGoogleCargado(true);
+    } catch (error) {
+      console.error("Error al cargar Google Maps:", error);
+    } finally {
+      setCargandoGoogle(false);
+    }
+  };
+
+  const buscarColonia = async (query) => {
+    if (!query || !window.google?.maps) return;
+    setLoading(true);
+
+    try {
+      const { AutocompleteSuggestion } = await window.google.maps.importLibrary("places");
+      const request = {
+        input: query,
+        includedRegionCodes: ["MX"],
+        locationBias: {
+          center: { lat: 18.4628, lng: -97.3928 },
+          radius: 15000
+        }
+      };
+
+      const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+      if (suggestions && suggestions.length > 0) {
+        const lugaresEncontrados = suggestions
+          .filter(s => s.placePrediction)
+          .map(s => {
+            const prediction = s.placePrediction;
+            return {
+              id: prediction.placeId,
+              nombre: prediction.mainText.text,
+              direccion: prediction.secondaryText ? prediction.secondaryText.text : prediction.text.text,
+              placeId: prediction.placeId
+            };
+          });
         setOpcionesColonias(lugaresEncontrados);
       } else {
         setOpcionesColonias([]);
       }
     } catch (error) {
-      console.error("Error en buscador LocationIQ:", error);
       setOpcionesColonias([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (event, value) => {
-    setBusquedaColonia(value);
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    if (!value || value.length < 2) {
-      setOpcionesColonias([]);
-      return;
-    }
-    debounceTimerRef.current = setTimeout(() => buscarConNominatim(value), 400);
-  };
-
-  const handleSeleccionarColonia = (event, seleccion) => {
-    if (!seleccion) {
+  const handleSeleccionarColonia = async (event, placeSeleccionado) => {
+    setColoniaSeleccionada(placeSeleccionado);
+    if (!placeSeleccionado) {
       setLimiteColonia(null);
       return;
     }
-    setCentroMapa([seleccion.lat, seleccion.lng]);
-    if (seleccion.geojson) {
-      setLimiteColonia(seleccion.geojson);
-    } else if (seleccion.boundingbox) {
-      const [south, north, west, east] = seleccion.boundingbox.map(parseFloat);
-      setLimiteColonia({
-        type: 'Polygon',
-        coordinates: [[[west, south], [east, south], [east, north], [west, north], [west, south]]]
+
+    try {
+      const { Geocoder } = await window.google.maps.importLibrary("geocoding");
+      const geocoder = new Geocoder();
+
+      geocoder.geocode({ placeId: placeSeleccionado.placeId }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const { location, viewport } = results[0].geometry;
+          setCentroMapa([location.lat(), location.lng()]);
+
+          if (viewport) {
+            const ne = viewport.getNorthEast();
+            const sw = viewport.getSouthWest();
+            setLimiteColonia({
+              type: 'Polygon',
+              coordinates: [[
+                [sw.lng(), sw.lat()],
+                [ne.lng(), sw.lat()],
+                [ne.lng(), ne.lat()],
+                [sw.lng(), ne.lat()],
+                [sw.lng(), sw.lat()]
+              ]]
+            });
+          }
+        }
       });
-    } else {
-      const offset = 0.002;
-      setLimiteColonia({
-        type: 'Polygon',
-        coordinates: [[[seleccion.lng - offset, seleccion.lat - offset], [seleccion.lng + offset, seleccion.lat - offset], [seleccion.lng + offset, seleccion.lat + offset], [seleccion.lng - offset, seleccion.lat + offset], [seleccion.lng - offset, seleccion.lat - offset]]]
-      });
+    } catch (error) {
+      console.error("Error geocodificando la colonia:", error);
     }
+  };
+
+  const handleInputChange = (event, newInputValue) => {
+    setInputValue(newInputValue);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    if (!newInputValue || newInputValue.length < 2) {
+      setOpcionesColonias([]);
+      return;
+    }
+    debounceTimerRef.current = setTimeout(() => buscarColonia(newInputValue), 700);
   };
 
   const fetchRoute = async (puntos) => {
@@ -204,50 +232,50 @@ const AsignacionRutas = () => {
     setPuntosRuta(prev => {
       if (!Array.isArray(prev) || prev.length === 0) return [];
       const nuevosPuntos = [...prev];
-      nuevosPuntos.pop(); 
+      nuevosPuntos.pop();
       return nuevosPuntos;
     });
   };
 
   const handleGuardarRuta = async () => {
     const wktLineString = `LINESTRING(${puntosRuta.map(p => `${p.lng} ${p.lat}`).join(', ')})`;
-
     const payload = {
-      zona_asignada: busquedaColonia || 'Zona sin especificar',
+      zona_asignada: coloniaSeleccionada ? coloniaSeleccionada.nombre : (inputValue || 'Zona sin especificar'),
       modo_trazado: 'Peatonal',
       estado: 'En Progreso',
-      camino_trazado: wktLineString, 
-      canvaceador_id: parseInt(canvaceadorId) 
+      camino_trazado: wktLineString,
+      canvaceador_id: parseInt(canvaceadorId)
     };
 
     try {
-      const response = await fetch(API_RUTAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        cargarDatosIniciales();
-        setCanvaceadorId('');
-        setBusquedaColonia('');
-        setOpcionesColonias([]);
-        setLimiteColonia(null);
-        limpiarMapa();
-      } else {
-        const errorData = await response.json();
-        alert(`❌ Django rechazó los datos.\nMotivo:\n${JSON.stringify(errorData, null, 2)}`);
-      }
+      await api.post(API_RUTAS_URL, payload);
+      cargarDatosIniciales();
+      setCanvaceadorId('');
+      setInputValue('');
+      setColoniaSeleccionada(null);
+      setOpcionesColonias([]);
+      setLimiteColonia(null);
+      limpiarMapa();
     } catch (error) {
-      alert(`Error de red o servidor caído: ${error.message}`);
+      const errorData = error.response ? error.response.data : error.message;
+      alert(`❌ Error al guardar.\nMotivo:\n${JSON.stringify(errorData, null, 2)}`);
     }
   };
 
   const MapCenterUpdater = ({ center }) => {
     const map = useMap();
     useEffect(() => {
-      if (center && center.length === 2) map.flyTo(center, 16, { animate: true, duration: 1.5 });
+      if (center && center.length === 2) map.flyTo(center, 15, { animate: true, duration: 1.5 });
     }, [center, map]);
+    return null;
+  };
+
+  const FixMapSize = () => {
+    const map = useMap();
+    useEffect(() => {
+      const timer = setTimeout(() => map.invalidateSize(), 400);
+      return () => clearTimeout(timer);
+    }, [map]);
     return null;
   };
 
@@ -262,7 +290,7 @@ const AsignacionRutas = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', pb: 5 }}>
-      
+
       <Box>
         <Typography variant="h5" sx={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
           <RouteOutlined color="primary" fontSize="large" /> Ruteo Inteligente de Equipo
@@ -273,7 +301,6 @@ const AsignacionRutas = () => {
       </Box>
 
       <Grid container spacing={3}>
-        
         <Grid item xs={12} md={5} lg={4}>
           <Card variant="outlined" sx={{ borderRadius: 3, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', height: '100%' }}>
             <CardContent sx={{ p: 3 }}>
@@ -289,50 +316,50 @@ const AsignacionRutas = () => {
                   <Autocomplete
                     freeSolo
                     options={opcionesColonias}
+                    filterOptions={(x) => x}
                     getOptionLabel={(option) => typeof option === 'string' ? option : option.nombre}
                     loading={loading}
-                    value={busquedaColonia}
-                    onInputChange={handleInputChange}
+                    value={coloniaSeleccionada}
                     onChange={handleSeleccionarColonia}
-                    renderInput={(params) => {
-                      const { InputProps, ...restParams } = params;
-                      return (
-                        <TextField
-                          {...restParams}
-                          placeholder="Ej. Del Valle"
-                          fullWidth
-                          size="small"
-                          InputProps={{
-                            ...InputProps,
-                            endAdornment: (
-                              <React.Fragment>
-                                {loading ? <CircularProgress color="inherit" size={20} sx={{ mr: 1 }} /> : null}
-                                {params.InputProps?.endAdornment}
-                                <InputAdornment position="end">
-                                  <IconButton size="small" sx={{ color: '#3b82f6' }}>
-                                    <SearchOutlined />
-                                  </IconButton>
-                                </InputAdornment>
-                              </React.Fragment>
-                            ),
-                          }}
-                        />
-                      );
-                    }}
+                    inputValue={inputValue}
+                    onInputChange={handleInputChange}
+                    disabled={cargandoGoogle}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder={cargandoGoogle ? "Despertando motor..." : "Ej. Del Valle"}
+                        fullWidth
+                        size="small"
+                        onFocus={iniciarGoogleMaps}
+                        onPointerEnter={iniciarGoogleMaps}
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {loading || cargandoGoogle ? <CircularProgress color="inherit" size={20} sx={{ mr: 1 }} /> : null}
+                              {params.InputProps?.endAdornment}
+                            </React.Fragment>
+                          ),
+                        }}
+                      />
+                    )}
                     renderOption={(props, option) => {
                       const { key, ...optionProps } = props;
                       return (
                         <Box key={key} component="li" {...optionProps} sx={{ '&:hover': { backgroundColor: '#f5f5f5' } }}>
+                          <LocationOn sx={{ color: '#94a3b8', mr: 2, fontSize: 20 }} />
                           <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{option.nombre}</Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0f172a' }}>
+                              {option.nombre}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#64748b' }}>
                               {option.direccion}
                             </Typography>
                           </Box>
                         </Box>
                       );
                     }}
-                    noOptionsText={busquedaColonia.length >= 2 ? "No se encontraron colonias" : "Escribe al menos 2 caracteres"}
+                    noOptionsText={inputValue.length >= 2 ? "No se encontraron resultados" : "Escribe al menos 2 caracteres"}
                   />
                 </Box>
 
@@ -342,11 +369,11 @@ const AsignacionRutas = () => {
                   <Typography variant="caption" sx={{ fontWeight: 700, color: '#475569', mb: 1, display: 'block' }}>
                     2. Seleccionar Responsable
                   </Typography>
-                  <TextField 
-                    select 
-                    fullWidth 
+                  <TextField
+                    select
+                    fullWidth
                     size="small"
-                    value={canvaceadorId} 
+                    value={canvaceadorId}
                     onChange={(e) => setCanvaceadorId(e.target.value)}
                   >
                     {canvaceadoresDisponibles.length === 0 ? (
@@ -359,8 +386,8 @@ const AsignacionRutas = () => {
                   </TextField>
                 </Box>
 
-                <Box sx={{ 
-                  p: 1.5, border: '1px solid', borderColor: Array.isArray(puntosRuta) && puntosRuta.length > 0 ? '#bfdbfe' : '#e2e8f0', 
+                <Box sx={{
+                  p: 1.5, border: '1px solid', borderColor: Array.isArray(puntosRuta) && puntosRuta.length > 0 ? '#bfdbfe' : '#e2e8f0',
                   borderRadius: 2, backgroundColor: Array.isArray(puntosRuta) && puntosRuta.length > 0 ? '#eff6ff' : '#f8fafc',
                   textAlign: 'center', transition: 'all 0.3s'
                 }}>
@@ -369,13 +396,13 @@ const AsignacionRutas = () => {
                   </Typography>
                 </Box>
 
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  fullWidth 
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
                   startIcon={<SaveOutlined />}
-                  disabled={!Array.isArray(puntosRuta) || puntosRuta.length < 2 || !canvaceadorId} 
-                  onClick={handleGuardarRuta} 
+                  disabled={!Array.isArray(puntosRuta) || puntosRuta.length < 2 || !canvaceadorId || !inputValue}
+                  onClick={handleGuardarRuta}
                   sx={{ py: 1.5, fontWeight: 700, textTransform: 'none', fontSize: '1rem' }}
                 >
                   Guardar y Asignar Ruta
@@ -389,14 +416,14 @@ const AsignacionRutas = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={5} lg={8}>
+        <Grid item xs={12} md={7} lg={8}>
           <Card variant="outlined" sx={{ borderRadius: 3, border: '1px solid #cbd5e1', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', height: '100%' }}>
-            
+
             <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 1 }}>
                 <MyLocation fontSize="small" color="primary" /> Lienzo de Trazado
               </Typography>
-              
+
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Tooltip title="Deshacer último punto trazado">
                   <span>
@@ -414,25 +441,28 @@ const AsignacionRutas = () => {
                 </Tooltip>
               </Box>
             </Box>
-            
+
             <Box sx={{ width: 900, height: { xs: 400, md: 600 }, position: 'relative' }}>
-              <MapContainer 
-                center={centroMapa} 
-                zoom={15} 
-                style={{ width: '100%', height: '100%', zIndex: 1, cursor: 'crosshair' }} 
+              <MapContainer
+                center={centroMapa}
+                zoom={14}
+                style={{ width: '100%', height: '100%', zIndex: 1, cursor: 'crosshair' }}
                 scrollWheelZoom={true}
+                preferCanvas={true}
               >
-                <TileLayer 
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' 
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+                <TileLayer
+                  url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                  attribution='&copy; Google Maps'
                 />
+
                 <MapCenterUpdater center={centroMapa} />
                 <MapClickHandler />
+                <FixMapSize />
 
                 {limiteColonia && (
-                  <GeoJSON 
+                  <GeoJSON
                     key={JSON.stringify(limiteColonia)}
-                    data={limiteColonia} 
+                    data={limiteColonia}
                     style={{ color: '#8b5cf6', weight: 3, fillColor: '#8b5cf6', fillOpacity: 0.15 }}
                   />
                 )}
@@ -443,16 +473,16 @@ const AsignacionRutas = () => {
 
                 {Array.isArray(puntosRuta) && puntosRuta.map((pos, idx) => {
                   let iconToUse = iconPunto;
-                  if (idx === 0) iconToUse = iconInicio; 
-                  if (idx === puntosRuta.length - 1 && puntosRuta.length > 1) iconToUse = iconDestino; 
+                  if (idx === 0) iconToUse = iconInicio;
+                  if (idx === puntosRuta.length - 1 && puntosRuta.length > 1) iconToUse = iconDestino;
                   return <Marker key={idx} position={pos} icon={iconToUse} />;
                 })}
               </MapContainer>
 
               {(!Array.isArray(puntosRuta) || puntosRuta.length === 0) && (
-                <Box sx={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255,255,255,0.95)', px: 3, py: 1.5, borderRadius: 3, pointerEvents: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', zIndex: 1000 }}>
+                <Box sx={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255,255,255,0.95)', px: 3, py: 1.5, borderRadius: 3, pointerEvents: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.15)', zIndex: 1000 }}>
                   <Typography variant="body2" sx={{ color: '#334155', fontWeight: 700, textAlign: 'center' }}>
-                    Haz clics en las calles para crear la ruta peatonal
+                    Selecciona una colonia a la izquierda y da clics en el mapa para trazar
                   </Typography>
                 </Box>
               )}
@@ -469,7 +499,7 @@ const AsignacionRutas = () => {
                 <LayersOutlined color="secondary" fontSize="small" /> Historial de Rutas Activas
               </Typography>
             </Box>
-            
+
             <TableContainer sx={{ maxHeight: 400 }}>
               <Table stickyHeader size="medium">
                 <TableHead>
@@ -504,19 +534,19 @@ const AsignacionRutas = () => {
                           {ruta.zona}
                         </TableCell>
                         <TableCell align="center">
-                          <Chip 
-                            label={`${ruta.puntosMarcados} Destinos`} 
-                            size="small" 
-                            variant="outlined" 
-                            sx={{ fontWeight: 600, color: '#3b82f6', borderColor: '#bfdbfe' }} 
+                          <Chip
+                            label={`${ruta.puntosMarcados} Destinos`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 600, color: '#3b82f6', borderColor: '#bfdbfe' }}
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <Chip 
-                            label={ruta.estado} 
-                            size="small" 
-                            color={ruta.estado === 'En Progreso' ? 'primary' : 'success'} 
-                            sx={{ fontWeight: 600, fontSize: '0.75rem' }} 
+                          <Chip
+                            label={ruta.estado}
+                            size="small"
+                            color={ruta.estado === 'En Progreso' ? 'primary' : 'success'}
+                            sx={{ fontWeight: 600, fontSize: '0.75rem' }}
                           />
                         </TableCell>
                       </TableRow>

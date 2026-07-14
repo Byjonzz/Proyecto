@@ -20,7 +20,7 @@ import VentaChips from './components/Ventas/VentaChips';
 import AsistenteFlotante from './components/AsistenteFlotante'; 
 
 const drawerWidth = 260;
-const API_BASE_URL = 'http://10.144.86.55:1423/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const loginUsuario = async (email, password) => {
   try {
@@ -171,7 +171,7 @@ function App() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
-            Solit System
+            SolitConect
           </Typography>
         </Toolbar>
       </AppBar>

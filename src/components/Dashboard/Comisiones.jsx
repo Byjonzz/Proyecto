@@ -291,14 +291,8 @@ const Comisiones = () => {
         </Typography>
       </Box>
 
-      <Alert severity="warning" icon={<WarningAmberOutlined fontSize="inherit" />} sx={{ borderRadius: 2 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Aprobación Pendiente - Ing. César</Typography>
-        Configura la modalidad de pago a continuación. Al presionar "Solicitar Aprobación", se actualizará el esquema de los Canvaceadores.
-      </Alert>
-
       <Grid container spacing={3}>
         
-        {/* PARÁMETROS DE PAGO */}
         <Grid item xs={12} lg={4}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>
@@ -363,7 +357,6 @@ const Comisiones = () => {
           </Card>
         </Grid>
 
-        {/* TABLA DE PRODUCTIVIDAD Y NÓMINA */}
         <Grid item xs={12} lg={8}>
           <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
             <CardContent>

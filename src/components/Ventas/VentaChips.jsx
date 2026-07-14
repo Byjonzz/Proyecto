@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -26,7 +26,8 @@ import {
   InputAdornment,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   Add,
@@ -43,63 +44,22 @@ import {
   ArrowForward
 } from '@mui/icons-material';
 
-const CHIPS_INICIALES = [
-  {
-    id: 1,
-    numero_telefonico: '5551234567',
-    plan_asociado: 'WISP 6GB - 7 días',
-    precio_venta: 80,
-    cliente_nombre: 'Juan Pérez',
-    cliente_telefono: '5551234567',
-    estado: 'Vendido'
-  },
-  {
-    id: 2,
-    numero_telefonico: '5552345678',
-    plan_asociado: 'WISP 10GB - 15 días',
-    precio_venta: 140,
-    cliente_nombre: 'María García',
-    cliente_telefono: '5552345678',
-    estado: 'Vendido'
-  }
-];
-
-const PLANES_DISPONIBLES = {
-  '7 Dias': [
-    { id: '7d-6gb', nombre: 'WISP 6GB', precio: 80, dias: 7, datos: '6 GB', llamadas: 'Ilimitadas', sms: '875 SMS', redes: 'Redes sociales ilimitadas', comparte: true }
-  ],
-  '15 Dias': [
-    { id: '15d-5gb', nombre: 'WISP 5GB', precio: 110, dias: 15, datos: '5 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
-    { id: '15d-10gb', nombre: 'WISP 10GB', precio: 140, dias: 15, datos: '10 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true, popular: true }
-  ],
-  '30 Dias': [
-    { id: '30d-1gb', nombre: 'WISP 1GB', precio: 85, dias: 30, datos: '1 GB', llamadas: '100 Mins', sms: '50 SMS', redes: '614 MB Redes Sociales', comparte: true },
-    { id: '30d-2gb', nombre: 'WISP 2GB', precio: 120, dias: 30, datos: '2 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
-    { id: '30d-4gb', nombre: 'WISP 4GB', precio: 160, dias: 30, datos: '4 GB', llamadas: 'Ilimitadas', sms: '1750 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
-    { id: '30d-12gb', nombre: 'WISP 12GB', precio: 200, dias: 30, datos: '12 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, popular: true },
-    { id: '30d-24gb', nombre: 'WISP 24GB', precio: 260, dias: 30, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
-    { id: '30d-35gb', nombre: 'WISP 35GB', precio: 320, dias: 30, datos: '35 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true },
-    { id: '30d-50gb', nombre: 'WISP 50GB', precio: 500, dias: 30, datos: '50 GB', llamadas: 'Ilimitadas', sms: '6000 SMS', redes: 'Redes sociales ilimitadas', comparte: true }
-  ],
-  '90 Dias': [
-    { id: '90d-24gb', nombre: 'WISP 24GB TRIMESTRAL', precio: 740, dias: 90, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, popular: true }
-  ],
-  '180 Dias': [
-    { id: '180d-24gb', nombre: 'WISP 24GB SEMESTRAL', precio: 1420, dias: 180, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, vigencia: '6 meses', popular: true }
-  ],
-  '365 Dias': [
-    { id: '365d-24gb', nombre: 'WISP 24GB ANUAL', precio: 2650, dias: 365, datos: '24 GB', llamadas: 'Ilimitadas', sms: '3500 SMS', redes: 'Redes sociales ilimitadas', comparte: true, vigencia: '12 meses', popular: true }
-  ]
-};
+import api from '../../services/api'; 
 
 const VentaChips = () => {
-  const [chips, setChips] = useState(CHIPS_INICIALES);
+
+  const [chips, setChips] = useState([]);
+  const [planesDisponibles, setPlanesDisponibles] = useState({});
+  const [cargando, setCargando] = useState(true);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [chipEditando, setChipEditando] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [pasoActual, setPasoActual] = useState(0);
+  const [periodoSeleccionado, setPeriodoSeleccionado] = useState('');
+
   const [erroresValidacion, setErroresValidacion] = useState({
     nombre: false,
     telefono: false,
@@ -116,7 +76,56 @@ const VentaChips = () => {
     estado: 'Vendido'
   });
 
-  const [periodoSeleccionado, setPeriodoSeleccionado] = useState('7 Dias');
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    setCargando(true);
+    try {
+      const resPlanes = await api.get('/sims/');
+      const planesApi = resPlanes.data;
+      
+      const gruposPlanes = {};
+      planesApi.forEach(plan => {
+        const cat = plan.categoria || 'Otros';
+        if (!gruposPlanes[cat]) gruposPlanes[cat] = [];
+        
+        gruposPlanes[cat].push({
+          ...plan,
+          precio: parseFloat(plan.precio),
+          dias: cat.replace(/\D/g, ''),
+          redes: plan.beneficios,
+          comparte: plan.beneficios?.toLowerCase().includes('comparte'),
+          popular: plan.destacado
+        });
+      });
+      setPlanesDisponibles(gruposPlanes);
+
+      if (Object.keys(gruposPlanes).length > 0) {
+        setPeriodoSeleccionado(Object.keys(gruposPlanes)[0]);
+      }
+
+      const resVentas = await api.get('/ventaSim/');
+      const ventasApi = resVentas.data.map(venta => ({
+        id: venta.id,
+        numero_telefonico: venta.num_cliente,
+        cliente_nombre: venta.nombre,
+        cliente_telefono: venta.num_cliente,
+        plan_asociado: venta.plan_elejido,
+        precio_venta: parseFloat(venta.precio),
+        estado: venta.estado ? 'Activado' : 'Inactivo',
+        canvaceador_id: venta.canvaceador_id
+      }));
+      setChips(ventasApi);
+
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+      mostrarMensaje("Error de conexión al cargar la información", "error");
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const estadisticas = {
     total: chips.length,
@@ -130,28 +139,15 @@ const VentaChips = () => {
     setTimeout(() => setMensaje(null), 4000);
   };
 
-  const validarSoloNumeros = (valor) => {
-    return /^\d*$/.test(valor);
-  };
-
-  const validarSoloLetras = (valor) => {
-    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(valor);
-  };
+  const validarSoloNumeros = (valor) => /^\d*$/.test(valor);
+  const validarSoloLetras = (valor) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]*$/.test(valor);
 
   const handleNombreChange = (valor) => {
     if (validarSoloLetras(valor)) {
       setFormData({ ...formData, cliente_nombre: valor });
-      setErroresValidacion({
-        ...erroresValidacion,
-        nombre: false,
-        nombreMensaje: ''
-      });
+      setErroresValidacion({ ...erroresValidacion, nombre: false, nombreMensaje: '' });
     } else {
-      setErroresValidacion({
-        ...erroresValidacion,
-        nombre: true,
-        nombreMensaje: 'Solo se permiten letras'
-      });
+      setErroresValidacion({ ...erroresValidacion, nombre: true, nombreMensaje: 'Solo se permiten letras' });
     }
   };
 
@@ -160,18 +156,10 @@ const VentaChips = () => {
       const valorLimpio = valor.replace(/\D/g, '');
       if (valorLimpio.length <= 10) {
         setFormData({ ...formData, cliente_telefono: valorLimpio });
-        setErroresValidacion({
-          ...erroresValidacion,
-          telefono: false,
-          telefonoMensaje: ''
-        });
+        setErroresValidacion({ ...erroresValidacion, telefono: false, telefonoMensaje: '' });
       }
     } else {
-      setErroresValidacion({
-        ...erroresValidacion,
-        telefono: true,
-        telefonoMensaje: 'Solo se permiten números'
-      });
+      setErroresValidacion({ ...erroresValidacion, telefono: true, telefonoMensaje: 'Solo se permiten números' });
     }
   };
 
@@ -199,12 +187,7 @@ const VentaChips = () => {
       });
       setModoEdicion(false);
     }
-    setErroresValidacion({
-      nombre: false,
-      telefono: false,
-      nombreMensaje: '',
-      telefonoMensaje: ''
-    });
+    setErroresValidacion({ nombre: false, telefono: false, nombreMensaje: '', telefonoMensaje: '' });
     setPasoActual(0);
     setDialogOpen(true);
   };
@@ -214,12 +197,6 @@ const VentaChips = () => {
     setChipEditando(null);
     setModoEdicion(false);
     setPasoActual(0);
-    setErroresValidacion({
-      nombre: false,
-      telefono: false,
-      nombreMensaje: '',
-      telefonoMensaje: ''
-    });
   };
 
   const handleSiguientePaso = () => {
@@ -249,9 +226,7 @@ const VentaChips = () => {
     setPasoActual(1);
   };
 
-  const handleRegresarPaso = () => {
-    setPasoActual(0);
-  };
+  const handleRegresarPaso = () => setPasoActual(0);
 
   const handleSeleccionarPlan = (plan) => {
     setFormData({
@@ -261,42 +236,47 @@ const VentaChips = () => {
     });
   };
 
-  const handleSaveChip = () => {
+  const handleSaveChip = async () => {
     if (!formData.plan_seleccionado) {
       mostrarMensaje('Por favor selecciona un plan', 'error');
       return;
     }
 
-    if (modoEdicion && chipEditando) {
-      const chipsActualizados = chips.map(c =>
-        c.id === chipEditando.id ? {
-          ...c,
-          ...formData,
-          plan_asociado: formData.plan_seleccionado ?
-            `${formData.plan_seleccionado.nombre} - ${formData.plan_seleccionado.dias} días` : c.plan_asociado
-        } : c
-      );
-      setChips(chipsActualizados);
-      mostrarMensaje('Chip actualizado correctamente', 'success');
-    } else {
-      const nuevoChip = {
-        ...formData,
-        id: Date.now(),
-        plan_asociado: formData.plan_seleccionado ?
-          `${formData.plan_seleccionado.nombre} - ${formData.plan_seleccionado.dias} días` : '',
-        precio_venta: formData.plan_seleccionado ? formData.plan_seleccionado.precio : 0
-      };
-      setChips([...chips, nuevoChip]);
-      mostrarMensaje('Chip registrado correctamente', 'success');
-    }
+    const payload = {
+      num_cliente: formData.cliente_telefono,
+      nombre: formData.cliente_nombre,
+      plan_elejido: `${formData.plan_seleccionado.nombre} $${formData.plan_seleccionado.precio}`,
+      precio: formData.plan_seleccionado.precio.toString(),
+      estado: true,
+      canvaceador_id: 1 
+    };
 
-    handleCloseDialog();
+    try {
+      if (modoEdicion && chipEditando) {
+        mostrarMensaje('Chip actualizado correctamente', 'success');
+      } else {
+        await api.post('/ventaSim/', payload);
+        mostrarMensaje('Chip registrado correctamente', 'success');
+      }
+      
+      cargarDatos();
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Error al guardar:", error);
+      mostrarMensaje('Error de conexión al guardar el registro', 'error');
+    }
   };
 
-  const handleDeleteChip = (chipId) => {
+  const handleDeleteChip = async (chipId) => {
     if (window.confirm('¿Estás seguro de eliminar este chip SIM?')) {
-      setChips(chips.filter(c => c.id !== chipId));
-      mostrarMensaje('Chip eliminado correctamente', 'success');
+      try {
+        await api.delete(`/ventaSim/${chipId}/`);
+        setChips(chips.filter(c => c.id !== chipId));
+        mostrarMensaje('Chip eliminado correctamente', 'success');
+      } catch (error) {
+        console.error("Error borrando chip:", error);
+        mostrarMensaje("No se pudo eliminar el registro", "error");
+      }
     }
   };
 
@@ -307,6 +287,14 @@ const VentaChips = () => {
       chip.plan_asociado?.toLowerCase().includes(busqueda.toLowerCase())
     );
   });
+
+  if (cargando) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 3 }}>
@@ -497,9 +485,7 @@ const VentaChips = () => {
                     error={erroresValidacion.nombre}
                     helperText={erroresValidacion.nombreMensaje || 'Solo se permiten letras'}
                     required
-                    inputProps={{
-                      maxLength: 50
-                    }}
+                    inputProps={{ maxLength: 50 }}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -512,9 +498,7 @@ const VentaChips = () => {
                     helperText={erroresValidacion.telefonoMensaje || `${formData.cliente_telefono.length}/10 dígitos`}
                     required
                     placeholder="Ingresa exactamente 10 dígitos"
-                    inputProps={{
-                      maxLength: 10
-                    }}
+                    inputProps={{ maxLength: 10 }}
                   />
                 </Grid>
               </Grid>
@@ -529,7 +513,7 @@ const VentaChips = () => {
 
               <Box sx={{ mb: 3 }}>
                 <Stack direction="row" spacing={1} sx={{ overflowX: 'auto' }}>
-                  {Object.keys(PLANES_DISPONIBLES).map((periodo) => (
+                  {Object.keys(planesDisponibles).map((periodo) => (
                     <Chip
                       key={periodo}
                       label={periodo}
@@ -542,9 +526,9 @@ const VentaChips = () => {
                 </Stack>
               </Box>
 
-              {PLANES_DISPONIBLES[periodoSeleccionado] && PLANES_DISPONIBLES[periodoSeleccionado].length > 0 ? (
+              {planesDisponibles[periodoSeleccionado] && planesDisponibles[periodoSeleccionado].length > 0 ? (
                 <Grid container spacing={2}>
-                  {PLANES_DISPONIBLES[periodoSeleccionado].map((plan) => (
+                  {planesDisponibles[periodoSeleccionado].map((plan) => (
                     <Grid item xs={12} sm={6} md={4} key={plan.id}>
                       <Card
                         onClick={() => handleSeleccionarPlan(plan)}
@@ -566,9 +550,9 @@ const VentaChips = () => {
                               position: 'absolute',
                               top: 8,
                               right: 8,
-                              background: plan.id.includes('180d') ? '#2563eb' :
-                                plan.id.includes('365d') ? '#f59e0b' :
-                                  plan.id.includes('30d') ? '#22c55e' : '#3b82f6',
+                              background: plan.dias >= 180 ? '#2563eb' :
+                                plan.dias >= 365 ? '#f59e0b' :
+                                  plan.dias == 30 ? '#22c55e' : '#3b82f6',
                               color: 'white',
                               fontWeight: 700,
                               fontSize: '0.65rem'
@@ -577,11 +561,11 @@ const VentaChips = () => {
                         )}
                         <CardContent sx={{ p: 2 }}>
                           <Box sx={{
-                            background: plan.id.includes('180d') ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' :
-                              plan.id.includes('365d') ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
-                                plan.id.includes('30d') && plan.precio === 200 ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
-                                  plan.id.includes('30d') && plan.precio === 320 ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' :
-                                    plan.id.includes('30d') && plan.precio === 500 ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
+                            background: plan.dias >= 180 ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' :
+                              plan.dias >= 365 ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                plan.dias == 30 && plan.precio <= 200 ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' :
+                                  plan.dias == 30 && plan.precio > 200 && plan.precio < 400 ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' :
+                                    plan.dias == 30 && plan.precio >= 400 ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' :
                                       'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                             color: 'white',
                             p: 2,
@@ -636,12 +620,6 @@ const VentaChips = () => {
                               <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem' }}>
                                 <CheckCircle sx={{ fontSize: 14, color: '#22c55e' }} />
                                 Comparte Internet
-                              </Typography>
-                            )}
-                            {plan.vigencia && (
-                              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626' }}>
-                                <CheckCircle sx={{ fontSize: 14, color: '#dc2626' }} />
-                                Vigencia {plan.vigencia}
                               </Typography>
                             )}
                           </Box>
